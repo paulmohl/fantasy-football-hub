@@ -14,23 +14,41 @@
   }
   body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
 
-  /* Nav */
   nav { background:var(--surface); border-bottom:1px solid var(--border); padding:0 24px; height:56px; display:flex; align-items:center; gap:0; }
   .logo { font-weight:700; font-size:18px; letter-spacing:-0.3px; margin-right:32px; }
   .logo span { color:var(--accent); }
   .nav-links { display:flex; gap:4px; flex:1; }
-  .nav-link { padding:6px 14px; border-radius:6px; font-size:14px; color:var(--muted); cursor:pointer; transition:all 0.15s; font-weight:500; text-decoration:none; }
-  .nav-link:hover { color:var(--text); background:var(--raised); }
+  .nav-link { padding:6px 14px; border-radius:6px; font-size:14px; color:var(--muted); cursor:pointer; font-weight:500; text-decoration:none; }
   .nav-link.active { color:var(--accent); background:#1a2640; }
   .nav-right { display:flex; align-items:center; gap:12px; }
   .avatar { width:32px; height:32px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:#fff; }
-  .league-badge { background:var(--raised); border:1px solid var(--border); border-radius:20px; padding:4px 12px; font-size:12px; color:var(--muted); }
-  .league-badge strong { color:var(--text); }
+  .league-switcher { background:var(--raised); border:1px solid var(--border); border-radius:8px; padding:5px 12px 5px 10px; font-size:12px; color:var(--muted); cursor:pointer; display:flex; align-items:center; gap:6px; }
+  .league-switcher strong { color:var(--text); font-size:13px; }
+  .league-switcher .platform-dot { width:6px; height:6px; border-radius:50%; background:var(--success); flex-shrink:0; }
 
-  /* Layout */
   .layout { display:grid; grid-template-columns:1fr 300px; gap:0; flex:1; min-height:0; }
   .main-panel { padding:24px; overflow-y:auto; border-right:1px solid var(--border); }
   .side-panel  { padding:24px; overflow-y:auto; }
+
+  /* League config banner */
+  .config-banner { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 16px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .config-source { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); }
+  .config-source strong { color:var(--text); }
+  .config-source .sync-badge { display:inline-flex; align-items:center; gap:4px; background:#1a2a1a; border:1px solid #2a4a2a; border-radius:20px; padding:2px 8px; font-size:10px; color:var(--success); font-weight:600; }
+  .config-slots { display:flex; gap:6px; flex-wrap:wrap; }
+  .slot-chip { background:var(--raised); border:1px solid var(--border); border-radius:4px; padding:2px 7px; font-size:10px; font-weight:700; }
+  .slot-chip.QB    { color:#3DA9FC; border-color:#1e3a5f; }
+  .slot-chip.RB    { color:#5CC8A9; border-color:#1e3a2a; }
+  .slot-chip.WR    { color:#F2B66D; border-color:#3a2a10; }
+  .slot-chip.TE    { color:#F26D6D; border-color:#3a1a1a; }
+  .slot-chip.SF    { color:#B39DDB; border-color:#2a1a4a; }
+  .slot-chip.FLEX  { color:#9AA3B2; border-color:#262C3A; }
+  .slot-chip.IDP   { color:#FF8A65; border-color:#3a2010; }
+  .slot-chip.K     { color:#9AA3B2; border-color:#262C3A; }
+  .slot-chip.BN    { color:#9AA3B2; border-color:#262C3A; }
+  .slot-chip.IR    { color:#F26D6D; border-color:#3a1a1a; }
+  .config-edit { font-size:11px; color:var(--muted); cursor:pointer; white-space:nowrap; }
+  .config-edit:hover { color:var(--accent); }
 
   /* Matchup header */
   .matchup-header { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; }
@@ -42,69 +60,83 @@
   .team-pts.mine { color:var(--accent); }
   .vs { font-size:14px; color:var(--muted); font-weight:600; }
   .matchup-meta { text-align:right; }
-  .matchup-proj { font-size:13px; color:var(--muted); }
-  .matchup-proj span { color:var(--success); font-weight:600; }
-  .win-prob { margin-top:6px; }
-  .win-prob-label { font-size:11px; color:var(--muted); margin-bottom:3px; }
-  .prob-bar { height:6px; background:var(--raised); border-radius:3px; width:140px; overflow:hidden; }
-  .prob-fill { height:100%; background:var(--accent); border-radius:3px; width:63%; }
+  .matchup-proj span { color:var(--success); font-weight:600; font-size:13px; }
+  .matchup-proj { color:var(--muted); font-size:13px; }
+  .prob-bar { height:6px; background:var(--raised); border-radius:3px; width:140px; overflow:hidden; margin:4px 0 2px; }
+  .prob-fill { height:100%; background:var(--accent); border-radius:3px; }
 
-  /* Section header */
-  .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  /* Section */
+  .section-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
   .section-title { font-size:13px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.6px; }
   .section-action { font-size:12px; color:var(--accent); cursor:pointer; }
 
-  /* Player row */
-  .lineup-slot { background:var(--surface); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; padding:14px 16px; display:flex; align-items:center; gap:12px; transition:border-color 0.15s; cursor:pointer; }
+  /* Lineup slot */
+  .lineup-slot { background:var(--surface); border:1px solid var(--border); border-radius:10px; margin-bottom:6px; padding:12px 14px; display:flex; align-items:center; gap:10px; cursor:pointer; transition:border-color 0.15s; }
   .lineup-slot:hover { border-color:#3a4560; }
-  .slot-pos { width:36px; text-align:center; font-size:11px; font-weight:700; color:var(--muted); flex-shrink:0; }
+  .lineup-slot.empty-slot { background:transparent; border-style:dashed; opacity:0.5; cursor:default; }
+  .lineup-slot.empty-slot:hover { border-color:var(--border); }
+
+  .slot-pos-badge { width:44px; text-align:center; flex-shrink:0; }
+  .slot-pos-label { font-size:10px; font-weight:800; padding:2px 5px; border-radius:3px; display:inline-block; }
+  .slot-eligibility { font-size:9px; color:var(--muted); margin-top:2px; line-height:1.2; }
+
+  /* pos badge colors match slot-chip */
+  .pos-QB   { background:#0d1e30; color:#3DA9FC; }
+  .pos-RB   { background:#0d1e18; color:#5CC8A9; }
+  .pos-WR   { background:#1e1608; color:#F2B66D; }
+  .pos-TE   { background:#1e0d0d; color:#F26D6D; }
+  .pos-SF   { background:#160d2a; color:#B39DDB; }
+  .pos-FLEX { background:#1B2030; color:#9AA3B2; }
+  .pos-IDP  { background:#1e1208; color:#FF8A65; }
+  .pos-K    { background:#1B2030; color:#9AA3B2; }
+  .pos-BN   { background:#1B2030; color:#9AA3B2; }
+  .pos-IR   { background:#1e0d0d; color:#F26D6D; }
+
   .player-avatar { width:36px; height:36px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; }
   .player-info { flex:1; min-width:0; }
-  .player-name { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .player-meta { font-size:12px; color:var(--muted); margin-top:1px; }
-  .player-status { display:inline-flex; align-items:center; gap:4px; }
-  .status-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
-  .status-dot.healthy  { background:var(--success); }
-  .status-dot.ques     { background:var(--warning); }
-  .status-dot.out      { background:var(--danger); }
-  .proj-col { text-align:right; flex-shrink:0; }
-  .proj-pts { font-size:16px; font-weight:700; font-family:'JetBrains Mono',monospace; }
-  .proj-label { font-size:11px; color:var(--muted); }
-  .slot-divider { height:1px; background:var(--border); margin:12px 0; }
-  .bench-label { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.6px; margin:16px 0 10px; }
-  .bench-slot { opacity:0.7; }
-
-  /* Advisor badge */
-  .advisor-badge { display:inline-flex; align-items:center; gap:4px; border-radius:4px; padding:2px 7px; font-size:11px; font-weight:600; margin-left:6px; }
+  .player-name { font-size:14px; font-weight:600; }
+  .player-meta { font-size:12px; color:var(--muted); margin-top:1px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .status-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; display:inline-block; }
+  .status-dot.healthy { background:var(--success); }
+  .status-dot.ques    { background:var(--warning); }
+  .status-dot.out     { background:var(--danger); }
+  .advisor-badge { display:inline-flex; align-items:center; border-radius:3px; padding:1px 6px; font-size:10px; font-weight:700; }
   .badge-start { background:#1a3a2a; color:var(--success); }
   .badge-sit   { background:#3a1a1a; color:var(--danger); }
   .badge-flex  { background:#2a2a1a; color:var(--warning); }
+  .proj-col { text-align:right; flex-shrink:0; }
+  .proj-pts { font-size:15px; font-weight:700; font-family:'JetBrains Mono',monospace; }
+  .proj-label { font-size:10px; color:var(--muted); }
 
-  /* Team colors */
-  .kc  { background:#e31837; }
-  .buf { background:#00338d; }
-  .sf  { background:#aa0000; }
-  .phi { background:#004c54; }
-  .cin { background:#fb4f14; }
-  .dal { background:#003594; }
-  .mia { background:#008e97; }
-  .nyg { background:#0b2265; }
+  .group-divider { font-size:10px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.7px; padding:10px 0 6px; border-top:1px solid var(--border); margin-top:6px; }
 
-  /* Side panel */
+  /* Side */
   .side-section { margin-bottom:24px; }
-  .waiver-item { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
-  .waiver-rank { font-size:11px; font-weight:700; color:var(--muted); width:18px; flex-shrink:0; text-align:center; }
+  .waiver-item { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+  .waiver-rank { font-size:11px; font-weight:700; color:var(--muted); width:16px; text-align:center; flex-shrink:0; }
   .waiver-info { flex:1; min-width:0; }
-  .waiver-name { font-size:13px; font-weight:600; }
+  .waiver-name { font-size:12px; font-weight:600; }
   .waiver-meta { font-size:11px; color:var(--muted); }
-  .waiver-pts { font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--success); }
-  .add-btn { background:var(--raised); border:1px solid var(--border); color:var(--accent); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:600; cursor:pointer; flex-shrink:0; font-family:'Inter',sans-serif; }
-  .add-btn:hover { background:#1a2640; }
-
-  .stat-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); font-size:13px; }
+  .waiver-pts { font-size:12px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--success); }
+  .add-btn { background:var(--raised); border:1px solid var(--border); color:var(--accent); padding:3px 9px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; flex-shrink:0; }
+  .stat-row { display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--border); font-size:12px; }
   .stat-row:last-child { border-bottom:none; }
   .stat-label { color:var(--muted); }
   .stat-val { font-weight:600; font-family:'JetBrains Mono',monospace; }
+
+  /* team nfl colors */
+  .nfl-kc  { background:#e31837; }
+  .nfl-buf { background:#00338d; }
+  .nfl-sf  { background:#aa0000; }
+  .nfl-phi { background:#004c54; }
+  .nfl-cin { background:#fb4f14; }
+  .nfl-dal { background:#003594; }
+  .nfl-mia { background:#008e97; }
+  .nfl-nyg { background:#0b2265; }
+  .nfl-lar { background:#003594; }
+  .nfl-pit { background:#ffb612; color:#000; }
+  .nfl-sea { background:#002244; }
+  .nfl-gb  { background:#203731; }
 </style>
 </head>
 <body>
@@ -119,13 +151,29 @@
     <a class="nav-link">Players</a>
   </div>
   <div class="nav-right">
-    <div class="league-badge"><strong>Dynasty Kings</strong> · Week 9</div>
+    <div class="league-switcher">
+      <span class="platform-dot"></span>
+      <strong>Dynasty Kings</strong>
+      <span style="color:var(--border)">|</span>
+      <span>Yahoo · Week 9</span>
+      <span style="font-size:10px">▾</span>
+    </div>
     <div class="avatar">P</div>
   </div>
 </nav>
 
 <div class="layout">
   <div class="main-panel">
+
+    <!-- League config banner — slots pulled from Yahoo API -->
+    <div class="config-banner" id="configBanner">
+      <div class="config-source">
+        <span>Roster format from <strong>Dynasty Kings</strong> (Yahoo)</span>
+        <span class="sync-badge">&#x2713; Synced 4 min ago</span>
+      </div>
+      <div class="config-slots" id="slotChips"></div>
+      <div class="config-edit" onclick="showConfigModal()">Edit override ›</div>
+    </div>
 
     <div class="matchup-header">
       <div>
@@ -143,143 +191,23 @@
         </div>
       </div>
       <div class="matchup-meta">
-        <div class="matchup-proj">Projected: <span>131.2</span> pts</div>
-        <div class="win-prob" style="margin-top:8px">
-          <div class="win-prob-label">Win probability</div>
-          <div class="prob-bar"><div class="prob-fill"></div></div>
-          <div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:600">63% to win</div>
-        </div>
+        <div class="matchup-proj">Projected: <span>148.7</span> pts</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Win probability</div>
+        <div class="prob-bar"><div class="prob-fill" style="width:67%"></div></div>
+        <div style="font-size:11px;color:var(--accent);font-weight:600">67% to win</div>
       </div>
     </div>
 
     <div class="section-head">
       <div class="section-title">Starting Lineup</div>
-      <div class="section-action">Auto-set lineup</div>
+      <div class="section-action" onclick="autoSet()">Auto-set lineup</div>
     </div>
 
-    <div class="lineup-slot">
-      <div class="slot-pos">QB</div>
-      <div class="player-avatar kc">M</div>
-      <div class="player-info">
-        <div class="player-name">Patrick Mahomes <span class="advisor-badge badge-start">START</span></div>
-        <div class="player-meta"><span class="player-status"><span class="status-dot healthy"></span>Active</span> · KC · vs LV · Proj 32.4 pts</div>
-      </div>
-      <div class="proj-col">
-        <div class="proj-pts">32.4</div>
-        <div class="proj-label">PROJ</div>
-      </div>
-    </div>
-
-    <div class="lineup-slot">
-      <div class="slot-pos">RB</div>
-      <div class="player-avatar sf">M</div>
-      <div class="player-info">
-        <div class="player-name">Christian McCaffrey <span class="advisor-badge badge-start">START</span></div>
-        <div class="player-meta"><span class="player-status"><span class="status-dot healthy"></span>Active</span> · SF · vs SEA · Proj 22.8 pts</div>
-      </div>
-      <div class="proj-col">
-        <div class="proj-pts">22.8</div>
-        <div class="proj-label">PROJ</div>
-      </div>
-    </div>
-
-    <div class="lineup-slot">
-      <div class="slot-pos">RB</div>
-      <div class="player-avatar buf">J</div>
-      <div class="player-info">
-        <div class="player-name">James Cook <span class="advisor-badge badge-start">START</span></div>
-        <div class="player-meta"><span class="player-status"><span class="status-dot healthy"></span>Active</span> · BUF · vs NYJ · Proj 18.1 pts</div>
-      </div>
-      <div class="proj-col">
-        <div class="proj-pts">18.1</div>
-        <div class="proj-label">PROJ</div>
-      </div>
-    </div>
-
-    <div class="lineup-slot">
-      <div class="slot-pos">WR</div>
-      <div class="player-avatar phi">S</div>
-      <div class="player-info">
-        <div class="player-name">A.J. Brown <span class="advisor-badge badge-start">START</span></div>
-        <div class="player-meta"><span class="player-status"><span class="status-dot healthy"></span>Active</span> · PHI · @ DAL · Proj 17.6 pts</div>
-      </div>
-      <div class="proj-col">
-        <div class="proj-pts">17.6</div>
-        <div class="proj-label">PROJ</div>
-      </div>
-    </div>
-
-    <div class="lineup-slot">
-      <div class="slot-pos">WR</div>
-      <div class="player-avatar cin">J</div>
-      <div class="player-info">
-        <div class="player-name">Ja'Marr Chase <span class="advisor-badge badge-start">START</span></div>
-        <div class="player-meta"><span class="player-status"><span class="status-dot ques"></span>Questionable</span> · CIN · vs PIT · Proj 15.2 pts</div>
-      </div>
-      <div class="proj-col">
-        <div class="proj-pts">15.2</div>
-        <div class="proj-label">PROJ</div>
-      </div>
-    </div>
-
-    <div class="lineup-slot">
-      <div class="slot-pos">TE</div>
-      <div class="player-avatar kc">K</div>
-      <div class="player-info">
-        <div class="player-name">Travis Kelce <span class="advisor-badge badge-start">START</span></div>
-        <div class="player-meta"><span class="player-status"><span class="status-dot healthy"></span>Active</span> · KC · vs LV · Proj 14.4 pts</div>
-      </div>
-      <div class="proj-col">
-        <div class="proj-pts">14.4</div>
-        <div class="proj-label">PROJ</div>
-      </div>
-    </div>
-
-    <div class="lineup-slot">
-      <div class="slot-pos">FLEX</div>
-      <div class="player-avatar dal">D</div>
-      <div class="player-info">
-        <div class="player-name">CeeDee Lamb <span class="advisor-badge badge-flex">CONSIDER</span></div>
-        <div class="player-meta"><span class="player-status"><span class="status-dot healthy"></span>Active</span> · DAL · vs PHI · Proj 13.8 pts</div>
-      </div>
-      <div class="proj-col">
-        <div class="proj-pts">13.8</div>
-        <div class="proj-label">PROJ</div>
-      </div>
-    </div>
-
-    <div class="bench-label">Bench</div>
-
-    <div class="lineup-slot bench-slot">
-      <div class="slot-pos">BN</div>
-      <div class="player-avatar mia">D</div>
-      <div class="player-info">
-        <div class="player-name">Tyreek Hill <span class="advisor-badge badge-sit">BENCH</span></div>
-        <div class="player-meta"><span class="player-status"><span class="status-dot out"></span>Doubtful</span> · MIA · @ NE · Proj 6.1 pts</div>
-      </div>
-      <div class="proj-col">
-        <div class="proj-pts" style="color:var(--muted)">6.1</div>
-        <div class="proj-label">PROJ</div>
-      </div>
-    </div>
-
-    <div class="lineup-slot bench-slot">
-      <div class="slot-pos">BN</div>
-      <div class="player-avatar nyg">S</div>
-      <div class="player-info">
-        <div class="player-name">Malik Nabers</div>
-        <div class="player-meta"><span class="player-status"><span class="status-dot healthy"></span>Active</span> · NYG · vs WAS · Proj 11.2 pts</div>
-      </div>
-      <div class="proj-col">
-        <div class="proj-pts" style="color:var(--muted)">11.2</div>
-        <div class="proj-label">PROJ</div>
-      </div>
-    </div>
+    <div id="lineupContainer"></div>
 
   </div>
 
   <div class="side-panel">
-
     <div class="side-section">
       <div class="section-head">
         <div class="section-title">Waiver Wire</div>
@@ -288,72 +216,271 @@
       <div class="waiver-item">
         <div class="waiver-rank">1</div>
         <div class="player-avatar" style="background:#6b3fa0;width:30px;height:30px;font-size:12px;flex-shrink:0">B</div>
-        <div class="waiver-info">
-          <div class="waiver-name">Brian Thomas Jr.</div>
-          <div class="waiver-meta">WR · JAX · 48% owned</div>
-        </div>
+        <div class="waiver-info"><div class="waiver-name">Brian Thomas Jr.</div><div class="waiver-meta">WR · JAX · 48% owned</div></div>
         <div class="waiver-pts">14.8</div>
         <button class="add-btn">Add</button>
       </div>
       <div class="waiver-item">
         <div class="waiver-rank">2</div>
         <div class="player-avatar" style="background:#004c54;width:30px;height:30px;font-size:12px;flex-shrink:0">D</div>
-        <div class="waiver-info">
-          <div class="waiver-name">De'Von Achane</div>
-          <div class="waiver-meta">RB · MIA · 31% owned</div>
-        </div>
+        <div class="waiver-info"><div class="waiver-name">De'Von Achane</div><div class="waiver-meta">RB · MIA · 31% owned</div></div>
         <div class="waiver-pts">12.3</div>
         <button class="add-btn">Add</button>
       </div>
       <div class="waiver-item">
         <div class="waiver-rank">3</div>
-        <div class="player-avatar" style="background:#97233f;width:30px;height:30px;font-size:12px;flex-shrink:0">M</div>
-        <div class="waiver-info">
-          <div class="waiver-name">Michael Wilson</div>
-          <div class="waiver-meta">WR · ARI · 22% owned</div>
-        </div>
-        <div class="waiver-pts">9.7</div>
+        <div class="player-avatar" style="background:#203731;width:30px;height:30px;font-size:12px;flex-shrink:0">J</div>
+        <div class="waiver-info"><div class="waiver-name">Jordan Love</div><div class="waiver-meta">QB · GB · 61% owned</div></div>
+        <div class="waiver-pts">22.1</div>
+        <button class="add-btn">Add</button>
+      </div>
+      <div class="waiver-item">
+        <div class="waiver-rank">4</div>
+        <div class="player-avatar" style="background:#002244;width:30px;height:30px;font-size:12px;flex-shrink:0">B</div>
+        <div class="waiver-info"><div class="waiver-name">Bobby Wagner</div><div class="waiver-meta">LB · SEA · 22% owned</div></div>
+        <div class="waiver-pts">9.4</div>
         <button class="add-btn">Add</button>
       </div>
     </div>
 
     <div class="side-section">
-      <div class="section-head">
-        <div class="section-title">This Week's Stats</div>
-      </div>
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
-        <div class="stat-row"><span class="stat-label">Projected</span><span class="stat-val">131.2</span></div>
-        <div class="stat-row"><span class="stat-label">League avg</span><span class="stat-val">112.4</span></div>
-        <div class="stat-row"><span class="stat-label">Opponent proj</span><span class="stat-val">108.6</span></div>
+      <div class="section-head"><div class="section-title">Season Stats</div></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;">
+        <div class="stat-row"><span class="stat-label">Projected</span><span class="stat-val">148.7</span></div>
+        <div class="stat-row"><span class="stat-label">League avg</span><span class="stat-val">121.4</span></div>
+        <div class="stat-row"><span class="stat-label">Opponent proj</span><span class="stat-val">112.6</span></div>
         <div class="stat-row"><span class="stat-label">Win streak</span><span class="stat-val" style="color:var(--success)">3 games</span></div>
         <div class="stat-row"><span class="stat-label">Season rank</span><span class="stat-val">2 / 12</span></div>
       </div>
     </div>
 
     <div class="side-section">
-      <div class="section-head">
-        <div class="section-title">Injury Alerts</div>
-      </div>
-      <div style="background:#2a1a1a;border:1px solid #4a2a2a;border-radius:10px;padding:14px 16px;">
+      <div class="section-head"><div class="section-title">Injury Alerts</div></div>
+      <div style="background:#2a1a1a;border:1px solid #4a2a2a;border-radius:10px;padding:12px 14px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="color:var(--warning)">⚠</span>
+          <span style="color:var(--warning)">&#x26A0;</span>
           <div>
             <div style="font-size:13px;font-weight:600;">Ja'Marr Chase</div>
-            <div style="font-size:11px;color:var(--muted)">Questionable · Hamstring · Listed Fri</div>
+            <div style="font-size:11px;color:var(--muted)">Questionable · Hamstring</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="color:var(--danger)">🔴</span>
+          <span style="color:var(--danger)">&#x25CF;</span>
           <div>
             <div style="font-size:13px;font-weight:600;">Tyreek Hill</div>
-            <div style="font-size:11px;color:var(--muted)">Doubtful · Ankle · Updated Sat</div>
+            <div style="font-size:11px;color:var(--muted)">Doubtful · Ankle</div>
           </div>
         </div>
       </div>
     </div>
-
   </div>
 </div>
 
+<!-- Config modal -->
+<div id="configModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:480px;max-width:90vw;">
+    <div style="font-size:16px;font-weight:700;margin-bottom:4px;">Roster Format Override</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">The structure below was pulled from <strong style="color:var(--text)">Dynasty Kings</strong> on Yahoo. You can override individual slots if the API returned incorrect data.</div>
+    <div style="font-size:12px;color:var(--warning);background:#2a2010;border:1px solid #4a3a10;border-radius:8px;padding:10px 14px;margin-bottom:20px;">
+      &#x26A0; Overriding league settings here only affects this app's display. It does not change your actual Yahoo league configuration.
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button onclick="hideConfigModal()" style="background:var(--raised);border:1px solid var(--border);color:var(--muted);padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Cancel</button>
+      <button style="background:var(--accent);border:none;color:#fff;padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Save Override</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ─── League config object — populated from Yahoo API response ───────────────
+  // In production this comes from the backend after fetching:
+  //   GET /api/leagues/:leagueId/settings  →  { rosterSlots, scoringType, ... }
+  // The mockup simulates a non-standard dynasty league with SuperFlex + IDP slots
+  // so it's obvious the structure is NOT hardcoded.
+  const leagueConfig = {
+    name: "Dynasty Kings",
+    platform: "Yahoo",
+    scoringType: "Half-PPR",
+    // Each entry: { slotType, eligiblePositions, label }
+    // slotType drives the slot badge color; eligiblePositions is shown as small text
+    rosterSlots: [
+      // ── Starters ─────────────────────────────────────────────────────────
+      { slotType: "QB",   eligible: ["QB"],                   group: "starters" },
+      { slotType: "RB",   eligible: ["RB"],                   group: "starters" },
+      { slotType: "RB",   eligible: ["RB"],                   group: "starters" },
+      { slotType: "WR",   eligible: ["WR"],                   group: "starters" },
+      { slotType: "WR",   eligible: ["WR"],                   group: "starters" },
+      { slotType: "WR",   eligible: ["WR"],                   group: "starters" },
+      { slotType: "TE",   eligible: ["TE"],                   group: "starters" },
+      { slotType: "FLEX", eligible: ["RB","WR","TE"],         group: "starters" },
+      { slotType: "SF",   eligible: ["QB","RB","WR","TE"],    group: "starters" },  // SuperFlex
+      { slotType: "IDP",  eligible: ["DT","DE","LB","CB","S"],group: "starters" },  // IDP
+      { slotType: "IDP",  eligible: ["DT","DE","LB","CB","S"],group: "starters" },  // IDP
+      { slotType: "K",    eligible: ["K"],                    group: "starters" },
+      // ── Bench ─────────────────────────────────────────────────────────────
+      { slotType: "BN",   eligible: null,                     group: "bench" },
+      { slotType: "BN",   eligible: null,                     group: "bench" },
+      { slotType: "BN",   eligible: null,                     group: "bench" },
+      { slotType: "BN",   eligible: null,                     group: "bench" },
+      { slotType: "BN",   eligible: null,                     group: "bench" },
+      { slotType: "BN",   eligible: null,                     group: "bench" },
+      // ── IR ────────────────────────────────────────────────────────────────
+      { slotType: "IR",   eligible: null,                     group: "ir" },
+      { slotType: "IR",   eligible: null,                     group: "ir" },
+    ]
+  };
+
+  // ─── Roster data — populated from Yahoo roster API ──────────────────────────
+  // In production: GET /api/leagues/:leagueId/rosters/:teamId
+  const roster = [
+    { name: "Patrick Mahomes", pos: "QB",  nfl: "KC",  nflClass:"nfl-kc",  init:"M", status:"healthy", opp:"vs LV", proj:32.4, advice:"start" },
+    { name: "Christian McCaffrey", pos:"RB", nfl:"SF", nflClass:"nfl-sf", init:"C", status:"healthy", opp:"vs SEA", proj:22.8, advice:"start" },
+    { name: "James Cook",      pos: "RB",  nfl: "BUF", nflClass:"nfl-buf", init:"J", status:"healthy", opp:"vs NYJ", proj:18.1, advice:"start" },
+    { name: "A.J. Brown",      pos: "WR",  nfl: "PHI", nflClass:"nfl-phi", init:"A", status:"healthy", opp:"@ DAL",  proj:17.6, advice:"start" },
+    { name: "Ja'Marr Chase",   pos: "WR",  nfl: "CIN", nflClass:"nfl-cin", init:"J", status:"ques",    opp:"vs PIT", proj:15.2, advice:"start" },
+    { name: "CeeDee Lamb",     pos: "WR",  nfl: "DAL", nflClass:"nfl-dal", init:"C", status:"healthy", opp:"vs PHI", proj:13.8, advice:"flex"  },
+    { name: "Travis Kelce",    pos: "TE",  nfl: "KC",  nflClass:"nfl-kc",  init:"T", status:"healthy", opp:"vs LV",  proj:14.4, advice:"start" },
+    { name: "Malik Nabers",    pos: "WR",  nfl: "NYG", nflClass:"nfl-nyg", init:"M", status:"healthy", opp:"vs WAS", proj:11.2, advice:"start" },  // FLEX
+    { name: "Josh Allen",      pos: "QB",  nfl: "BUF", nflClass:"nfl-buf", init:"J", status:"healthy", opp:"vs NYJ", proj:28.6, advice:"start" },  // SF slot
+    { name: "Roquan Smith",    pos: "LB",  nfl: "LAR", nflClass:"nfl-lar", init:"R", status:"healthy", opp:"@ SEA",  proj:10.2, advice:"start" },  // IDP 1
+    { name: "Minkah Fitzpatrick",pos:"S",  nfl: "PIT", nflClass:"nfl-pit", init:"M", status:"healthy", opp:"@ CIN",  proj: 8.8, advice:"start" },  // IDP 2
+    { name: "Evan McPherson",  pos: "K",   nfl: "CIN", nflClass:"nfl-cin", init:"E", status:"healthy", opp:"vs PIT", proj: 8.1, advice:"start" },
+    // bench
+    { name: "Tyreek Hill",     pos: "WR",  nfl: "MIA", nflClass:"nfl-mia", init:"T", status:"out",     opp:"@ NE",   proj: 6.1, advice:"sit",   group:"bench" },
+    { name: "Tank Dell",       pos: "WR",  nfl: "SEA", nflClass:"nfl-sea", init:"T", status:"healthy", opp:"vs LAR", proj: 9.4, advice:null,    group:"bench" },
+    { name: "Javonte Williams",pos: "RB",  nfl: "GB",  nflClass:"nfl-gb",  init:"J", status:"healthy", opp:"vs MIN", proj: 8.8, advice:null,    group:"bench" },
+    { name: "Sam LaPorta",     pos: "TE",  nfl: "SEA", nflClass:"nfl-sea", init:"S", status:"healthy", opp:"vs LAR", proj: 9.1, advice:null,    group:"bench" },
+    { name: "Patrick Surtain", pos: "CB",  nfl: "GB",  nflClass:"nfl-gb",  init:"P", status:"healthy", opp:"vs MIN", proj: 7.3, advice:null,    group:"bench" },
+    { name: "Jaxon Smith-Njigba",pos:"WR", nfl:"SEA",  nflClass:"nfl-sea", init:"J", status:"healthy", opp:"vs LAR", proj: 8.2, advice:null,    group:"bench" },
+    // IR
+    { name: "Justin Jefferson", pos:"WR",  nfl: "MIN", nflClass:"nfl-buf", init:"J", status:"out",     opp:"—",      proj: 0,   advice:null,    group:"ir"    },
+    { name: "(empty IR slot)",  pos: null, nfl: null,   nflClass:"",        init:"",  status:null,      opp:null,     proj: null, advice:null,   group:"ir", empty:true },
+  ];
+
+  // ─── Render ─────────────────────────────────────────────────────────────────
+  function posClass(s) {
+    const map = { QB:"pos-QB", RB:"pos-RB", WR:"pos-WR", TE:"pos-TE", SF:"pos-SF", FLEX:"pos-FLEX", IDP:"pos-IDP", K:"pos-K", BN:"pos-BN", IR:"pos-IR" };
+    return map[s] || "pos-BN";
+  }
+
+  function chipClass(s) {
+    const map = { QB:"QB", RB:"RB", WR:"WR", TE:"TE", SF:"SF", FLEX:"FLEX", IDP:"IDP", K:"K", BN:"BN", IR:"IR" };
+    return map[s] || "BN";
+  }
+
+  function renderSlotChips() {
+    const counts = {};
+    leagueConfig.rosterSlots.forEach(s => { counts[s.slotType] = (counts[s.slotType]||0)+1; });
+    const chips = document.getElementById('slotChips');
+    chips.innerHTML = Object.entries(counts).map(([type, n]) =>
+      `<span class="slot-chip ${chipClass(type)}">${n > 1 ? n+'×' : ''}${type}</span>`
+    ).join('');
+  }
+
+  function adviceBadge(advice) {
+    if (advice === 'start') return `<span class="advisor-badge badge-start">START</span>`;
+    if (advice === 'sit')   return `<span class="advisor-badge badge-sit">BENCH</span>`;
+    if (advice === 'flex')  return `<span class="advisor-badge badge-flex">CONSIDER</span>`;
+    return '';
+  }
+
+  function renderLineup() {
+    const container = document.getElementById('lineupContainer');
+    const starters = leagueConfig.rosterSlots.filter(s => s.group === 'starters');
+    const bench    = leagueConfig.rosterSlots.filter(s => s.group === 'bench');
+    const ir       = leagueConfig.rosterSlots.filter(s => s.group === 'ir');
+
+    let starterPlayers = roster.filter(p => !p.group);        // starters have no group key
+    let benchPlayers   = roster.filter(p => p.group === 'bench');
+    let irPlayers      = roster.filter(p => p.group === 'ir');
+
+    let html = '';
+
+    // Starters
+    starters.forEach((slot, i) => {
+      const p = starterPlayers[i];
+      const eligLabel = slot.eligible ? slot.eligible.join('/') : '';
+      if (!p || p.empty) {
+        html += `<div class="lineup-slot empty-slot">
+          <div class="slot-pos-badge"><span class="slot-pos-label ${posClass(slot.slotType)}">${slot.slotType}</span><div class="slot-eligibility">${eligLabel}</div></div>
+          <div style="font-size:13px;color:var(--border);padding-left:4px">Empty — click to add player</div>
+        </div>`;
+      } else {
+        html += `<div class="lineup-slot">
+          <div class="slot-pos-badge">
+            <span class="slot-pos-label ${posClass(slot.slotType)}">${slot.slotType}</span>
+            <div class="slot-eligibility">${eligLabel}</div>
+          </div>
+          <div class="player-avatar ${p.nflClass}">${p.init}</div>
+          <div class="player-info">
+            <div class="player-name">${p.name} ${adviceBadge(p.advice)}</div>
+            <div class="player-meta">
+              <span class="status-dot ${p.status}"></span>
+              <span>${p.nfl}</span>
+              <span style="color:var(--border)">·</span>
+              <span>${p.pos}</span>
+              <span style="color:var(--border)">·</span>
+              <span>${p.opp}</span>
+            </div>
+          </div>
+          <div class="proj-col">
+            <div class="proj-pts" style="color:${p.status==='out'?'var(--muted)':''}">${p.proj.toFixed(1)}</div>
+            <div class="proj-label">PROJ</div>
+          </div>
+        </div>`;
+      }
+    });
+
+    // Bench
+    html += `<div class="group-divider">Bench (${bench.length} slots)</div>`;
+    bench.forEach((slot, i) => {
+      const p = benchPlayers[i];
+      if (!p) {
+        html += `<div class="lineup-slot empty-slot" style="opacity:0.3"><div class="slot-pos-badge"><span class="slot-pos-label pos-BN">BN</span></div><div style="font-size:12px;color:var(--border);padding-left:4px">Empty</div></div>`;
+      } else {
+        html += `<div class="lineup-slot" style="opacity:0.75">
+          <div class="slot-pos-badge"><span class="slot-pos-label pos-BN">BN</span></div>
+          <div class="player-avatar ${p.nflClass}">${p.init}</div>
+          <div class="player-info">
+            <div class="player-name">${p.name} ${adviceBadge(p.advice)}</div>
+            <div class="player-meta"><span class="status-dot ${p.status}"></span><span>${p.nfl}</span><span style="color:var(--border)">·</span><span>${p.pos}</span><span style="color:var(--border)">·</span><span>${p.opp}</span></div>
+          </div>
+          <div class="proj-col">
+            <div class="proj-pts" style="color:${p.status==='out'?'var(--danger)':'var(--muted)'}">${p.proj.toFixed(1)}</div>
+            <div class="proj-label">PROJ</div>
+          </div>
+        </div>`;
+      }
+    });
+
+    // IR
+    html += `<div class="group-divider">IR (${ir.length} slots)</div>`;
+    ir.forEach((slot, i) => {
+      const p = irPlayers[i];
+      if (!p || p.empty) {
+        html += `<div class="lineup-slot empty-slot" style="opacity:0.3"><div class="slot-pos-badge"><span class="slot-pos-label pos-IR">IR</span></div><div style="font-size:12px;color:var(--border);padding-left:4px">Empty</div></div>`;
+      } else {
+        html += `<div class="lineup-slot" style="opacity:0.7">
+          <div class="slot-pos-badge"><span class="slot-pos-label pos-IR">IR</span></div>
+          <div class="player-avatar ${p.nflClass}">${p.init}</div>
+          <div class="player-info">
+            <div class="player-name">${p.name}</div>
+            <div class="player-meta"><span class="status-dot out"></span><span>${p.nfl}</span><span style="color:var(--border)">·</span><span>${p.pos}</span><span style="color:var(--border)">·</span><span style="color:var(--danger)">IR eligible</span></div>
+          </div>
+          <div class="proj-col"><div class="proj-pts" style="color:var(--muted)">—</div><div class="proj-label">PROJ</div></div>
+        </div>`;
+      }
+    });
+
+    container.innerHTML = html;
+  }
+
+  function showConfigModal() { document.getElementById('configModal').style.display = 'flex'; }
+  function hideConfigModal() { document.getElementById('configModal').style.display = 'none'; }
+  function autoSet() { alert('Auto-set lineup: optimizes your starters against the ' + leagueConfig.rosterSlots.filter(s=>s.group==='starters').length + ' starting slots defined by ' + leagueConfig.name); }
+
+  renderSlotChips();
+  renderLineup();
+</script>
 </body>
 </html>
