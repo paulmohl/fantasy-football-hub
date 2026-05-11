@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draft Room — Fantasy Football Hub</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#06080D; --surface:#0F1219; --raised:#161C28; --border:#1E2535;
+    --accent:#3DA9FC; --success:#5CC8A9; --warning:#F2B66D; --danger:#F26D6D;
+    --text:#E8ECF1; --muted:#9AA3B2; --gold:#FFD700;
+  }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+
+  /* Top bar */
+  .topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:0 20px; height:52px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .topbar-left { display:flex; align-items:center; gap:16px; }
+  .logo { font-weight:800; font-size:16px; letter-spacing:-0.5px; }
+  .logo span { color:var(--accent); }
+  .draft-name { font-size:14px; color:var(--muted); }
+  .draft-name strong { color:var(--text); }
+  .topbar-center { display:flex; align-items:center; gap:16px; }
+  .timer { background:#1a0a0a; border:2px solid var(--danger); border-radius:8px; padding:6px 16px; display:flex; align-items:center; gap:8px; }
+  .timer-label { font-size:10px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+  .timer-count { font-size:22px; font-weight:800; font-family:'JetBrains Mono',monospace; color:var(--danger); line-height:1; }
+  .on-clock { background:#1a1a0a; border:1px solid #4a4a10; border-radius:8px; padding:6px 14px; text-align:center; }
+  .on-clock-label { font-size:10px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+  .on-clock-name { font-size:14px; font-weight:700; color:var(--gold); }
+  .topbar-right { display:flex; align-items:center; gap:10px; }
+  .round-pill { background:var(--raised); border:1px solid var(--border); border-radius:20px; padding:4px 12px; font-size:12px; }
+  .round-pill span { color:var(--accent); font-weight:700; }
+  .pick-pill { background:var(--raised); border:1px solid var(--border); border-radius:20px; padding:4px 12px; font-size:12px; }
+
+  /* Main layout */
+  .layout { display:grid; grid-template-columns:1fr 340px; gap:0; flex:1; min-height:0; }
+  .draft-main { display:flex; flex-direction:column; overflow:hidden; }
+  .draft-side  { display:flex; flex-direction:column; border-left:1px solid var(--border); }
+
+  /* Draft board */
+  .board-scroll { flex:1; overflow-y:auto; overflow-x:auto; padding:16px 20px; }
+  .board-header { display:flex; gap:0; margin-bottom:8px; }
+  .board-pick-num { width:32px; flex-shrink:0; }
+  .board-team-col { flex:1; min-width:90px; font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.4px; text-align:center; padding-bottom:6px; }
+  .board-row { display:flex; gap:0; margin-bottom:4px; align-items:center; }
+  .round-label { width:32px; font-size:10px; font-weight:700; color:var(--muted); text-align:center; flex-shrink:0; }
+  .pick-cell { flex:1; min-width:90px; height:52px; background:var(--surface); border:1px solid var(--border); border-radius:6px; margin:0 2px; display:flex; flex-direction:column; justify-content:center; padding:4px 8px; transition:all 0.15s; overflow:hidden; }
+  .pick-cell.mine { border-color:#1e3a60; background:#0e1a2e; }
+  .pick-cell.mine-active { border-color:var(--accent); background:#112240; box-shadow:0 0 0 2px rgba(61,169,252,0.15); }
+  .pick-cell.filled { background:var(--raised); }
+  .pick-cell.on-clock-cell { border-color:var(--gold); background:#1a1500; animation:pulse-gold 1.5s infinite; }
+  .pick-cell.empty { background:transparent; border-color:var(--border); opacity:0.4; }
+  @keyframes pulse-gold { 0%,100%{box-shadow:0 0 0 0 rgba(255,215,0,0)} 50%{box-shadow:0 0 0 4px rgba(255,215,0,0.1)} }
+  .pick-player { font-size:11px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pick-pos { font-size:9px; color:var(--muted); }
+  .pick-pos.QB { color:#3DA9FC; }
+  .pick-pos.RB { color:#5CC8A9; }
+  .pick-pos.WR { color:#F2B66D; }
+  .pick-pos.TE { color:#F26D6D; }
+  .pick-pos.K  { color:#B39DDB; }
+  .pick-empty-label { font-size:10px; color:var(--border); font-weight:500; }
+
+  /* Queue / available players */
+  .players-panel { background:var(--surface); border-top:1px solid var(--border); padding:0; height:220px; flex-shrink:0; }
+  .panel-tabs { display:flex; border-bottom:1px solid var(--border); }
+  .panel-tab { padding:10px 18px; font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
+  .panel-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .players-list { overflow-y:auto; height:calc(220px - 40px); }
+  .player-row { display:flex; align-items:center; gap:10px; padding:8px 16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background 0.1s; }
+  .player-row:hover { background:var(--raised); }
+  .player-row.queued { background:#1a2030; }
+  .pr-rank { font-size:11px; color:var(--muted); width:20px; text-align:center; flex-shrink:0; font-family:'JetBrains Mono',monospace; }
+  .pr-pos-badge { width:28px; height:20px; border-radius:3px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:800; flex-shrink:0; }
+  .pos-QB { background:#1a2840; color:#3DA9FC; }
+  .pos-RB { background:#1a2e28; color:#5CC8A9; }
+  .pos-WR { background:#2e2510; color:#F2B66D; }
+  .pos-TE { background:#2e1a1a; color:#F26D6D; }
+  .pr-name { flex:1; font-size:13px; font-weight:600; }
+  .pr-team { font-size:11px; color:var(--muted); width:60px; }
+  .pr-proj { font-size:13px; font-weight:700; font-family:'JetBrains Mono',monospace; color:var(--success); width:50px; text-align:right; }
+  .pr-adp { font-size:11px; color:var(--muted); width:50px; text-align:right; }
+  .draft-btn { background:var(--accent); color:#fff; border:none; padding:4px 12px; border-radius:5px; font-size:11px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; flex-shrink:0; }
+  .queue-btn { background:var(--raised); border:1px solid var(--border); color:var(--muted); padding:4px 10px; border-radius:5px; font-size:11px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; flex-shrink:0; }
+
+  /* Side: video + chat */
+  .video-grid { padding:12px; display:grid; grid-template-columns:repeat(3,1fr); gap:6px; flex-shrink:0; }
+  .video-tile { aspect-ratio:4/3; background:var(--raised); border-radius:8px; border:1px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; position:relative; overflow:hidden; cursor:pointer; transition:border-color 0.15s; }
+  .video-tile:hover { border-color:#3a4a60; }
+  .video-tile.on-clock-tile { border-color:var(--gold); }
+  .video-tile.mine-tile { border-color:var(--accent); }
+  .video-avatar { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#fff; }
+  .video-name { font-size:9px; color:var(--muted); font-weight:600; }
+  .video-clock-badge { position:absolute; top:4px; right:4px; background:var(--gold); color:#000; font-size:8px; font-weight:800; padding:1px 5px; border-radius:3px; }
+  .video-mute { position:absolute; bottom:4px; right:4px; font-size:10px; opacity:0.5; }
+
+  /* Chat */
+  .chat-panel { flex:1; display:flex; flex-direction:column; min-height:0; }
+  .chat-header { padding:10px 14px; border-bottom:1px solid var(--border); font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; justify-content:space-between; }
+  .chat-messages { flex:1; overflow-y:auto; padding:10px 14px; display:flex; flex-direction:column; gap:8px; }
+  .chat-msg { display:flex; gap:8px; }
+  .chat-ava { width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:#fff; flex-shrink:0; margin-top:2px; }
+  .chat-content { flex:1; }
+  .chat-sender { font-size:11px; font-weight:700; margin-bottom:2px; }
+  .chat-text { font-size:12px; color:#c4cad6; line-height:1.4; }
+  .chat-time { font-size:10px; color:var(--muted); margin-left:6px; }
+  .chat-system { text-align:center; font-size:11px; color:var(--muted); padding:4px 0; }
+  .chat-system span { background:var(--raised); padding:3px 10px; border-radius:10px; }
+  .chat-input-row { padding:10px 12px; border-top:1px solid var(--border); display:flex; gap:8px; }
+  .chat-input { flex:1; background:var(--raised); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; color:var(--text); font-family:'Inter',sans-serif; outline:none; }
+  .chat-input:focus { border-color:var(--accent); }
+  .chat-send { background:var(--accent); border:none; border-radius:8px; width:36px; height:36px; color:#fff; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Fantasy<span>Hub</span></div>
+    <div class="draft-name"><strong>Dynasty Kings 2026</strong> · Live Draft</div>
+  </div>
+  <div class="topbar-center">
+    <div class="on-clock">
+      <div class="on-clock-label">On the Clock</div>
+      <div class="on-clock-name">⚡ Mike D.</div>
+    </div>
+    <div class="timer">
+      <div>
+        <div class="timer-label">Time Left</div>
+        <div class="timer-count">0:43</div>
+      </div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="round-pill">Round <span>3</span></div>
+    <div class="pick-pill">Pick <span style="color:var(--warning);font-weight:700">27</span> of 120</div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="draft-main">
+    <div class="board-scroll">
+      <div class="board-header">
+        <div class="board-pick-num"></div>
+        <div class="board-team-col">Paul B</div>
+        <div class="board-team-col">Mike D</div>
+        <div class="board-team-col">Sarah K</div>
+        <div class="board-team-col">Tom R</div>
+        <div class="board-team-col">Lisa M</div>
+        <div class="board-team-col">Chuck W</div>
+        <div class="board-team-col">Dave P</div>
+        <div class="board-team-col">Anna F</div>
+        <div class="board-team-col">Brian S</div>
+        <div class="board-team-col">Kate L</div>
+      </div>
+
+      <!-- Round 1 -->
+      <div class="board-row">
+        <div class="round-label">R1</div>
+        <div class="pick-cell filled mine"><span class="pick-pos RB">RB</span><div class="pick-player">C. McCaffrey</div></div>
+        <div class="pick-cell filled"><span class="pick-pos WR">WR</span><div class="pick-player">J. Chase</div></div>
+        <div class="pick-cell filled"><span class="pick-pos QB">QB</span><div class="pick-player">P. Mahomes</div></div>
+        <div class="pick-cell filled"><span class="pick-pos RB">RB</span><div class="pick-player">B. Robinson</div></div>
+        <div class="pick-cell filled"><span class="pick-pos WR">WR</span><div class="pick-player">T. Hill</div></div>
+        <div class="pick-cell filled"><span class="pick-pos TE">TE</span><div class="pick-player">T. Kelce</div></div>
+        <div class="pick-cell filled"><span class="pick-pos RB">RB</span><div class="pick-player">J. Taylor</div></div>
+        <div class="pick-cell filled"><span class="pick-pos WR">WR</span><div class="pick-player">S. Diggs</div></div>
+        <div class="pick-cell filled"><span class="pick-pos QB">QB</span><div class="pick-player">J. Burrow</div></div>
+        <div class="pick-cell filled"><span class="pick-pos RB">RB</span><div class="pick-player">D. Henry</div></div>
+      </div>
+
+      <!-- Round 2 (snake reversal) -->
+      <div class="board-row">
+        <div class="round-label">R2</div>
+        <div class="pick-cell filled"><span class="pick-pos RB">RB</span><div class="pick-player">A. Jones</div></div>
+        <div class="pick-cell filled mine"><span class="pick-pos WR">WR</span><div class="pick-player">A.J. Brown</div></div>
+        <div class="pick-cell filled"><span class="pick-pos RB">RB</span><div class="pick-player">J. Cook</div></div>
+        <div class="pick-cell filled"><span class="pick-pos WR">WR</span><div class="pick-player">C. Lamb</div></div>
+        <div class="pick-cell filled"><span class="pick-pos QB">QB</span><div class="pick-player">L. Jackson</div></div>
+        <div class="pick-cell filled"><span class="pick-pos RB">RB</span><div class="pick-player">R. Stevenson</div></div>
+        <div class="pick-cell filled"><span class="pick-pos WR">WR</span><div class="pick-player">D. Adams</div></div>
+        <div class="pick-cell filled"><span class="pick-pos TE">TE</span><div class="pick-player">M. Andrews</div></div>
+        <div class="pick-cell filled"><span class="pick-pos RB">RB</span><div class="pick-player">T. Pollard</div></div>
+        <div class="pick-cell filled"><span class="pick-pos WR">WR</span><div class="pick-player">T. McLaurin</div></div>
+      </div>
+
+      <!-- Round 3 — in progress -->
+      <div class="board-row">
+        <div class="round-label" style="color:var(--accent)">R3</div>
+        <div class="pick-cell filled mine"><span class="pick-pos QB">QB</span><div class="pick-player">T. Lawrence</div></div>
+        <div class="pick-cell on-clock-cell"><div class="pick-empty-label" style="color:var(--gold);font-weight:700;font-size:11px;">⏳ On Clock</div></div>
+        <div class="pick-cell mine-active empty"><div class="pick-empty-label" style="color:var(--accent);font-size:10px;font-weight:600">YOU NEXT</div></div>
+        <div class="pick-cell empty"><div class="pick-empty-label">—</div></div>
+        <div class="pick-cell empty"><div class="pick-empty-label">—</div></div>
+        <div class="pick-cell empty"><div class="pick-empty-label">—</div></div>
+        <div class="pick-cell empty"><div class="pick-empty-label">—</div></div>
+        <div class="pick-cell empty"><div class="pick-empty-label">—</div></div>
+        <div class="pick-cell empty"><div class="pick-empty-label">—</div></div>
+        <div class="pick-cell empty"><div class="pick-empty-label">—</div></div>
+      </div>
+    </div>
+
+    <!-- Available players -->
+    <div class="players-panel">
+      <div class="panel-tabs">
+        <div class="panel-tab active">Available Players</div>
+        <div class="panel-tab">My Queue (3)</div>
+        <div class="panel-tab">My Roster</div>
+      </div>
+      <div class="players-list">
+        <div class="player-row">
+          <div class="pr-rank">1</div>
+          <div class="pr-pos-badge pos-WR">WR</div>
+          <div class="pr-name">Malik Nabers</div>
+          <div class="pr-team">NYG</div>
+          <div class="pr-proj">19.4</div>
+          <div class="pr-adp">ADP 28</div>
+          <button class="queue-btn">+ Queue</button>
+          <button class="draft-btn">Draft</button>
+        </div>
+        <div class="player-row queued">
+          <div class="pr-rank">2</div>
+          <div class="pr-pos-badge pos-RB">RB</div>
+          <div class="pr-name">De'Von Achane ★</div>
+          <div class="pr-team">MIA</div>
+          <div class="pr-proj">17.8</div>
+          <div class="pr-adp">ADP 30</div>
+          <button class="queue-btn" style="color:var(--accent);border-color:var(--accent)">Queued</button>
+          <button class="draft-btn">Draft</button>
+        </div>
+        <div class="player-row">
+          <div class="pr-rank">3</div>
+          <div class="pr-pos-badge pos-QB">QB</div>
+          <div class="pr-name">C.J. Stroud</div>
+          <div class="pr-team">HOU</div>
+          <div class="pr-proj">24.1</div>
+          <div class="pr-adp">ADP 33</div>
+          <button class="queue-btn">+ Queue</button>
+          <button class="draft-btn">Draft</button>
+        </div>
+        <div class="player-row">
+          <div class="pr-rank">4</div>
+          <div class="pr-pos-badge pos-TE">TE</div>
+          <div class="pr-name">Sam LaPorta</div>
+          <div class="pr-team">DET</div>
+          <div class="pr-proj">12.3</div>
+          <div class="pr-adp">ADP 36</div>
+          <button class="queue-btn">+ Queue</button>
+          <button class="draft-btn">Draft</button>
+        </div>
+        <div class="player-row">
+          <div class="pr-rank">5</div>
+          <div class="pr-pos-badge pos-WR">WR</div>
+          <div class="pr-name">Brian Thomas Jr.</div>
+          <div class="pr-team">JAX</div>
+          <div class="pr-proj">14.6</div>
+          <div class="pr-adp">ADP 38</div>
+          <button class="queue-btn">+ Queue</button>
+          <button class="draft-btn">Draft</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Side panel: video + chat -->
+  <div class="draft-side">
+    <div class="video-grid">
+      <div class="video-tile mine-tile">
+        <div class="video-avatar" style="background:#3DA9FC">P</div>
+        <div class="video-name">You (Paul)</div>
+        <div class="video-mute">🎤</div>
+      </div>
+      <div class="video-tile on-clock-tile">
+        <div class="video-avatar" style="background:#F2B66D;color:#000">M</div>
+        <div class="video-name">Mike D.</div>
+        <div class="video-clock-badge">CLOCK</div>
+        <div class="video-mute">🎤</div>
+      </div>
+      <div class="video-tile">
+        <div class="video-avatar" style="background:#5CC8A9;color:#000">S</div>
+        <div class="video-name">Sarah K.</div>
+        <div class="video-mute">🔇</div>
+      </div>
+      <div class="video-tile">
+        <div class="video-avatar" style="background:#F26D6D">T</div>
+        <div class="video-name">Tom R.</div>
+        <div class="video-mute">🎤</div>
+      </div>
+      <div class="video-tile">
+        <div class="video-avatar" style="background:#B39DDB">L</div>
+        <div class="video-name">Lisa M.</div>
+        <div class="video-mute">🔇</div>
+      </div>
+      <div class="video-tile">
+        <div class="video-avatar" style="background:#4DB6AC">C</div>
+        <div class="video-name">Chuck W.</div>
+        <div class="video-mute">🎤</div>
+      </div>
+    </div>
+
+    <div class="chat-panel">
+      <div class="chat-header">
+        <span>League Chat</span>
+        <span style="font-size:10px;color:var(--success)">● 10 online</span>
+      </div>
+      <div class="chat-messages">
+        <div class="chat-system"><span>Draft started · Round 1, Pick 1</span></div>
+        <div class="chat-msg">
+          <div class="chat-ava" style="background:#3DA9FC">P</div>
+          <div class="chat-content">
+            <div class="chat-sender">Paul <span class="chat-time">2:34</span></div>
+            <div class="chat-text">McCaffrey was a no-brainer at 1 🔒</div>
+          </div>
+        </div>
+        <div class="chat-msg">
+          <div class="chat-ava" style="background:#F2B66D;color:#000">M</div>
+          <div class="chat-content">
+            <div class="chat-sender">Mike D. <span class="chat-time">2:35</span></div>
+            <div class="chat-text">Took Chase, feel good about that</div>
+          </div>
+        </div>
+        <div class="chat-msg">
+          <div class="chat-ava" style="background:#5CC8A9;color:#000">S</div>
+          <div class="chat-content">
+            <div class="chat-sender">Sarah K. <span class="chat-time">2:38</span></div>
+            <div class="chat-text">Mahomes went fast... I was hoping he'd fall</div>
+          </div>
+        </div>
+        <div class="chat-system"><span>Round 3 started</span></div>
+        <div class="chat-msg">
+          <div class="chat-ava" style="background:#4DB6AC">C</div>
+          <div class="chat-content">
+            <div class="chat-sender">Chuck W. <span class="chat-time">2:51</span></div>
+            <div class="chat-text">Mike hurry up, Achane is RIGHT THERE</div>
+          </div>
+        </div>
+        <div class="chat-msg">
+          <div class="chat-ava" style="background:#F26D6D">T</div>
+          <div class="chat-content">
+            <div class="chat-sender">Tom R. <span class="chat-time">2:52</span></div>
+            <div class="chat-text">lmao 43 seconds left buddy</div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" placeholder="Say something..." />
+        <button class="chat-send">↑</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

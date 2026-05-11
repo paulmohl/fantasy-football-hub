@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade Evaluator — Fantasy Football Hub</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0B0E14; --surface:#141822; --raised:#1B2030; --border:#262C3A;
+    --accent:#3DA9FC; --success:#5CC8A9; --warning:#F2B66D; --danger:#F26D6D;
+    --text:#E8ECF1; --muted:#9AA3B2;
+  }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+  nav { background:var(--surface); border-bottom:1px solid var(--border); padding:0 24px; height:56px; display:flex; align-items:center; gap:0; }
+  .logo { font-weight:700; font-size:18px; letter-spacing:-0.3px; margin-right:32px; }
+  .logo span { color:var(--accent); }
+  .nav-links { display:flex; gap:4px; flex:1; }
+  .nav-link { padding:6px 14px; border-radius:6px; font-size:14px; color:var(--muted); cursor:pointer; font-weight:500; }
+  .nav-link.active { color:var(--accent); background:#1a2640; }
+  .avatar { width:32px; height:32px; background:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; color:#fff; }
+  main { flex:1; padding:24px; max-width:1100px; margin:0 auto; width:100%; }
+  .page-title { font-size:22px; font-weight:800; letter-spacing:-0.4px; margin-bottom:4px; }
+  .page-subtitle { color:var(--muted); font-size:14px; margin-bottom:24px; }
+  .trade-layout { display:grid; grid-template-columns:1fr 180px 1fr; gap:16px; margin-bottom:24px; }
+  .trade-side { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+  .trade-side-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .side-team { display:flex; align-items:center; gap:10px; }
+  .side-team-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#fff; flex-shrink:0; }
+  .side-team-name { font-size:15px; font-weight:700; }
+  .side-team-record { font-size:12px; color:var(--muted); margin-top:1px; }
+  .sends-label { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+  .sends-label strong { color:var(--warning); }
+  .player-card { display:flex; align-items:center; gap:10px; padding:12px 20px; border-bottom:1px solid var(--border); cursor:pointer; }
+  .player-card.removing { background:#2a1a1a; border-left:3px solid var(--danger); }
+  .pc-avatar { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:#fff; flex-shrink:0; }
+  .pc-info { flex:1; min-width:0; }
+  .pc-name { font-size:13px; font-weight:600; }
+  .pc-meta { font-size:11px; color:var(--muted); margin-top:1px; }
+  .pc-val { text-align:right; flex-shrink:0; }
+  .pc-val-num { font-size:15px; font-weight:800; font-family:'JetBrains Mono',monospace; }
+  .pc-val-label { font-size:10px; color:var(--muted); }
+  .total-row { padding:14px 20px; display:flex; justify-content:space-between; align-items:center; background:var(--raised); }
+  .total-label { font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+  .total-num { font-size:20px; font-weight:800; font-family:'JetBrains Mono',monospace; }
+  .add-player-row { padding:12px 20px; display:flex; align-items:center; gap:8px; border-top:1px solid var(--border); cursor:pointer; color:var(--muted); font-size:13px; }
+  .trade-center { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+  .swap-icon { width:48px; height:48px; background:var(--raised); border:1px solid var(--border); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; }
+  .verdict-badge { background:var(--surface); border:2px solid var(--success); border-radius:12px; padding:14px 16px; text-align:center; width:100%; }
+  .verdict-label { font-size:10px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; }
+  .verdict-text { font-size:14px; font-weight:800; color:var(--success); }
+  .verdict-detail { font-size:11px; color:var(--muted); margin-top:4px; }
+  .analyze-btn { background:var(--accent); color:#fff; border:none; border-radius:8px; padding:10px 16px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; width:100%; }
+  .propose-btn { background:var(--raised); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:8px 16px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; width:100%; }
+  .delta-section { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px 24px; margin-bottom:20px; }
+  .delta-title { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px; }
+  .delta-bar-wrap { position:relative; height:32px; background:var(--raised); border-radius:8px; overflow:hidden; margin-bottom:8px; }
+  .delta-fill-you { position:absolute; left:0; top:0; height:100%; background:var(--accent); border-radius:0 4px 4px 0; display:flex; align-items:center; padding-left:10px; }
+  .delta-fill-them { position:absolute; right:0; top:0; height:100%; background:#2a3550; border-radius:4px 0 0 4px; display:flex; align-items:center; justify-content:flex-end; padding-right:10px; }
+  .delta-fill-label { font-size:11px; font-weight:700; color:#fff; white-space:nowrap; }
+  .delta-center-line { position:absolute; left:50%; top:0; height:100%; width:1px; background:var(--border); }
+  .delta-labels { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
+  .delta-you-wins { color:var(--accent); font-weight:700; }
+  .analysis-section { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px 24px; }
+  .analysis-title { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  .ai-badge { background:#1a1a3a; border:1px solid #2a2a6a; border-radius:20px; padding:2px 8px; font-size:10px; color:#7878f0; font-weight:700; }
+  .analysis-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .analysis-card { background:var(--raised); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+  .ac-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .ac-icon { font-size:16px; }
+  .ac-label { font-size:12px; font-weight:700; }
+  .ac-body { font-size:12px; color:var(--muted); line-height:1.5; }
+  .ac-body strong { color:var(--text); }
+  .winner-tag { display:inline-flex; align-items:center; gap:4px; background:#1a3a1a; border:1px solid #2a5a2a; border-radius:4px; padding:2px 8px; font-size:11px; font-weight:700; color:var(--success); margin-top:8px; }
+  .loser-tag  { display:inline-flex; align-items:center; gap:4px; background:#2a2010; border:1px solid #4a3a10; border-radius:4px; padding:2px 8px; font-size:11px; font-weight:700; color:var(--warning); margin-top:8px; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">Fantasy<span>Hub</span></div>
+  <div class="nav-links">
+    <a class="nav-link">My Team</a>
+    <a class="nav-link">Draft Room</a>
+    <a class="nav-link active">Trade Finder</a>
+    <a class="nav-link">Standings</a>
+    <a class="nav-link">Players</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="avatar">P</div>
+  </div>
+</nav>
+
+<main>
+  <div class="page-title">Trade Evaluator</div>
+  <p class="page-subtitle">Build a trade, see who wins, and send it directly from here.</p>
+
+  <div class="trade-layout">
+    <div class="trade-side">
+      <div class="trade-side-header">
+        <div class="side-team">
+          <div class="side-team-icon" style="background:#3DA9FC">B</div>
+          <div>
+            <div class="side-team-name">Bazzanimals</div>
+            <div class="side-team-record">6-2 &middot; 2nd place</div>
+          </div>
+        </div>
+        <div class="sends-label">You send <strong>&#x2193;</strong></div>
+      </div>
+      <div class="player-card removing">
+        <div class="pc-avatar" style="background:#e31837">M</div>
+        <div class="pc-info">
+          <div class="pc-name">Patrick Mahomes</div>
+          <div class="pc-meta">QB &middot; KC &middot; 2026</div>
+        </div>
+        <div class="pc-val">
+          <div class="pc-val-num" style="color:var(--danger)">47.2</div>
+          <div class="pc-val-label">VALUE</div>
+        </div>
+      </div>
+      <div class="player-card removing">
+        <div class="pc-avatar" style="background:#004c54">J</div>
+        <div class="pc-info">
+          <div class="pc-name">James Cook</div>
+          <div class="pc-meta">RB &middot; BUF &middot; Week 10</div>
+        </div>
+        <div class="pc-val">
+          <div class="pc-val-num" style="color:var(--danger)">28.4</div>
+          <div class="pc-val-label">VALUE</div>
+        </div>
+      </div>
+      <div class="total-row">
+        <div class="total-label">Total Outgoing</div>
+        <div class="total-num" style="color:var(--danger)">75.6</div>
+      </div>
+      <div class="add-player-row">+ Add a player</div>
+    </div>
+
+    <div class="trade-center">
+      <div class="swap-icon">&#x21c4;</div>
+      <div class="verdict-badge">
+        <div class="verdict-label">AI Verdict</div>
+        <div class="verdict-text">You Win</div>
+        <div class="verdict-detail">+8.7 value advantage</div>
+      </div>
+      <button class="analyze-btn">Analyze Trade</button>
+      <button class="propose-btn">&#x1F4E4; Send Proposal</button>
+    </div>
+
+    <div class="trade-side">
+      <div class="trade-side-header">
+        <div class="side-team">
+          <div class="side-team-icon" style="background:#cc0000">R</div>
+          <div>
+            <div class="side-team-name">Roman Conquest</div>
+            <div class="side-team-record">4-4 &middot; 6th place</div>
+          </div>
+        </div>
+        <div class="sends-label">They send <strong>&#x2193;</strong></div>
+      </div>
+      <div class="player-card">
+        <div class="pc-avatar" style="background:#aa0000">C</div>
+        <div class="pc-info">
+          <div class="pc-name">Christian McCaffrey</div>
+          <div class="pc-meta">RB &middot; SF &middot; 2026</div>
+        </div>
+        <div class="pc-val">
+          <div class="pc-val-num" style="color:var(--success)">62.1</div>
+          <div class="pc-val-label">VALUE</div>
+        </div>
+      </div>
+      <div class="player-card">
+        <div class="pc-avatar" style="background:#97233f">B</div>
+        <div class="pc-info">
+          <div class="pc-name">Brian Robinson Jr.</div>
+          <div class="pc-meta">RB &middot; WSH &middot; Week 10</div>
+        </div>
+        <div class="pc-val">
+          <div class="pc-val-num" style="color:var(--success)">22.2</div>
+          <div class="pc-val-label">VALUE</div>
+        </div>
+      </div>
+      <div class="total-row">
+        <div class="total-label">Total Incoming</div>
+        <div class="total-num" style="color:var(--success)">84.3</div>
+      </div>
+      <div class="add-player-row">+ Add a player</div>
+    </div>
+  </div>
+
+  <div class="delta-section">
+    <div class="delta-title">Value Distribution</div>
+    <div class="delta-bar-wrap">
+      <div class="delta-fill-you" style="width:53%"><span class="delta-fill-label">84.3 &mdash; Bazzanimals</span></div>
+      <div class="delta-fill-them" style="width:44%"><span class="delta-fill-label">75.6 &mdash; Roman Conquest</span></div>
+      <div class="delta-center-line"></div>
+    </div>
+    <div class="delta-labels">
+      <span class="delta-you-wins">+8.7 in your favor</span>
+      <span>Fair trade threshold: &plusmn;5.0</span>
+    </div>
+  </div>
+
+  <div class="analysis-section">
+    <div class="analysis-title">
+      <span>AI Trade Analysis</span>
+      <span class="ai-badge">Claude 4</span>
+    </div>
+    <div class="analysis-grid">
+      <div class="analysis-card">
+        <div class="ac-header"><div class="ac-icon">&#x1F4C8;</div><div class="ac-label">Bazzanimals &mdash; You</div></div>
+        <div class="ac-body">
+          You're trading a <strong>QB1 and a solid RB2</strong> for an <strong>elite RB1 and a handcuff</strong>.
+          McCaffrey's dynasty value alone exceeds both pieces you're sending.
+          Your QB slot is thin, but T. Lawrence can cover it.
+          Net impact: <strong>+2 projected points/week</strong>.
+        </div>
+        <div class="winner-tag">&#x2713; Winner</div>
+      </div>
+      <div class="analysis-card">
+        <div class="ac-header"><div class="ac-icon">&#x1F4C9;</div><div class="ac-label">Roman Conquest</div></div>
+        <div class="ac-body">
+          Chuck is buying a <strong>QB upgrade</strong> (Mahomes over Stroud) and selling RB depth he can't use.
+          Cook + Mahomes fixes his QB weakness but he's giving up too much at RB.
+          His current 6th-place standing makes this a <strong>win-now gamble</strong> that likely won't move the needle.
+        </div>
+        <div class="loser-tag">&#x26A0; Overpays slightly</div>
+      </div>
+      <div class="analysis-card">
+        <div class="ac-header"><div class="ac-icon">&#x1F4C5;</div><div class="ac-label">Schedule Outlook</div></div>
+        <div class="ac-body">
+          McCaffrey's next 4 weeks: <strong>SEA, ARI, LAR, NYG</strong> &mdash; all weak run defenses.
+          Mahomes' next 4: <strong>LV, DEN, CLE, LAC</strong> &mdash; mixed but manageable.
+          Trade timing favors you. CMC is entering his easiest stretch of the season.
+        </div>
+      </div>
+      <div class="analysis-card">
+        <div class="ac-header"><div class="ac-icon">&#x1F3C6;</div><div class="ac-label">Playoff Impact</div></div>
+        <div class="ac-body">
+          You're currently <strong>2nd</strong> and a likely playoff team. Adding CMC gives you a true RB1 and increases projected playoff score by <strong>~4 pts/game</strong>.
+          The QB downgrade is real but acceptable given your overall depth.
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

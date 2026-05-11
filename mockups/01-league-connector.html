@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>League Connector — Fantasy Football Hub</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0B0E14;
+    --surface:  #141822;
+    --raised:   #1B2030;
+    --border:   #262C3A;
+    --accent:   #3DA9FC;
+    --success:  #5CC8A9;
+    --warning:  #F2B66D;
+    --danger:   #F26D6D;
+    --text:     #E8ECF1;
+    --muted:    #9AA3B2;
+    --font:     'Inter', sans-serif;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Nav */
+  nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-weight: 700; font-size: 18px; letter-spacing: -0.3px; }
+  .logo span { color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .avatar { width: 32px; height: 32px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; }
+
+  /* Main */
+  main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
+  .container { width: 100%; max-width: 760px; }
+
+  /* Progress */
+  .progress-bar { display: flex; align-items: center; gap: 0; margin-bottom: 40px; }
+  .step { display: flex; align-items: center; gap: 8px; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .step.done .step-num  { background: var(--success); color: #0B0E14; }
+  .step.active .step-num{ background: var(--accent); color: #fff; }
+  .step.idle .step-num  { background: var(--raised); color: var(--muted); border: 1px solid var(--border); }
+  .step-label { font-size: 13px; font-weight: 500; }
+  .step.active .step-label { color: var(--text); }
+  .step.idle .step-label  { color: var(--muted); }
+  .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 12px; }
+  .step-line.filled { background: var(--success); }
+
+  /* Card */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 40px; }
+  h2 { font-size: 24px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.3px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+
+  /* Platform grid */
+  .platform-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px; }
+  .platform-card { background: var(--raised); border: 2px solid var(--border); border-radius: 12px; padding: 24px 20px; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; }
+  .platform-card:hover { border-color: var(--accent); background: #1e2535; }
+  .platform-card.selected { border-color: var(--accent); background: #1a2640; }
+  .platform-card.selected::after { content: '✓'; position: absolute; top: 10px; right: 12px; color: var(--accent); font-size: 14px; font-weight: 700; }
+  .platform-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .yahoo-icon  { background: #4b0082; }
+  .sleeper-icon{ background: #1a1a2e; border: 1px solid #3a3a5e; }
+  .espn-icon   { background: #cc0000; }
+  .nfl-icon    { background: #013369; }
+  .platform-name { font-size: 16px; font-weight: 600; }
+  .platform-auth { font-size: 12px; color: var(--muted); background: var(--bg); padding: 3px 8px; border-radius: 20px; }
+
+  /* Info note */
+  .info-note { display: flex; gap: 10px; background: #141e30; border: 1px solid #1e3a5f; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #6ea8d4; margin-bottom: 32px; }
+  .info-note .icon { flex-shrink: 0; margin-top: 1px; }
+
+  /* Actions */
+  .actions { display: flex; justify-content: flex-end; gap: 12px; }
+  .btn { padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; font-family: var(--font); transition: all 0.15s; }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #5ab8fd; }
+  .btn-primary:disabled { background: #2a3a50; color: var(--muted); cursor: not-allowed; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Fantasy<span>Hub</span></div>
+  <div class="nav-right">
+    <div class="avatar">P</div>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+
+    <div class="progress-bar">
+      <div class="step done">
+        <div class="step-num">✓</div>
+        <div class="step-label">Create account</div>
+      </div>
+      <div class="step-line filled"></div>
+      <div class="step active">
+        <div class="step-num">2</div>
+        <div class="step-label">Connect league</div>
+      </div>
+      <div class="step-line"></div>
+      <div class="step idle">
+        <div class="step-num">3</div>
+        <div class="step-label">Confirm settings</div>
+      </div>
+      <div class="step-line"></div>
+      <div class="step idle">
+        <div class="step-num">4</div>
+        <div class="step-label">Import roster</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Pick your platform</h2>
+      <p class="subtitle">Select the platform your league is hosted on. You can connect multiple leagues from different platforms later.</p>
+
+      <div class="platform-grid">
+        <div class="platform-card selected" onclick="select(this)">
+          <div class="platform-icon yahoo-icon">🏈</div>
+          <div class="platform-name">Yahoo</div>
+          <div class="platform-auth">OAuth 2.0</div>
+        </div>
+        <div class="platform-card" onclick="select(this)">
+          <div class="platform-icon sleeper-icon">💤</div>
+          <div class="platform-name">Sleeper</div>
+          <div class="platform-auth">Username only</div>
+        </div>
+        <div class="platform-card" onclick="select(this)">
+          <div class="platform-icon espn-icon">📺</div>
+          <div class="platform-name">ESPN</div>
+          <div class="platform-auth">Cookie auth</div>
+        </div>
+        <div class="platform-card" onclick="select(this)">
+          <div class="platform-icon nfl-icon">🏟</div>
+          <div class="platform-name">NFL.com</div>
+          <div class="platform-auth">OAuth 2.0 · V1</div>
+        </div>
+      </div>
+
+      <div class="info-note">
+        <span class="icon">ℹ️</span>
+        <span>Yahoo requires a one-time authorization. We only request read access — we never post or modify your league on your behalf.</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-ghost">Back</button>
+        <button class="btn btn-primary">Connect with Yahoo →</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  function select(el) {
+    document.querySelectorAll('.platform-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    const name = el.querySelector('.platform-name').textContent;
+    document.querySelector('.btn-primary').textContent = `Connect with ${name} →`;
+  }
+</script>
+</body>
+</html>
