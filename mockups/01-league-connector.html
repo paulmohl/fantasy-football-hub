@@ -5,164 +5,217 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>League Connector — Fantasy Football Hub</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg:       #0B0E14;
-    --surface:  #141822;
-    --raised:   #1B2030;
-    --border:   #262C3A;
-    --accent:   #3DA9FC;
-    --success:  #5CC8A9;
-    --warning:  #F2B66D;
-    --danger:   #F26D6D;
-    --text:     #E8ECF1;
-    --muted:    #9AA3B2;
-    --font:     'Inter', sans-serif;
+    --bg:#0B0E14; --surface:#141822; --raised:#1B2030; --border:#262C3A;
+    --accent:#3DA9FC; --success:#5CC8A9; --warning:#F2B66D; --danger:#F26D6D;
+    --text:#E8ECF1; --muted:#9AA3B2;
   }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
 
-  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; flex-direction: column; }
+  /* Top bar — minimal during onboarding */
+  .topbar { height:52px; display:flex; align-items:center; justify-content:center; flex-shrink:0; border-bottom:1px solid var(--border); }
+  .logo { font-weight:800; font-size:17px; letter-spacing:-0.4px; }
+  .logo span { color:var(--accent); }
+  .skip { position:absolute; right:20px; font-size:13px; color:var(--muted); cursor:pointer; }
+  .skip:hover { color:var(--text); }
 
-  /* Nav */
-  nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 32px; height: 56px; display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-weight: 700; font-size: 18px; letter-spacing: -0.3px; }
-  .logo span { color: var(--accent); }
-  .nav-right { display: flex; align-items: center; gap: 16px; }
-  .avatar { width: 32px; height: 32px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; }
+  /* Chat area */
+  .chat-area { flex:1; overflow-y:auto; padding:24px 0; display:flex; flex-direction:column; gap:0; max-width:600px; margin:0 auto; width:100%; }
 
-  /* Main */
-  main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
-  .container { width: 100%; max-width: 760px; }
+  /* Messages */
+  .msg-row { display:flex; gap:10px; padding:6px 20px; align-items:flex-end; }
+  .msg-row.app { justify-content:flex-start; }
+  .msg-row.user { justify-content:flex-end; }
 
-  /* Progress */
-  .progress-bar { display: flex; align-items: center; gap: 0; margin-bottom: 40px; }
-  .step { display: flex; align-items: center; gap: 8px; }
-  .step-num { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
-  .step.done .step-num  { background: var(--success); color: #0B0E14; }
-  .step.active .step-num{ background: var(--accent); color: #fff; }
-  .step.idle .step-num  { background: var(--raised); color: var(--muted); border: 1px solid var(--border); }
-  .step-label { font-size: 13px; font-weight: 500; }
-  .step.active .step-label { color: var(--text); }
-  .step.idle .step-label  { color: var(--muted); }
-  .step-line { flex: 1; height: 1px; background: var(--border); margin: 0 12px; }
-  .step-line.filled { background: var(--success); }
+  .app-ava { width:30px; height:30px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#fff; flex-shrink:0; margin-bottom:2px; }
 
-  /* Card */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 40px; }
-  h2 { font-size: 24px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.3px; }
-  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+  .bubble { max-width:78%; padding:12px 16px; border-radius:18px; font-size:14px; line-height:1.5; }
+  .bubble.app  { background:var(--surface); border:1px solid var(--border); border-bottom-left-radius:4px; color:var(--text); }
+  .bubble.user { background:var(--accent); border-bottom-right-radius:4px; color:#fff; }
 
-  /* Platform grid */
-  .platform-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px; }
-  .platform-card { background: var(--raised); border: 2px solid var(--border); border-radius: 12px; padding: 24px 20px; cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; }
-  .platform-card:hover { border-color: var(--accent); background: #1e2535; }
-  .platform-card.selected { border-color: var(--accent); background: #1a2640; }
-  .platform-card.selected::after { content: '✓'; position: absolute; top: 10px; right: 12px; color: var(--accent); font-size: 14px; font-weight: 700; }
-  .platform-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-  .yahoo-icon  { background: #4b0082; }
-  .sleeper-icon{ background: #1a1a2e; border: 1px solid #3a3a5e; }
-  .espn-icon   { background: #cc0000; }
-  .nfl-icon    { background: #013369; }
-  .platform-name { font-size: 16px; font-weight: 600; }
-  .platform-auth { font-size: 12px; color: var(--muted); background: var(--bg); padding: 3px 8px; border-radius: 20px; }
+  /* Inline option buttons inside a bubble */
+  .option-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .opt-btn { background:var(--raised); border:1px solid var(--border); color:var(--text); padding:7px 14px; border-radius:20px; font-size:13px; font-weight:500; cursor:pointer; font-family:'Inter',sans-serif; transition:all 0.15s; }
+  .opt-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .opt-btn.selected { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .opt-btn.disabled { opacity:0.4; cursor:default; pointer-events:none; }
 
-  /* Info note */
-  .info-note { display: flex; gap: 10px; background: #141e30; border: 1px solid #1e3a5f; border-radius: 8px; padding: 12px 16px; font-size: 13px; color: #6ea8d4; margin-bottom: 32px; }
-  .info-note .icon { flex-shrink: 0; margin-top: 1px; }
+  /* Typing indicator */
+  .typing { display:flex; align-items:center; gap:4px; padding:10px 14px; }
+  .dot { width:7px; height:7px; border-radius:50%; background:var(--muted); animation:bounce 1.2s infinite; }
+  .dot:nth-child(2) { animation-delay:0.2s; }
+  .dot:nth-child(3) { animation-delay:0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
 
-  /* Actions */
-  .actions { display: flex; justify-content: flex-end; gap: 12px; }
-  .btn { padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; font-family: var(--font); transition: all 0.15s; }
-  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: #5ab8fd; }
-  .btn-primary:disabled { background: #2a3a50; color: var(--muted); cursor: not-allowed; }
+  /* League checklist */
+  .league-list { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+  .league-item { display:flex; align-items:center; gap:10px; background:var(--raised); border:1px solid var(--border); border-radius:10px; padding:10px 14px; cursor:pointer; transition:border-color 0.15s; }
+  .league-item:hover { border-color:#3a4560; }
+  .league-item.checked { border-color:var(--accent); background:#0e1a2e; }
+  .league-check { width:18px; height:18px; border-radius:4px; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:11px; font-weight:700; }
+  .league-item.checked .league-check { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .league-info { flex:1; }
+  .league-name { font-size:13px; font-weight:600; }
+  .league-meta { font-size:11px; color:var(--muted); margin-top:1px; }
+  .league-badge { font-size:10px; font-weight:700; padding:1px 7px; border-radius:3px; }
+  .badge-dynasty  { background:#1a1a3a; color:#B39DDB; }
+  .badge-redraft  { background:#1a2a1a; color:var(--success); }
+  .badge-keeper   { background:#2a2010; color:var(--warning); }
+
+  /* Input row */
+  .input-row { flex-shrink:0; border-top:1px solid var(--border); background:var(--surface); padding:12px 20px; display:flex; align-items:center; gap:10px; max-width:600px; margin:0 auto; width:100%; }
+  .chat-input { flex:1; background:var(--raised); border:1px solid var(--border); border-radius:22px; padding:10px 18px; font-size:14px; color:var(--text); font-family:'Inter',sans-serif; outline:none; }
+  .chat-input::placeholder { color:var(--muted); }
+  .chat-input:focus { border-color:var(--accent); }
+  .send-btn { width:40px; height:40px; border-radius:50%; background:var(--accent); border:none; color:#fff; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .send-btn:hover { background:#5ab8fd; }
+
+  /* Bottom nav */
+  .bottom-nav { background:var(--surface); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:8px 0 12px; flex-shrink:0; }
+  .nav-tab { display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 16px; opacity:0.35; pointer-events:none; }
+  .nav-tab.active { opacity:1; }
+  .nav-icon { font-size:20px; }
+  .nav-label { font-size:10px; font-weight:600; color:var(--muted); }
+  .nav-tab.active .nav-label { color:var(--accent); }
 </style>
 </head>
 <body>
 
-<nav>
+<div class="topbar" style="position:relative;">
   <div class="logo">Fantasy<span>Hub</span></div>
-  <div class="nav-right">
-    <div class="avatar">P</div>
-  </div>
-</nav>
+  <div class="skip">Skip setup</div>
+</div>
 
-<main>
-  <div class="container">
+<div class="chat-area" id="chatArea">
 
-    <div class="progress-bar">
-      <div class="step done">
-        <div class="step-num">✓</div>
-        <div class="step-label">Create account</div>
-      </div>
-      <div class="step-line filled"></div>
-      <div class="step active">
-        <div class="step-num">2</div>
-        <div class="step-label">Connect league</div>
-      </div>
-      <div class="step-line"></div>
-      <div class="step idle">
-        <div class="step-num">3</div>
-        <div class="step-label">Confirm settings</div>
-      </div>
-      <div class="step-line"></div>
-      <div class="step idle">
-        <div class="step-num">4</div>
-        <div class="step-label">Import roster</div>
+  <div class="msg-row app">
+    <div class="app-ava">F</div>
+    <div class="bubble app">
+      Hey! Welcome to FantasyHub. Which platform is your league on?
+      <div class="option-row">
+        <button class="opt-btn selected" onclick="pickPlatform(this,'Yahoo')">Yahoo</button>
+        <button class="opt-btn" onclick="pickPlatform(this,'Sleeper')">Sleeper</button>
+        <button class="opt-btn" onclick="pickPlatform(this,'ESPN')">ESPN</button>
+        <button class="opt-btn" onclick="pickPlatform(this,'NFL.com')">NFL.com</button>
+        <button class="opt-btn" onclick="pickPlatform(this,'Other')">Other…</button>
       </div>
     </div>
+  </div>
 
-    <div class="card">
-      <h2>Pick your platform</h2>
-      <p class="subtitle">Select the platform your league is hosted on. You can connect multiple leagues from different platforms later.</p>
+  <div class="msg-row user">
+    <div class="bubble user">Yahoo</div>
+  </div>
 
-      <div class="platform-grid">
-        <div class="platform-card selected" onclick="select(this)">
-          <div class="platform-icon yahoo-icon">🏈</div>
-          <div class="platform-name">Yahoo</div>
-          <div class="platform-auth">OAuth 2.0</div>
-        </div>
-        <div class="platform-card" onclick="select(this)">
-          <div class="platform-icon sleeper-icon">💤</div>
-          <div class="platform-name">Sleeper</div>
-          <div class="platform-auth">Username only</div>
-        </div>
-        <div class="platform-card" onclick="select(this)">
-          <div class="platform-icon espn-icon">📺</div>
-          <div class="platform-name">ESPN</div>
-          <div class="platform-auth">Cookie auth</div>
-        </div>
-        <div class="platform-card" onclick="select(this)">
-          <div class="platform-icon nfl-icon">🏟</div>
-          <div class="platform-name">NFL.com</div>
-          <div class="platform-auth">OAuth 2.0 · V1</div>
-        </div>
-      </div>
-
-      <div class="info-note">
-        <span class="icon">ℹ️</span>
-        <span>Yahoo requires a one-time authorization. We only request read access — we never post or modify your league on your behalf.</span>
-      </div>
-
-      <div class="actions">
-        <button class="btn btn-ghost">Back</button>
-        <button class="btn btn-primary">Connect with Yahoo →</button>
+  <div class="msg-row app">
+    <div class="app-ava">F</div>
+    <div class="bubble app">
+      Got it. I'll redirect you to Yahoo to authorize read access — we never post or change anything in your league.
+      <div class="option-row" style="margin-top:12px">
+        <button class="opt-btn selected" style="background:var(--accent);border-color:var(--accent);color:#fff" onclick="triggerOAuth()">Connect with Yahoo →</button>
       </div>
     </div>
-
   </div>
-</main>
+
+  <div class="msg-row user">
+    <div class="bubble user">✓ Authorized</div>
+  </div>
+
+  <div class="msg-row app" id="leagueMsg">
+    <div class="app-ava">F</div>
+    <div class="bubble app">
+      Found <strong>3 leagues</strong> on your Yahoo account. Pick the ones you want to import.
+      <div class="league-list">
+        <div class="league-item checked" onclick="toggleLeague(this)">
+          <div class="league-check">✓</div>
+          <div class="league-info">
+            <div class="league-name">Dynasty Kings 2026</div>
+            <div class="league-meta">12 teams · Half-PPR · SuperFlex · IDP · <span class="league-badge badge-dynasty">Dynasty</span></div>
+          </div>
+        </div>
+        <div class="league-item checked" onclick="toggleLeague(this)">
+          <div class="league-check">✓</div>
+          <div class="league-info">
+            <div class="league-name">Mom's Money League</div>
+            <div class="league-meta">10 teams · PPR · Standard · <span class="league-badge badge-redraft">Redraft</span></div>
+          </div>
+        </div>
+        <div class="league-item" onclick="toggleLeague(this)">
+          <div class="league-check"></div>
+          <div class="league-info">
+            <div class="league-name">Work Survival Pool</div>
+            <div class="league-meta">Survivor pool — not a fantasy league</div>
+          </div>
+        </div>
+      </div>
+      <div class="option-row" style="margin-top:14px">
+        <button class="opt-btn selected" style="background:var(--accent);border-color:var(--accent);color:#fff" onclick="importLeagues()">Import 2 leagues →</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width:600px;margin:0 auto;width:100%;">
+  <div class="input-row">
+    <input class="chat-input" placeholder="Type a question or paste a league ID…" />
+    <button class="send-btn">↑</button>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <div class="nav-tab active">
+    <div class="nav-icon">🏠</div>
+    <div class="nav-label" style="color:var(--accent)">Setup</div>
+  </div>
+  <div class="nav-tab">
+    <div class="nav-icon">👤</div>
+    <div class="nav-label">My Team</div>
+  </div>
+  <div class="nav-tab">
+    <div class="nav-icon">🏈</div>
+    <div class="nav-label">Draft</div>
+  </div>
+  <div class="nav-tab">
+    <div class="nav-icon">🔄</div>
+    <div class="nav-label">Trades</div>
+  </div>
+  <div class="nav-tab">
+    <div class="nav-icon">⋯</div>
+    <div class="nav-label">More</div>
+  </div>
+</div>
 
 <script>
-  function select(el) {
-    document.querySelectorAll('.platform-card').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    const name = el.querySelector('.platform-name').textContent;
-    document.querySelector('.btn-primary').textContent = `Connect with ${name} →`;
+  function pickPlatform(btn, platform) {
+    btn.closest('.option-row').querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+  function triggerOAuth() { /* would redirect in production */ }
+  function toggleLeague(item) {
+    item.classList.toggle('checked');
+    const check = item.querySelector('.league-check');
+    check.textContent = item.classList.contains('checked') ? '✓' : '';
+    const count = document.querySelectorAll('.league-item.checked').length;
+    const btn = document.querySelector('#leagueMsg .opt-btn');
+    btn.textContent = count > 0 ? `Import ${count} league${count > 1 ? 's' : ''} →` : 'Select at least one';
+    btn.classList.toggle('selected', count > 0);
+  }
+  function importLeagues() {
+    const chat = document.getElementById('chatArea');
+    const row = document.createElement('div');
+    row.className = 'msg-row user';
+    row.innerHTML = '<div class="bubble user">Import Dynasty Kings + Mom\'s Money League</div>';
+    chat.appendChild(row);
+    setTimeout(() => {
+      const appRow = document.createElement('div');
+      appRow.className = 'msg-row app';
+      appRow.innerHTML = `<div class="app-ava">F</div><div class="bubble app">Done! Both leagues are imported. Pulling your rosters now — this takes about 10 seconds.<br><br>You're all set. Head to <strong>My Team</strong> to see your lineup.</div>`;
+      chat.appendChild(appRow);
+      chat.scrollTop = chat.scrollHeight;
+    }, 600);
+    chat.scrollTop = chat.scrollHeight;
   }
 </script>
 </body>

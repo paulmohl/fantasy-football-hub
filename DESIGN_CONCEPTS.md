@@ -4,7 +4,21 @@ This document presents three distinct UI directions for each of the four primary
 
 All wireframes are ASCII. Imagery and final visual treatment will be decided in a later pass; the goal here is **layout, density, and information hierarchy**, not pixel-perfect aesthetics.
 
-**How to vote:** For each screen, three options are presented (A, B, C). Open a `design-vote` issue per screen with the three options pasted in. React on the option you prefer. Soft vetoes welcome — leave a comment.
+## Design Decisions (Locked)
+
+| Screen | Chosen | Direction |
+|--------|--------|-----------|
+| Screen 1 — League Connector | **C** | Conversational onboarding chat |
+| Screen 2 — Team Manager | **B** | Card-based, scannable vertical stack |
+| Screen 3 — Draft Room | **B** | Bloomberg Terminal (high-density data) |
+| Screen 4 — Trade Evaluator | **C** | Decision-tree impact analysis |
+| Navigation | **C** | Bottom tab bar (mobile) + top bar (desktop) |
+
+These decisions are reflected in the HTML mockups in `mockups/`. Do not re-open voting on locked decisions — open a new issue if you want to propose a revision.
+
+---
+
+**Historical context:** For each screen, three options were presented (A, B, C).
 
 **Shared design tokens (proposed):**
 
