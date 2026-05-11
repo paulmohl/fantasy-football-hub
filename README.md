@@ -6,6 +6,19 @@ This repository is the **planning workspace**. No production code has been writt
 
 ---
 
+## Live Mockups
+
+**View interactive screen designs:** https://paulmohl.github.io/fantasy-football-hub/mockups/
+
+| Screen | Direct link |
+|--------|-------------|
+| 01 — League Connector | https://paulmohl.github.io/fantasy-football-hub/mockups/01-league-connector.html |
+| 02 — Team Manager | https://paulmohl.github.io/fantasy-football-hub/mockups/02-team-manager.html |
+| 03 — Live Draft Room | https://paulmohl.github.io/fantasy-football-hub/mockups/03-draft-room.html |
+| 04 — Trade Evaluator | https://paulmohl.github.io/fantasy-football-hub/mockups/04-trade-evaluator.html |
+
+---
+
 ## Status
 
 **Phase:** Planning and design voting
