@@ -1,6 +1,10 @@
+import secrets
 from datetime import UTC, datetime, timedelta
 
-from jose import JWTError, jwt
+import jwt
+from fastapi import Response
+from itsdangerous import URLSafeTimedSerializer
+from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 from passlib.context import CryptContext
 
 from app.core.config import settings
@@ -29,5 +33,34 @@ def decode_token(token: str) -> str | None:
     try:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
         return payload.get("sub")
-    except JWTError:
+    except (ExpiredSignatureError, InvalidTokenError):
         return None
+
+
+def create_email_token(email: str, salt: str = "email-verify") -> str:
+    s = URLSafeTimedSerializer(settings.app_secret_key)
+    return s.dumps(email, salt=salt)
+
+
+def verify_email_token(token: str, salt: str = "email-verify", max_age: int = 86400) -> str | None:
+    s = URLSafeTimedSerializer(settings.app_secret_key)
+    try:
+        return s.loads(token, salt=salt, max_age=max_age)
+    except Exception:
+        return None
+
+
+def create_refresh_token() -> str:
+    return secrets.token_urlsafe(48)
+
+
+def set_refresh_cookie(response: Response, refresh_token: str) -> None:
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=settings.is_production,
+        samesite="lax",
+        max_age=60 * 60 * 24 * 30,
+        path="/api/v1/auth/refresh",
+    )
