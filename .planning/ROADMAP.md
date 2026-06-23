@@ -44,8 +44,20 @@ This roadmap delivers a serious multi-platform fantasy football companion in nin
   4. Two users who import the same Sleeper league see the same league data but only their own team highlighted
   5. A user can manually refresh league data, disconnect a league (with confirmation), and re-connect as a fresh import
   6. Attempting to access another user's league returns a 404; the connections list shows only the authenticated user's own leagues
-**Plans**: TBD
+**Plans**: 10 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 01-01-PLAN.md — Dependencies + docker-compose + PyJWT migration + config extension
+- [ ] 01-02-PLAN.md — SQLAlchemy models (User, Session, League, LeagueMember, Team, Roster, AuditLog) + Alembic migration
+- [ ] 01-03-PLAN.md — Redis cache helpers (CacheKey, CacheTTL) + FastAPI deps (get_current_user, get_league_for_user) + pytest test infrastructure
+- [ ] 01-04-PLAN.md — Email/password auth endpoints (/auth/register, /login, /logout, /refresh, /verify-email, /forgot-password, /reset-password) + /users/me
+- [ ] 01-05-PLAN.md — Google OAuth endpoints (/auth/google, /auth/google/callback) using authlib
+- [ ] 01-06-PLAN.md — SleeperClient HTTP wrapper + league_service (import_league, refresh_league, classify_draft)
+- [ ] 01-07-PLAN.md — Sleeper API proxy routes (/sleeper/lookup, /sleeper/import) + league management routes + arq purge worker + LC test suite
+- [ ] 01-08-PLAN.md — Frontend auth foundation: api.ts refresh interceptor, auth store hasLeagues, RequireLeague guard, disabled nav tabs
+- [ ] 01-09-PLAN.md — UI component primitives (Button, Input, ChatBubble, TypingIndicator, OptionPill, Toast) + complete LoginPage.tsx
+- [ ] 01-10-PLAN.md — ConnectPage.tsx dual-mode (5-step onboarding + My Connections) + supporting components
 
 ### Phase 2: Team Manager Core
 **Goal**: Once a league is connected, users can view lineup recommendations with reasoning, browse the waiver wire, and inspect player details — read-only, no writes to host yet.
@@ -151,7 +163,7 @@ This roadmap delivers a serious multi-platform fantasy football companion in nin
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 0. Project Setup | -/- | Complete | 2026-06-22 |
-| 1. League Connector MVP | 0/TBD | In progress | - |
+| 1. League Connector MVP | 0/10 | In progress | - |
 | 2. Team Manager Core | 0/TBD | Not started | - |
 | 3. Multi-Platform Connectors | 0/TBD | Not started | - |
 | 4. Live Draft Room (Snake) | 0/TBD | Not started | - |
