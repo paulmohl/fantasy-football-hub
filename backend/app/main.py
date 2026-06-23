@@ -47,6 +47,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from starlette.middleware.sessions import SessionMiddleware  # noqa: E402
+app.add_middleware(SessionMiddleware, secret_key=settings.app_secret_key)
+
 app.include_router(v1_router)
 
 

@@ -29,9 +29,20 @@ def event_loop():
     loop.close()
 
 
+def _patch_jsonb_for_sqlite(metadata) -> None:
+    """Replace PostgreSQL JSONB with JSON so SQLite in-memory tests can create tables."""
+    from sqlalchemy import JSON
+    from sqlalchemy.dialects.postgresql import JSONB
+    for table in metadata.tables.values():
+        for col in table.columns:
+            if isinstance(col.type, JSONB):
+                col.type = JSON()
+
+
 @pytest_asyncio.fixture(scope="function")
 async def test_engine():
     engine = create_async_engine(TEST_DB_URL, echo=False)
+    _patch_jsonb_for_sqlite(Base.metadata)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield engine
