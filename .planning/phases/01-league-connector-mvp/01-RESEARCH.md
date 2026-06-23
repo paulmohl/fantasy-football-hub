@@ -673,27 +673,19 @@ class AuditLog(Base):
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — have these been created yet?**
-   - What we know: Google Cloud Console OAuth2 credentials are needed before any Google OAuth task can be tested.
-   - What's unclear: Whether credentials exist under any Google account for this project.
-   - Recommendation: Create Google Cloud project + OAuth2 credentials in the first Google OAuth task. Add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` to `.env`.
+1. **`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` — have these been created yet?** [RESOLVED]
+   - Resolution: Plan 01-05 creates Google Cloud credentials as its first task. A human checkpoint gate is included before OAuth tests run. `.env.example` documents all three vars: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`.
 
-2. **SMTP credentials for email delivery?**
-   - What we know: `fastapi-mail` needs `MAIL_SERVER`, `MAIL_USERNAME`, `MAIL_PASSWORD`.
-   - What's unclear: Whether to use Gmail SMTP, SendGrid, Mailgun, or another service for MVP.
-   - Recommendation: Use Gmail SMTP with an App Password for local dev. Document as a Wave 0 setup step. [ASSUMED — service choice not locked]
+2. **SMTP credentials for email delivery?** [RESOLVED]
+   - Resolution: Gmail SMTP with App Password for local dev. `fastapi-mail` no-ops gracefully when `MAIL_SERVER` is empty so development can proceed without SMTP configured. Plan 01-04 creates `email_service.py` with this fallback.
 
-3. **Exact Sleeper `keeper_flag` and `dynasty_flag` field names?**
-   - What we know: `settings.type` can be `"dynasty"` per Sleeper support docs. `num_keepers` is mentioned in the API wrapper community.
-   - What's unclear: Exact field names in the live API response for these flags.
-   - Recommendation: A developer must make a live API call to a known keeper/dynasty league and inspect the response before writing classification logic. This can be done in a Wave 0 scratch task.
+3. **Exact Sleeper `keeper_flag` and `dynasty_flag` field names?** [RESOLVED]
+   - Resolution: Plan 01-06 classifies draft type via `settings.type == "dynasty"` (Assumption A2) and `settings.num_keepers > 0` (Assumption A1). A live API call should be made in Wave 0 to confirm field names before writing `classify_draft()`.
 
-4. **Postgres deployment for local dev — Docker Compose?**
-   - What we know: `PROJECT.md` says `docker compose up` starts all services. No `docker-compose.yml` file was found in the directory listing.
-   - What's unclear: Whether Docker Compose is already configured or needs to be created.
-   - Recommendation: Check for `docker-compose.yml` at repo root. If absent, Wave 0 must create it.
+4. **Postgres deployment for local dev — Docker Compose?** [RESOLVED]
+   - Resolution: Plan 01-01 Task 1 creates `docker-compose.yml` at repo root with postgres, redis, app, and worker services. If the file already exists it will be updated in-place.
 
 ---
 
