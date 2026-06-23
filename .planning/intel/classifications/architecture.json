@@ -1,0 +1,36 @@
+{
+  "source_path": "/c/Users/paul_/git/fantasy-football-hub/ARCHITECTURE.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Architecture",
+  "summary": "Technical architecture specification covering stack decisions, data model, caching strategy, real-time design, auth, and hosting for Fantasy Football Hub.",
+  "scope": [
+    "FastAPI",
+    "React",
+    "PostgreSQL",
+    "Redis",
+    "Socket.IO",
+    "Tailwind CSS",
+    "Daily.co",
+    "arq",
+    "JWT auth",
+    "oauth_credentials",
+    "leagues",
+    "drafts",
+    "picks",
+    "trades",
+    "players",
+    "projections",
+    "rosters",
+    "caching",
+    "real-time fan-out",
+    "Digital Ocean"
+  ],
+  "cross_refs": [
+    "/db/schema.sql"
+  ],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

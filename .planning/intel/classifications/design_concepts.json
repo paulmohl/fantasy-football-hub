@@ -1,0 +1,27 @@
+{
+  "source_path": "/c/Users/paul_/git/fantasy-football-hub/DESIGN_CONCEPTS.md",
+  "type": "ADR",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Design Concepts",
+  "summary": "Presents three UI direction options for each of four primary screens, with locked decisions recorded for layout, navigation, and interaction patterns.",
+  "scope": [
+    "League Connector",
+    "Team Manager Dashboard",
+    "Live Draft Room",
+    "Trade Evaluator",
+    "Navigation",
+    "Design tokens",
+    "Empty states",
+    "Loading states",
+    "Toasts and alerts",
+    "Iconography",
+    "Accessibility"
+  ],
+  "cross_refs": [
+    "mockups/"
+  ],
+  "locked": true,
+  "precedence": null,
+  "notes": ""
+}

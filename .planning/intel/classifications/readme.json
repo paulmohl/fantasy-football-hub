@@ -1,0 +1,31 @@
+{
+  "source_path": "/c/Users/paul_/git/fantasy-football-hub/README.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Fantasy Football Hub",
+  "summary": "Project overview for a fantasy football platform covering scope, repository layout, contributing workflow, quick stack summary, and guiding principles.",
+  "scope": [
+    "Fantasy Football Hub",
+    "League Connector",
+    "Team Manager",
+    "Live Draft Room",
+    "Trade Evaluator",
+    "planning workspace",
+    "repository layout",
+    "voting protocol"
+  ],
+  "cross_refs": [
+    "USER_STORIES.md",
+    "ARCHITECTURE.md",
+    "DESIGN_CONCEPTS.md",
+    "PHASES.md",
+    "mockups/01-league-connector.html",
+    "mockups/02-team-manager.html",
+    "mockups/03-draft-room.html",
+    "mockups/04-trade-evaluator.html"
+  ],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

@@ -1,0 +1,31 @@
+{
+  "source_path": "/c/Users/paul_/git/fantasy-football-hub/USER_STORIES.md",
+  "type": "PRD",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "User Stories",
+  "summary": "Gherkin-format user stories for all four product epics: League Connector, Team Manager, Live Draft Room, and Trade Evaluator.",
+  "scope": [
+    "League Connector",
+    "Team Manager",
+    "Live Draft Room",
+    "Trade Finder & Evaluator",
+    "Authentication",
+    "Notifications",
+    "Mobile / Responsive",
+    "Data Integrity",
+    "Yahoo",
+    "Sleeper",
+    "ESPN",
+    "FAAB",
+    "WebRTC",
+    "Auction Draft",
+    "Keeper / Dynasty"
+  ],
+  "cross_refs": [
+    "PHASES.md"
+  ],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}

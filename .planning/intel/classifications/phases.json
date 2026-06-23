@@ -1,0 +1,36 @@
+{
+  "source_path": "/c/Users/paul_/git/fantasy-football-hub/PHASES.md",
+  "type": "PRD",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Phases and Work Breakdown",
+  "summary": "Defines the full build roadmap across 10 phases from project setup through V2 differentiation, with effort estimates, release tiers, exit criteria, and MVP scope boundaries.",
+  "scope": [
+    "MVP",
+    "V1",
+    "V2",
+    "Phase 0 project setup",
+    "Phase 1 League Connector",
+    "Phase 2 Team Manager",
+    "Phase 3 Multi-Platform Connectors",
+    "Phase 4 Live Draft Room",
+    "Phase 5 Auction Draft",
+    "Phase 6 Video and Audio",
+    "Phase 7 Trade Evaluator",
+    "Phase 8 Polish and Mobile",
+    "Phase 9 V2 Differentiation",
+    "Sleeper",
+    "Yahoo",
+    "ESPN",
+    "Socket.IO",
+    "Redis",
+    "Daily.co"
+  ],
+  "cross_refs": [
+    "ARCHITECTURE.md",
+    "DESIGN_CONCEPTS.md"
+  ],
+  "locked": false,
+  "precedence": null,
+  "notes": ""
+}
