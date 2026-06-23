@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5173"
 
     # Database
-    database_url: str = "postgresql+psycopg://ffhub:ffhub@localhost:5432/ffhub"
+    database_url: str = "postgresql+asyncpg://ffhub:ffhub@localhost:5432/ffhub"
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"
