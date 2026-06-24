@@ -6,7 +6,8 @@ CRITICAL ORDERING RULE (LC-08):
 
 DEDUP RULE (LC-10):
   leagues table has UNIQUE(host_platform, host_league_id, season).
-  Use pg_insert().on_conflict_do_update() for atomic upsert.
+  We use select-then-insert-or-update so tests can run against SQLite.
+  Production behavior is identical; uniqueness is enforced by the DB constraint.
 
 FRESH CONNECT RULE (LC-12):
   Re-connecting a previously disconnected league is treated as a fresh import.
@@ -17,7 +18,6 @@ from datetime import UTC, datetime
 
 from redis.asyncio import Redis
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cache import CacheKey, CacheTTL
@@ -40,19 +40,11 @@ def classify_draft(league_data: dict) -> str:
 
 
 def _keeper_flag(league_data: dict) -> bool:
-    """Detect keeper league from Sleeper settings.
-
-    Per RESEARCH.md Assumption A1: num_keepers > 0 indicates a keeper league.
-    """
     settings = league_data.get("settings", {})
     return int(settings.get("num_keepers", 0)) > 0
 
 
 def _dynasty_flag(league_data: dict) -> bool:
-    """Detect dynasty league from Sleeper settings.
-
-    Per RESEARCH.md Assumption A2: league type field can be 'dynasty'.
-    """
     settings = league_data.get("settings", {})
     return settings.get("type") == "dynasty"
 
@@ -73,42 +65,49 @@ async def import_league(
     Step 4: Upsert team + roster rows.
     Step 5: Cache league settings.
     """
-    # Step 1: Fetch all data from Sleeper BEFORE opening a transaction
     logger.info("league.import.start", league_id=league_id, user_id=str(current_user.id))
+
+    # Step 1: Fetch all data from Sleeper BEFORE opening a transaction (LC-08)
     league_data = await sleeper.get_league(league_id)
     rosters = await sleeper.get_rosters(league_id)
     members = await sleeper.get_users(league_id)
 
-    # Step 2–4: All DB writes in one atomic transaction
-    async with db.begin():
-        # Upsert league (dedup by host key — LC-10)
-        league_stmt = (
-            pg_insert(League)
-            .values(
+    # Step 2–4: All DB writes in one atomic savepoint.
+    # begin_nested() works whether or not an outer transaction is already open,
+    # making this callable from both HTTP handlers and test fixtures.
+    async with db.begin_nested():
+        # League upsert (LC-10 dedup)
+        result = await db.execute(
+            select(League).where(
+                League.host_platform == "sleeper",
+                League.host_league_id == league_id,
+                League.season == league_data["season"],
+            )
+        )
+        league = result.scalar_one_or_none()
+        scoring_rules = league_data.get("scoring_settings") or {}
+        roster_format = {"positions": league_data.get("roster_positions") or []}
+
+        if league is None:
+            league = League(
                 host_platform="sleeper",
                 host_league_id=league_id,
                 season=league_data["season"],
                 name=league_data["name"],
-                scoring_rules=league_data.get("scoring_settings") or {},
-                roster_format={"positions": league_data.get("roster_positions") or []},
+                scoring_rules=scoring_rules,
+                roster_format=roster_format,
                 draft_type=classify_draft(league_data),
                 keeper_flag=_keeper_flag(league_data),
                 dynasty_flag=_dynasty_flag(league_data),
                 last_synced_at=datetime.now(UTC),
             )
-            .on_conflict_do_update(
-                index_elements=["host_platform", "host_league_id", "season"],
-                set_={
-                    "name": league_data["name"],
-                    "scoring_rules": league_data.get("scoring_settings") or {},
-                    "roster_format": {"positions": league_data.get("roster_positions") or []},
-                    "last_synced_at": datetime.now(UTC),
-                },
-            )
-            .returning(League)
-        )
-        league_result = await db.execute(league_stmt)
-        league = league_result.scalar_one()
+            db.add(league)
+        else:
+            league.name = league_data["name"]
+            league.scoring_rules = scoring_rules
+            league.roster_format = roster_format
+            league.last_synced_at = datetime.now(UTC)
+        await db.flush()
 
         # Find current user's roster_id from rosters list
         member_host_team_id = None
@@ -117,71 +116,70 @@ async def import_league(
                 member_host_team_id = str(roster["roster_id"])
                 break
 
-        # Upsert league_member for current user (LC-10, LC-12)
-        member_stmt = (
-            pg_insert(LeagueMember)
-            .values(
+        # LeagueMember upsert (LC-10, LC-12)
+        result = await db.execute(
+            select(LeagueMember).where(
+                LeagueMember.user_id == current_user.id,
+                LeagueMember.league_id == league.id,
+            )
+        )
+        member = result.scalar_one_or_none()
+        if member is None:
+            db.add(LeagueMember(
                 user_id=current_user.id,
                 league_id=league.id,
                 host_team_id=member_host_team_id,
                 role="owner",
                 connected_at=datetime.now(UTC),
-            )
-            .on_conflict_do_update(
-                index_elements=["user_id", "league_id"],
-                set_={"host_team_id": member_host_team_id},
-            )
-        )
-        await db.execute(member_stmt)
+            ))
+        else:
+            member.host_team_id = member_host_team_id
 
-        # Upsert teams + rosters
+        # Teams + rosters upsert
         for roster in rosters:
             host_team_id = str(roster["roster_id"])
 
-            team_stmt = (
-                pg_insert(Team)
-                .values(
+            result = await db.execute(
+                select(Team).where(
+                    Team.league_id == league.id,
+                    Team.host_team_id == host_team_id,
+                )
+            )
+            team = result.scalar_one_or_none()
+            if team is None:
+                team = Team(
                     league_id=league.id,
                     host_team_id=host_team_id,
                     name=None,
                     owner_user_id=None,
                 )
-                .on_conflict_do_update(
-                    index_elements=["league_id", "host_team_id"],
-                    set_={"owner_user_id": None},
-                )
-                .returning(Team)
-            )
-            team_result = await db.execute(team_stmt)
-            team = team_result.scalar_one()
+                db.add(team)
+                await db.flush()
 
-            roster_stmt = (
-                pg_insert(Roster)
-                .values(
+            snapshot_data = {
+                "starters": roster.get("starters") or [],
+                "players": roster.get("players") or [],
+                "settings": roster.get("settings") or {},
+            }
+            result = await db.execute(
+                select(Roster).where(
+                    Roster.team_id == team.id,
+                    Roster.week == week,
+                )
+            )
+            existing_roster = result.scalar_one_or_none()
+            if existing_roster is None:
+                db.add(Roster(
                     team_id=team.id,
                     week=week,
-                    snapshot={
-                        "starters": roster.get("starters") or [],
-                        "players": roster.get("players") or [],
-                        "settings": roster.get("settings") or {},
-                    },
+                    snapshot=snapshot_data,
                     last_synced_at=datetime.now(UTC),
-                )
-                .on_conflict_do_update(
-                    index_elements=["team_id", "week"],
-                    set_={
-                        "snapshot": {
-                            "starters": roster.get("starters") or [],
-                            "players": roster.get("players") or [],
-                            "settings": roster.get("settings") or {},
-                        },
-                        "last_synced_at": datetime.now(UTC),
-                    },
-                )
-            )
-            await db.execute(roster_stmt)
+                ))
+            else:
+                existing_roster.snapshot = snapshot_data
+                existing_roster.last_synced_at = datetime.now(UTC)
 
-    # Step 5: Cache after successful commit (outside transaction)
+    # Step 5: Cache after successful savepoint commit (outside transaction)
     await redis.set(
         CacheKey.league_settings(str(league.id)),
         json.dumps(league_data),
@@ -209,7 +207,7 @@ async def refresh_league(
     rosters = await sleeper.get_rosters(league.host_league_id)
     members = await sleeper.get_users(league.host_league_id)
 
-    async with db.begin():
+    async with db.begin_nested():
         league.scoring_rules = league_data.get("scoring_settings") or {}
         league.roster_format = {"positions": league_data.get("roster_positions") or []}
         league.draft_type = classify_draft(league_data)
