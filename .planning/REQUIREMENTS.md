@@ -44,7 +44,8 @@ Requirements committed for Phase 1 through Phase 8. Each maps to exactly one roa
 - [ ] **TM-07**: App detects waiver type from league settings; FAAB UI is hidden for rolling-priority leagues and priority order is shown instead
 - [x] **TM-08
 **: User can compare two players head-to-head with recommendation, point delta, confidence, and three biggest factors (V1)
-- [ ] **TM-09**: Games with 20+ mph wind, heavy rain, or snow show a weather chip; projection is adjusted down with magnitude shown; indoor stadiums never show weather (V1)
+- [x] **TM-09
+**: Games with 20+ mph wind, heavy rain, or snow show a weather chip; projection is adjusted down with magnitude shown; indoor stadiums never show weather (V1)
 - [ ] **TM-10**: If all flex options have confidence below 55, a "no strong call" banner is shown instead of a false high-confidence pick (V1)
 - [ ] **TM-11**: RB on a team favored by 10+ shows "Positive game script" as a factor with projection reflecting expected workload (V1)
 - [ ] **TM-12**: FAAB bid recommendation shown with confidence range (e.g., $14 ± $3) for FAAB leagues (V1)
