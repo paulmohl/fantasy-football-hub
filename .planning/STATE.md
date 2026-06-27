@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-10-PLAN.md — WaiverCard + AddPlayerDialog
-last_updated: "2026-06-27T11:38:40.537Z"
+stopped_at: Completed 02-11-PLAN.md — PlayerDetailDrawer, WeatherChip, TrendChart, PlayerComparePanel
+last_updated: "2026-06-27T11:47:40.471Z"
 last_activity: 2026-06-27
 progress:
   total_phases: 9
   completed_phases: 1
   total_plans: 22
-  completed_plans: 20
-  percent: 91
+  completed_plans: 21
+  percent: 95
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 ## Current Position
 
 Phase: 2 of 8 active phases (Team Manager Core)
-Plan: 10 of 12 in current phase (02-01-PLAN.md complete)
+Plan: 11 of 12 in current phase (02-01-PLAN.md complete)
 Status: Ready to execute
 Last activity: 2026-06-27
 
-Progress: [█████████░] 91%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [█████████░] 91%
 | Phase 02-team-manager-core P08 | 2min | 1 tasks | 1 files |
 | Phase 02-team-manager-core P09 | 10min | 2 tasks | 4 files |
 | Phase 02-team-manager-core P10 | 2min | 2 tasks | 3 files |
+| Phase 02-team-manager-core P11 | 6min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,9 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 - WaiverPlayer exported from WaiverCard.tsx so TeamPage can type AddPlayerState without duplication
 - onAddPlayer callback passes drop_suggestions+faab_bid from API response to avoid second request in AddPlayerDialog
 - AddPlayerDialog handleAdd() is a read-only stub (Phase 2); Phase 3+ replaces with POST /api/v1/team/waiver/add
+- comparePool built in TeamPage via useQuery with same key as LineupCard (React Query deduplication, no extra fetch)
+- PlayerSlotData exported from PlayerDetailDrawer.tsx — LineupCard.SlotData mapped via adapter closure in TeamPage onPlayerClick
+- Recharts v3 Tooltip formatter typed defensively with typeof v === number guard (ValueType includes undefined in v3)
 
 ### Pending Todos
 
@@ -120,6 +124,6 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ## Session Continuity
 
-Last session: 2026-06-27T11:38:40.529Z
-Stopped at: Completed 02-10-PLAN.md — WaiverCard + AddPlayerDialog
+Last session: 2026-06-27T11:47:40.463Z
+Stopped at: Completed 02-11-PLAN.md — PlayerDetailDrawer, WeatherChip, TrendChart, PlayerComparePanel
 Resume file: None
