@@ -1,7 +1,10 @@
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useLeagueStore } from '@/store/league'
 import { LeagueSwitcher } from '@/components/LeagueSwitcher'
+import { LineupCard } from '@/components/LineupCard'
+import { StandingsCard } from '@/components/StandingsCard'
 
 interface Player {
   player_id: string
@@ -67,6 +70,7 @@ export function PlayerCard({ slot }: { slot: RosterSlot }) {
 
 export default function TeamPage() {
   const { activeLeagueId } = useLeagueStore()
+  const [selectedPlayer, setSelectedPlayer] = useState<unknown>(null)
 
   const { data, isLoading } = useQuery<TeamData>({
     queryKey: ['my-team', activeLeagueId],
@@ -76,7 +80,6 @@ export default function TeamPage() {
 
   return (
     <div className="px-4 pt-10 pb-4 space-y-3">
-      {/* Page header row */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-base font-semibold text-text">
@@ -91,7 +94,6 @@ export default function TeamPage() {
         <LeagueSwitcher />
       </div>
 
-      {/* No league selected */}
       {!activeLeagueId && (
         <div className="bg-surface border border-border rounded-xl p-6 text-center">
           <p className="text-sm font-semibold text-text">Select a league</p>
@@ -99,7 +101,6 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* Loading skeleton (3 cards) */}
       {activeLeagueId && isLoading && (
         <div className="space-y-3">
           {[0, 1, 2].map((i) => (
@@ -108,21 +109,23 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* Card stack — card components added by Wave 5/6 plans */}
       {activeLeagueId && !isLoading && (
         <div className="space-y-3">
-          {/* LineupCard placeholder — replaced in Plan 09 */}
-          <div className="bg-surface border border-border rounded-xl p-4">
-            <p className="text-base font-semibold text-text">Lineup Optimizer</p>
-            <p className="text-xs text-muted mt-1">Loading lineup data…</p>
-          </div>
+          <LineupCard onPlayerClick={setSelectedPlayer} />
 
           {/* WaiverCard placeholder — replaced in Plan 10 */}
           <div className="bg-surface border border-border rounded-xl p-4">
             <p className="text-base font-semibold text-text">Waiver Wire</p>
             <p className="text-xs text-muted mt-1">Loading waiver targets…</p>
           </div>
+
+          <StandingsCard />
         </div>
+      )}
+
+      {/* PlayerDetailDrawer — wired in Plan 11 */}
+      {selectedPlayer && (
+        <div />
       )}
     </div>
   )
