@@ -65,6 +65,7 @@ export function WaiverCard({
   const queryClient = useQueryClient()
   const [mode, setMode] = useState<WaiverMode>('composite')
   const [visibleCount, setVisibleCount] = useState(10)
+  const [addingPlayerId, setAddingPlayerId] = useState<string | null>(null)
 
   const { data, isLoading, error } = useQuery<WaiverResponse>({
     queryKey: ['team-waiver', activeLeagueId, mode],
@@ -73,6 +74,17 @@ export function WaiverCard({
         .get('/team/waiver', { params: { league_id: activeLeagueId, mode } })
         .then((r) => r.data),
     enabled: !!activeLeagueId,
+  })
+
+  const { data: addData } = useQuery<WaiverResponse>({
+    queryKey: ['team-waiver-add', activeLeagueId, addingPlayerId],
+    queryFn: () =>
+      api
+        .get('/team/waiver', {
+          params: { league_id: activeLeagueId, mode, player_a: addingPlayerId },
+        })
+        .then((r) => r.data),
+    enabled: !!activeLeagueId && !!addingPlayerId,
   })
 
   const isOffSeason = data?.season_type === 'off'
@@ -184,9 +196,18 @@ export function WaiverCard({
                   {getScore(player).toFixed(1)}
                 </span>
                 <button
-                  onClick={() =>
-                    onAddPlayer(player, data.waiver_type, data.drop_suggestions, data.faab_bid)
-                  }
+                  onClick={() => {
+                    setAddingPlayerId(player.player_id)
+                    const dropCandidates =
+                      addingPlayerId === player.player_id
+                        ? (addData?.drop_suggestions ?? data.drop_suggestions)
+                        : data.drop_suggestions
+                    const faabBid =
+                      addingPlayerId === player.player_id
+                        ? (addData?.faab_bid ?? data.faab_bid)
+                        : data.faab_bid
+                    onAddPlayer(player, data.waiver_type, dropCandidates, faabBid)
+                  }}
                   className="bg-accent/10 hover:bg-accent text-accent hover:text-white rounded-lg w-8 h-8 flex items-center justify-center transition-colors shrink-0"
                   aria-label={`Add ${player.full_name} to roster`}
                 >

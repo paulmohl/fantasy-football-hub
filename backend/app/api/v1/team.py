@@ -537,6 +537,57 @@ async def get_trade_comparison(
     return result
 
 
+@router.get("/stats/{player_id}")
+async def get_player_stats(
+    player_id: str,
+    league: League = Depends(get_league_for_user),
+    redis: Redis = Depends(get_redis),
+    projection: ProjectionService = Depends(get_projection_service),
+    sleeper: SleeperClient = Depends(get_sleeper_client),
+    weeks: int = Query(default=8, ge=1, le=18),
+):
+    """Return weekly fantasy point history for a player (TM-13).
+
+    Returns up to 'weeks' most recent regular-season weeks.
+    Off-season: returns empty array (Sleeper stats endpoint has no current-season data).
+    """
+    nfl_state = await _get_nfl_state(redis, sleeper)
+    season = nfl_state["season"]
+    current_week = int(nfl_state.get("week", 1))
+    season_type = nfl_state.get("season_type", "off")
+
+    weekly_pts: list[dict] = []
+    if season_type != "off" and current_week > 1:
+        for w in range(max(1, current_week - weeks), current_week):
+            stats = await projection.get_player_weekly_stats(season, w)
+            player_week = stats.get(player_id, {})
+            pts = float(player_week.get("pts_ppr", 0) or 0)
+            weekly_pts.append({"week": w, "pts": round(pts, 1)})
+
+    career_avg: dict[str, float] = {}
+    for prior_season in [str(int(season) - 1), str(int(season) - 2)]:
+        season_pts: list[float] = []
+        for w in range(1, 19):
+            try:
+                stats = await projection.get_player_weekly_stats(prior_season, w)
+                pw = stats.get(player_id, {})
+                if pw:
+                    season_pts.append(float(pw.get("pts_ppr", 0) or 0))
+            except Exception:
+                break
+        if season_pts:
+            career_avg[prior_season] = round(sum(season_pts) / len(season_pts), 1)
+
+    logger.info("team.stats.fetched", player_id=player_id, week_count=len(weekly_pts))
+    return {
+        "player_id": player_id,
+        "season": season,
+        "weekly_pts": weekly_pts,
+        "career_avg": career_avg,
+        "season_type": season_type,
+    }
+
+
 @router.post("/lineup/apply")
 async def apply_lineup(_: User = Depends(get_current_user)):
     """TM-16 placeholder: Apply suggested lineup via host platform API.
