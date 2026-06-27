@@ -74,7 +74,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 02-01-PLAN.md — Test scaffolding (4 test files + 2 fixture JSONs) + npm install @dnd-kit/core, @dnd-kit/sortable, recharts
+- [x] 02-01-PLAN.md — Test scaffolding (4 test files + 2 fixture JSONs) + npm install @dnd-kit/core, @dnd-kit/sortable, recharts
 - [ ] 02-02-PLAN.md — cache.py extensions + nfl_stadiums.py (32 teams) + ProjectionService (FantasyCalc + Sleeper merge)
 - [ ] 02-03-PLAN.md — WeatherService (Open-Meteo + indoor stadium exclusion)
 - [ ] 02-04-PLAN.md — LineupOptimizer (greedy slot assignment, confidence scores, OUT replacement)
@@ -178,7 +178,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 0. Project Setup | -/- | Complete | 2026-06-22 |
 | 1. League Connector MVP | 0/10 | In progress | - |
-| 2. Team Manager Core | 0/12 | Planned | - |
+| 2. Team Manager Core | 1/12 | In progress | - |
 | 3. Multi-Platform Connectors | 0/TBD | Not started | - |
 | 4. Live Draft Room (Snake) | 0/TBD | Not started | - |
 | 5. Auction Draft Variant | 0/TBD | Not started | - |

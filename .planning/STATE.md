@@ -9,25 +9,26 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 
 ## Current Position
 
-Phase: 1 of 8 active phases (League Connector MVP)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-06-22 — Planning files initialized (PROJECT.md, REQUIREMENTS.md, ROADMAP.md, STATE.md)
+Phase: 2 of 8 active phases (Team Manager Core)
+Plan: 1 of 12 in current phase (02-01-PLAN.md complete)
+Status: In progress
+Last activity: 2026-06-27 — 02-01 Wave 0 test scaffolding complete (stubs + fixtures + npm packages)
 
-Progress: [█░░░░░░░░░] ~10% (Phase 0 complete; Phase 1 not yet planned)
+Progress: [██░░░░░░░░] ~15% (Phase 0 complete; Phase 1 complete; Phase 2 plan 1/12 complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: ~15 minutes
+- Total execution time: ~0.25 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 0. Setup | complete | — | — |
+| 2. Team Manager Core | 02-01 | ~15 min | ~15 min |
 
 **Recent Trend:** No data yet.
 
@@ -49,7 +50,7 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ### Pending Todos
 
-None yet.
+- Wave 0 test scaffolding (02-01) complete; next is Wave 1: 02-02 (ProjectionService) and 02-03 (WeatherService)
 
 ### Blockers / Concerns
 
@@ -72,6 +73,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-22
-Stopped at: Initial planning files written; ready to begin Phase 1 planning
+Last session: 2026-06-27
+Stopped at: 02-01 complete (Wave 0 test scaffolding). Next: 02-02 (cache.py extensions + ProjectionService)
 Resume file: None
