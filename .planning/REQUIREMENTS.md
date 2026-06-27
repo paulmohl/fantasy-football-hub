@@ -39,10 +39,12 @@ Requirements committed for Phase 1 through Phase 8. Each maps to exactly one roa
 **: Per-player detail panel shows: projected points, confidence, matchup grade, weather, injury status, opponent rank vs position, recent usage trend, and a one-paragraph natural-language explanation
 - [x] **TM-04
 **: Real-time injury status: a player downgraded to OUT shows OUT in red and the optimizer auto-suggests a replacement
-- [ ] **TM-05**: Waiver wire ranks every available player by composite score weighted by team positional need; re-rankable by raw projection, ownership trend, or breakout score; at least 30 viable targets per league
+- [x] **TM-05
+**: Waiver wire ranks every available player by composite score weighted by team positional need; re-rankable by raw projection, ownership trend, or breakout score; at least 30 viable targets per league
 - [x] **TM-06
 **: Add dialog suggests 1–3 drop candidates ranked by lowest rest-of-season value; no suggestions include players whose game is in progress
-- [ ] **TM-07**: App detects waiver type from league settings; FAAB UI is hidden for rolling-priority leagues and priority order is shown instead
+- [x] **TM-07
+**: App detects waiver type from league settings; FAAB UI is hidden for rolling-priority leagues and priority order is shown instead
 - [x] **TM-08
 **: User can compare two players head-to-head with recommendation, point delta, confidence, and three biggest factors (V1)
 - [x] **TM-09
@@ -50,7 +52,8 @@ Requirements committed for Phase 1 through Phase 8. Each maps to exactly one roa
 - [x] **TM-10
 **: If all flex options have confidence below 55, a "no strong call" banner is shown instead of a false high-confidence pick (V1)
 - [ ] **TM-11**: RB on a team favored by 10+ shows "Positive game script" as a factor with projection reflecting expected workload (V1)
-- [ ] **TM-12**: FAAB bid recommendation shown with confidence range (e.g., $14 ± $3) for FAAB leagues (V1)
+- [x] **TM-12
+**: FAAB bid recommendation shown with confidence range (e.g., $14 ± $3) for FAAB leagues (V1)
 - [ ] **TM-13**: Per-player season trend chart: weekly points for current season, season totals for last 3 seasons, "vs this opponent" toggle (V1)
 - [ ] **TM-14**: Player news feed shown most-recent-first with source, timestamp, and impact tag (injury, usage, coach quote) (V1)
 - [x] **TM-15
