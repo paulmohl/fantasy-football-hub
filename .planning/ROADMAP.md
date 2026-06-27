@@ -70,8 +70,22 @@ Plans:
   4. A player downgraded to OUT appears in red and the optimizer auto-suggests a replacement
   5. The waiver wire shows at least 30 ranked targets weighted by team positional need, re-rankable by multiple criteria
   6. Adding a player shows 1–3 suggested drops ranked by lowest rest-of-season value, with locked players excluded
-**Plans**: TBD
+**Plans**: 12 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 02-01-PLAN.md — Test scaffolding (4 test files + 2 fixture JSONs) + npm install @dnd-kit/core, @dnd-kit/sortable, recharts
+- [ ] 02-02-PLAN.md — cache.py extensions + nfl_stadiums.py (32 teams) + ProjectionService (FantasyCalc + Sleeper merge)
+- [ ] 02-03-PLAN.md — WeatherService (Open-Meteo + indoor stadium exclusion)
+- [ ] 02-04-PLAN.md — LineupOptimizer (greedy slot assignment, confidence scores, OUT replacement)
+- [ ] 02-05-PLAN.md — WaiverRanker (dual-mode scoring) + TradeEvaluator (head-to-head comparison)
+- [ ] 02-06-PLAN.md — team.py router (5 routes: /my, /lineup, /waiver, /standings, /trade + TM-16 501 stub)
+- [ ] 02-07-PLAN.md — league.ts Zustand store + LeagueSwitcher + TeamPage shell with card stack
+- [ ] 02-08-PLAN.md — StandingsCard component
+- [ ] 02-09-PLAN.md — LineupCard + InjuryBadge + ConfidenceBadge + dnd-kit drag override (TM-15)
+- [ ] 02-10-PLAN.md — WaiverCard (dual-mode toggle) + AddPlayerDialog (FAAB/drop candidates)
+- [ ] 02-11-PLAN.md — PlayerDetailDrawer + WeatherChip + TrendChart + PlayerComparePanel
+- [ ] 02-12-PLAN.md — arq pre-warm task + TM-11 game script flag + TM-12/13 wire-up + TM-14 deferred
 
 ### Phase 3: Multi-Platform Connectors
 **Goal**: Yahoo and ESPN leagues work end-to-end with the same Team Manager experience as Sleeper.
@@ -149,8 +163,8 @@ Plans:
   2. Lineup editing on mobile works with touch-based drag-and-drop using pointer events
   3. PWA installs after first successful league connection; cached state is readable offline
   4. Users can configure notification preferences per category and per channel (in-app, email, push) with quiet hours that queue but do not drop notifications
-  5. When a host platform is down, cached data is shown with a stale-data banner and write actions are disabled; "Last synced N minutes ago" is shown before next sync
-  6. Every screen has correct empty states (skeletons for predictable shapes, spinners for short actions), loading states, and error states
+  5. When a host platform is down, cached data is shown with a "Stale data — host platform down" banner; write actions are disabled until host recovers
+  6. "Last synced N minutes ago" stamp shown before next sync if a webhook or poll has not yet updated data
   7. WCAG 2.1 AA contrast and keyboard reachability passes on all interactive elements
   8. A public marketing/landing page exists that explains the product and links to sign up
 **Plans**: TBD
@@ -164,7 +178,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 0. Project Setup | -/- | Complete | 2026-06-22 |
 | 1. League Connector MVP | 0/10 | In progress | - |
-| 2. Team Manager Core | 0/TBD | Not started | - |
+| 2. Team Manager Core | 0/12 | Planned | - |
 | 3. Multi-Platform Connectors | 0/TBD | Not started | - |
 | 4. Live Draft Room (Snake) | 0/TBD | Not started | - |
 | 5. Auction Draft Variant | 0/TBD | Not started | - |
