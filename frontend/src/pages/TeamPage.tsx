@@ -1,0 +1,129 @@
+import { useQuery } from '@tanstack/react-query'
+import { api } from '@/lib/api'
+import { useLeagueStore } from '@/store/league'
+import { LeagueSwitcher } from '@/components/LeagueSwitcher'
+
+interface Player {
+  player_id: string
+  full_name: string
+  position: string
+  team: string
+  projected_points: number
+  status?: string
+}
+
+interface RosterSlot {
+  slot_type: string
+  display: string
+  player: Player | null
+}
+
+interface TeamData {
+  team_name: string
+  owner_name: string
+  record: string
+  points_for: number
+  waiver_position: number
+  roster: RosterSlot[]
+  leagues?: Array<{ league_id: string; name: string; season: string; platform: string }>
+}
+
+function StatusDot({ status }: { status?: string }) {
+  if (!status || status === 'Active') return null
+  const color = status === 'Out' ? 'bg-danger' : status === 'Questionable' ? 'bg-warning' : 'bg-muted'
+  return (
+    <span className={`inline-block w-2 h-2 rounded-full ${color} ml-1.5`} title={status} />
+  )
+}
+
+export function PlayerCard({ slot }: { slot: RosterSlot }) {
+  return (
+    <div className="bg-surface border border-border rounded-xl p-3 flex items-center gap-3">
+      <div className="shrink-0 w-8 h-8 rounded-lg bg-raised flex items-center justify-center">
+        <span className="text-[10px] font-bold text-muted">{slot.slot_type}</span>
+      </div>
+      {slot.player ? (
+        <>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center">
+              <span className="font-semibold text-text text-sm truncate">{slot.player.full_name}</span>
+              <StatusDot status={slot.player.status} />
+            </div>
+            <p className="text-xs text-muted">{slot.player.position} · {slot.player.team}</p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-sm font-semibold text-accent">{slot.player.projected_points.toFixed(1)}</p>
+            <p className="text-[10px] text-muted">proj</p>
+          </div>
+        </>
+      ) : (
+        <div className="flex-1">
+          <p className="text-sm text-muted italic">{slot.display} — Empty</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function TeamPage() {
+  const { activeLeagueId } = useLeagueStore()
+
+  const { data, isLoading } = useQuery<TeamData>({
+    queryKey: ['my-team', activeLeagueId],
+    queryFn: () => api.get('/team/my').then((r) => r.data),
+    enabled: !!activeLeagueId,
+  })
+
+  return (
+    <div className="px-4 pt-10 pb-4 space-y-3">
+      {/* Page header row */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-base font-semibold text-text">
+            {data?.team_name ?? 'Team Manager'}
+          </h1>
+          {data?.record && (
+            <p className="text-xs text-muted mt-0.5">
+              {data.record} · <span className="font-mono">{data.points_for ?? 0}</span> pts
+            </p>
+          )}
+        </div>
+        <LeagueSwitcher />
+      </div>
+
+      {/* No league selected */}
+      {!activeLeagueId && (
+        <div className="bg-surface border border-border rounded-xl p-6 text-center">
+          <p className="text-sm font-semibold text-text">Select a league</p>
+          <p className="text-xs text-muted mt-1">Choose a league from the dropdown to see your team.</p>
+        </div>
+      )}
+
+      {/* Loading skeleton (3 cards) */}
+      {activeLeagueId && isLoading && (
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-32 animate-pulse bg-raised rounded-xl" />
+          ))}
+        </div>
+      )}
+
+      {/* Card stack — card components added by Wave 5/6 plans */}
+      {activeLeagueId && !isLoading && (
+        <div className="space-y-3">
+          {/* LineupCard placeholder — replaced in Plan 09 */}
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <p className="text-base font-semibold text-text">Lineup Optimizer</p>
+            <p className="text-xs text-muted mt-1">Loading lineup data…</p>
+          </div>
+
+          {/* WaiverCard placeholder — replaced in Plan 10 */}
+          <div className="bg-surface border border-border rounded-xl p-4">
+            <p className="text-base font-semibold text-text">Waiver Wire</p>
+            <p className="text-xs text-muted mt-1">Loading waiver targets…</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
