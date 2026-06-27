@@ -10,11 +10,11 @@ def test_indoor_no_chip():
     """TM-09: Indoor stadiums return None — no weather chip should be shown."""
     pytest.importorskip("app.services.weather_service")
     from app.services.weather_service import WeatherService
+    import asyncio
     mock_redis = MagicMock()
     mock_redis.get = AsyncMock(return_value=None)
     svc = WeatherService(http=MagicMock(), redis=mock_redis)
-    import asyncio
-    result = asyncio.get_event_loop().run_until_complete(
+    result = asyncio.run(
         svc.get_game_weather("LV", "2026-09-07")  # LV = Allegiant, indoor
     )
     assert result is None, "Indoor stadium must return None"
