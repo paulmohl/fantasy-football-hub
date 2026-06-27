@@ -5,6 +5,8 @@ import { useLeagueStore } from '@/store/league'
 import { LeagueSwitcher } from '@/components/LeagueSwitcher'
 import { LineupCard } from '@/components/LineupCard'
 import { StandingsCard } from '@/components/StandingsCard'
+import { WaiverCard, WaiverPlayer } from '@/components/WaiverCard'
+import { AddPlayerDialog } from '@/components/AddPlayerDialog'
 
 interface Player {
   player_id: string
@@ -68,9 +70,32 @@ export function PlayerCard({ slot }: { slot: RosterSlot }) {
   )
 }
 
+interface DropCandidate {
+  player_id: string
+  full_name: string
+  position: string
+  ros_value: number
+  injury_status: string | null
+}
+
+interface FaabBid {
+  mid_bid: number
+  confidence_range: number
+  min_bid: number
+  max_bid: number
+}
+
+interface AddPlayerState {
+  player: WaiverPlayer
+  waiverType: 'faab' | 'rolling'
+  dropCandidates: DropCandidate[]
+  faabBid: FaabBid | null
+}
+
 export default function TeamPage() {
   const { activeLeagueId } = useLeagueStore()
   const [selectedPlayer, setSelectedPlayer] = useState<unknown>(null)
+  const [addPlayer, setAddPlayer] = useState<AddPlayerState | null>(null)
 
   const { data, isLoading } = useQuery<TeamData>({
     queryKey: ['my-team', activeLeagueId],
@@ -113,11 +138,11 @@ export default function TeamPage() {
         <div className="space-y-3">
           <LineupCard onPlayerClick={setSelectedPlayer} />
 
-          {/* WaiverCard placeholder — replaced in Plan 10 */}
-          <div className="bg-surface border border-border rounded-xl p-4">
-            <p className="text-base font-semibold text-text">Waiver Wire</p>
-            <p className="text-xs text-muted mt-1">Loading waiver targets…</p>
-          </div>
+          <WaiverCard
+            onAddPlayer={(player, waiverType, dropCandidates, faabBid) =>
+              setAddPlayer({ player, waiverType, dropCandidates, faabBid })
+            }
+          />
 
           <StandingsCard />
         </div>
@@ -127,6 +152,15 @@ export default function TeamPage() {
       {selectedPlayer && (
         <div />
       )}
+
+      <AddPlayerDialog
+        open={!!addPlayer}
+        onClose={() => setAddPlayer(null)}
+        playerName={addPlayer?.player.full_name ?? ''}
+        waiverType={addPlayer?.waiverType ?? 'rolling'}
+        dropCandidates={addPlayer?.dropCandidates ?? []}
+        faabBid={addPlayer?.faabBid ?? null}
+      />
     </div>
   )
 }
