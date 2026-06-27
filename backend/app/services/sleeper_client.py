@@ -90,6 +90,16 @@ class SleeperClient:
         r.raise_for_status()
         return r.json()
 
+    async def get_league_matchups(self, league_id: str, week: int) -> list[dict]:
+        """Fetch matchup data for a league week.
+
+        Returns list of {roster_id, matchup_id, points, players, starters}.
+        Two entries sharing the same matchup_id are head-to-head opponents.
+        """
+        r = await self.http.get(f"{self.base}/league/{league_id}/matchups/{week}")
+        r.raise_for_status()
+        return r.json() or []
+
 
 async def get_sleeper_client():
     """FastAPI dependency that provides a SleeperClient with a managed httpx client."""

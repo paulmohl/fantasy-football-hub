@@ -23,6 +23,9 @@ from __future__ import annotations
 
 # Injury status sets from RESEARCH.md (verified: support.sleeper.com)
 WONT_PLAY_STATUS: frozenset[str] = frozenset({"Out", "Suspended", "IR", "PUP", "NA", "DNR"})
+
+# Game script threshold: top ~33% of league scoring (TM-11 matchup-history proxy)
+GAME_SCRIPT_PTS_THRESHOLD: float = 25.0
 UNLIKELY_STATUS: frozenset[str] = frozenset({"Doubtful"})
 
 # Slots where a FLEX-eligible position can play
@@ -239,3 +242,50 @@ def build_optimal_lineup(
         })
 
     return assignments
+
+
+class LineupOptimizer:
+    """Thin wrapper around build_optimal_lineup that holds game-script logic.
+
+    Instantiated once per /team/lineup request in team.py.
+    Pure computation — no I/O, no async.
+    """
+
+    def _compute_game_script(
+        self,
+        roster_id: int,
+        team_matchup_stats: dict[int, dict[str, float]],
+        position: str,
+    ) -> bool:
+        """Return True if player's team is in a positive game script (spread proxy).
+
+        Uses Sleeper matchup history as a win-likelihood proxy.
+        NOT a Vegas spread — based on season-average scoring vs opponent.
+        Only applies to RB position (game script matters most for RBs).
+        """
+        if position != "RB":
+            return False
+        stats = team_matchup_stats.get(roster_id)
+        if not stats:
+            return False
+        return (
+            stats.get("pts_for_avg", 0) >= GAME_SCRIPT_PTS_THRESHOLD
+            and stats.get("pts_against_avg", 0) >= GAME_SCRIPT_PTS_THRESHOLD
+        )
+
+    def build(
+        self,
+        roster_player_ids: list[str],
+        player_lookup: dict[str, dict],
+        fc_index: dict[str, dict],
+        roster_positions: list[str],
+        current_starters: list[str] | None = None,
+    ) -> list[dict]:
+        """Delegate to the module-level build_optimal_lineup function."""
+        return build_optimal_lineup(
+            roster_player_ids=roster_player_ids,
+            player_lookup=player_lookup,
+            fc_index=fc_index,
+            roster_positions=roster_positions,
+            current_starters=current_starters,
+        )

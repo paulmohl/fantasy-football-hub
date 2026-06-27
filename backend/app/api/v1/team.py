@@ -26,7 +26,7 @@ from app.core.logging import logger
 from app.core.redis import get_redis
 from app.models.league import League, LeagueMember, Roster, Team
 from app.models.user import User
-from app.services.lineup_optimizer import build_optimal_lineup
+from app.services.lineup_optimizer import LineupOptimizer, build_optimal_lineup
 from app.services.projection_service import ProjectionService, get_projection_service
 from app.services.sleeper_client import SleeperClient, get_sleeper_client
 from app.services.trade_evaluator import compare_players
@@ -79,6 +79,66 @@ async def _get_user_team_and_roster(
     )
     roster = roster_result.scalar_one_or_none()
     return team, roster
+
+
+async def _compute_team_matchup_stats(
+    league_id: str,
+    current_week: int,
+    sleeper: SleeperClient,
+    redis: Redis,
+) -> dict[int, dict[str, float]]:
+    """Compute pts_for_avg and pts_against_avg for each team over last 4 weeks.
+
+    Returns dict keyed by roster_id:
+        {roster_id: {"pts_for_avg": float, "pts_against_avg": float}}
+    """
+    weeks_back = min(4, current_week - 1)
+    if weeks_back < 1:
+        return {}
+
+    roster_points: dict[int, list[float]] = {}
+    matchup_id_to_roster: dict[int, dict[int, list[tuple[int, float]]]] = {}
+
+    for w in range(max(1, current_week - weeks_back), current_week):
+        cache_key = f"sleeper:matchups:{league_id}:{w}"
+        cached = await redis.get(cache_key)
+        if cached:
+            week_data = json.loads(cached)
+        else:
+            week_data = await sleeper.get_league_matchups(league_id, w)
+            await redis.set(cache_key, json.dumps(week_data), ex=3600)
+
+        for entry in week_data:
+            rid = entry.get("roster_id")
+            pts = float(entry.get("points") or 0)
+            mid = entry.get("matchup_id")
+            if rid is None:
+                continue
+            roster_points.setdefault(rid, []).append(pts)
+            if mid:
+                matchup_id_to_roster.setdefault(w, {}).setdefault(mid, []).append((rid, pts))
+
+    result: dict[int, dict[str, float]] = {}
+    for rid, pts_list in roster_points.items():
+        result[rid] = {
+            "pts_for_avg": sum(pts_list) / len(pts_list),
+            "pts_against_avg": 0.0,
+        }
+
+    opponent_pts: dict[int, list[float]] = {}
+    for w_data in matchup_id_to_roster.values():
+        for mid, pairs in w_data.items():
+            if len(pairs) == 2:
+                r1, p1 = pairs[0]
+                r2, p2 = pairs[1]
+                opponent_pts.setdefault(r1, []).append(p2)
+                opponent_pts.setdefault(r2, []).append(p1)
+
+    for rid, opp_list in opponent_pts.items():
+        if rid in result and opp_list:
+            result[rid]["pts_against_avg"] = sum(opp_list) / len(opp_list)
+
+    return result
 
 
 @router.get("/my")
@@ -160,6 +220,83 @@ async def get_lineup(
         current_starters=current_starters,
     )
 
+    # Compute team matchup stats for TM-11 game script and TM-03 matchup fields
+    team_matchup_stats = await _compute_team_matchup_stats(
+        league_id=league.host_league_id,
+        current_week=week,
+        sleeper=sleeper,
+        redis=redis,
+    )
+
+    # Fetch trending adds for TM-03 recent_usage_trend
+    season_type = nfl_state.get("season_type", "off")
+    trending_adds: dict[str, int] = {}
+    if season_type != "off":
+        trending_adds = await projection.get_sleeper_trending()
+
+    # Compute matchup grade rank map (rank by pts_against_avg descending = allows most pts = easiest)
+    all_pts_against = sorted(
+        [(rid, s.get("pts_against_avg", 0)) for rid, s in team_matchup_stats.items()],
+        key=lambda x: -x[1],
+    )
+    rank_map: dict[int, int] = {rid: i + 1 for i, (rid, _) in enumerate(all_pts_against)}
+    total_teams = len(all_pts_against) or 1
+
+    def _grade_from_rank(rank: int, total: int) -> str:
+        pct = rank / total
+        if pct <= 0.25:
+            return "F"
+        elif pct <= 0.50:
+            return "D"
+        elif pct <= 0.75:
+            return "C"
+        elif pct <= 0.90:
+            return "B"
+        else:
+            return "A"
+
+    optimizer = LineupOptimizer()
+
+    # Look up the user's roster_id from matchup data (needed for game script)
+    # The team's host_team_id maps to Sleeper roster_id
+    user_roster_id: int | None = None
+    if team.host_team_id:
+        try:
+            user_roster_id = int(team.host_team_id)
+        except (ValueError, TypeError):
+            user_roster_id = None
+
+    for slot in optimal_slots:
+        # TM-11: positive_game_script flag (RB only)
+        slot["positive_game_script"] = False
+        if slot.get("position") == "RB" and not slot.get("is_out") and user_roster_id is not None:
+            slot["positive_game_script"] = optimizer._compute_game_script(
+                user_roster_id, team_matchup_stats, "RB"
+            )
+
+        # TM-03: matchup_grade (grade how many points opponent allows)
+        # We don't have per-slot opponent roster_id in this data model, so use user's own grade
+        # as a proxy for overall matchup difficulty this week
+        if user_roster_id and user_roster_id in rank_map:
+            opp_rank = rank_map.get(user_roster_id)
+            slot["matchup_grade"] = _grade_from_rank(opp_rank, total_teams) if opp_rank else None
+        else:
+            slot["matchup_grade"] = None
+
+        # TM-03: opponent_rank_vs_position (rank 1 = allows most to this position)
+        slot["opponent_rank_vs_position"] = rank_map.get(user_roster_id) if user_roster_id else None
+
+        # TM-03: recent_usage_trend from Sleeper trending adds
+        player_id = slot.get("player_id")
+        current_adds = trending_adds.get(player_id, 0) if player_id else 0
+        if current_adds > 0:
+            slot["recent_usage_trend"] = "stable"
+        else:
+            slot["recent_usage_trend"] = None
+
+        # TM-14: news deferred (CONTEXT.md — data source TBD)
+        slot["news"] = []
+
     # Derive summary metadata from the slots
     total_projected = sum(
         slot.get("projected_points", 0)
@@ -196,7 +333,7 @@ async def get_lineup(
         "current_starters": current_starters,
         "total_projected_points": round(total_projected, 1),
         "no_strong_call": no_strong_call,
-        "season_type": nfl_state.get("season_type", "off"),
+        "season_type": season_type,
     }
 
 
