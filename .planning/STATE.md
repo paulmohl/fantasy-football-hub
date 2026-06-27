@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-03-PLAN.md — WeatherService implemented, 3 TDD tests pass
-last_updated: "2026-06-27T11:04:23.103Z"
+stopped_at: Completed 02-04-PLAN.md — LineupOptimizer implemented, 4 TDD tests pass
+last_updated: "2026-06-27T11:10:16.370Z"
 last_activity: 2026-06-27
 progress:
   total_phases: 9
   completed_phases: 1
   total_plans: 22
-  completed_plans: 13
-  percent: 59
+  completed_plans: 14
+  percent: 64
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 ## Current Position
 
 Phase: 2 of 8 active phases (Team Manager Core)
-Plan: 3 of 12 in current phase (02-01-PLAN.md complete)
+Plan: 4 of 12 in current phase (02-01-PLAN.md complete)
 Status: Ready to execute
 Last activity: 2026-06-27
 
-Progress: [██████░░░░] 59%
+Progress: [██████░░░░] 64%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [██████░░░░] 59%
 *Updated after each plan completion*
 | Phase 02-team-manager-core P02 | 224 | 2 tasks | 6 files |
 | Phase 02-team-manager-core P03 | 138 | 1 tasks | 2 files |
+| Phase 02-team-manager-core P04 | 3 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,9 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 - SoFi Stadium (LAC/LAR) treated as indoor=True — weather-controlled despite transparent roof
 - build_sleeper_id_index is synchronous — pure dict comprehension, no I/O
 - asyncio.run() used in test instead of deprecated get_event_loop().run_until_complete() for Python 3.10+ compatibility
+- build_optimal_lineup returns list[dict] (not tuple) to match test iteration contract
+- Bench slots labeled 'BN' (not 'BN1'/'BN2') to match test filter s[slot] not in ('BN', 'IR')
+- WONT_PLAY_STATUS frozenset verified from support.sleeper.com covers Out/Suspended/IR/PUP/NA/DNR
 
 ### Pending Todos
 
@@ -96,6 +100,6 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ## Session Continuity
 
-Last session: 2026-06-27T11:04:23.096Z
-Stopped at: Completed 02-03-PLAN.md — WeatherService implemented, 3 TDD tests pass
+Last session: 2026-06-27T11:10:16.359Z
+Stopped at: Completed 02-04-PLAN.md — LineupOptimizer implemented, 4 TDD tests pass
 Resume file: None
