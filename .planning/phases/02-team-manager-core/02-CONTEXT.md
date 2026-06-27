@@ -37,10 +37,10 @@ This phase will be structured across multiple plan files. TM-01–07 form the co
 
 **Cache strategy:** FantasyCalc data changes infrequently — cache 24 hours in Redis. Sleeper injury/status data should be fresher — cache 1 hour.
 
-**FantasyCalc endpoints to use:**
-- `GET /values?sport=nfl&isSuperflex=false` — redraft trade values
-- `GET /values?sport=nfl&isSuperflex=false&isDynasty=true` — dynasty trade values
-- `GET /rankings?sport=nfl` — consensus rankings
+**FantasyCalc endpoints to use (VERIFIED 2026-06-26 — previous URLs returned 404):**
+- `GET /values/current?isDynasty=false&numQbs=1&numTeams=12&ppr=1` — redraft trade values
+- `GET /values/current?isDynasty=true&numQbs=1&numTeams=12&ppr=1` — dynasty trade values
+- Rankings: use `overallRank` and `positionRank` fields from the `/values/current` response — no separate rankings endpoint exists (all tested variants return 404)
 
 ### DECISION-002: UI Layout
 
@@ -97,8 +97,10 @@ New backend structures needed (not DB-persisted, computed on request):
 - AI natural-language trade summaries (Phase 7)
 - Push notifications for waiver wire pickups or lineup alerts (Phase 8)
 - User preference persistence to DB (Phase 8)
+- **TM-14 (player news feed):** Deferred — Sleeper has no news endpoint and no free structured source was identified. Phase 2 delivers `news: []` (empty array); the news section in PlayerDetailDrawer is hidden (not shown as empty state) per UI-SPEC. Will be addressed in Phase 2b or Phase 3.
 
 ---
 
 *Phase: 02-team-manager-core*
 *Context recorded: 2026-06-25 — post-discuss-phase decisions*
+*Updated: 2026-06-26 — FantasyCalc URL corrected (verified live); TM-14 formally deferred*

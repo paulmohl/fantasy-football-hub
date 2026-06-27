@@ -672,22 +672,32 @@ function SortablePlayerCard({ slot }: { slot: RosterSlot }) {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED 2026-06-26)
 
-1. **TM-14: Player news feed data source**
-   - What we know: Sleeper has no news endpoint. The requirement specifies source, timestamp, and impact tag.
-   - What's unclear: Which free or low-cost news source to use — RotoBaller, RotoWire RSS, Sportradar, or Fantasy Nerds.
-   - Recommendation: Evaluate Fantasy Nerds API (free tier) or RotoWire RSS feed before planning TM-14. Consider deferring TM-14 to Phase 2b if no free source is found.
+All three open questions from initial research have been resolved. Plans updated accordingly.
 
-2. **TM-11: Point spread data for "positive game script" signal**
-   - What we know: Sleeper matchup endpoint does not include Vegas spreads.
-   - What's unclear: Whether to add an odds API (The Odds API has free tier) or drop this signal.
-   - Recommendation: Use The Odds API free tier (500 requests/month); cache weekly spread data in Redis. If not feasible, omit the game script signal and use a simpler "team win percentage" proxy from matchup history.
+1. **TM-14: Player news feed data source — RESOLVED: DEFERRED**
+   - Resolution: No free structured news source with timestamp + impact tag was identified for Phase 2.
+   - Phase 2 delivers `news: []` (empty array) on each lineup slot. PlayerDetailDrawer hides the news
+     section entirely when the array is empty (per UI-SPEC: hide, not empty-state).
+   - TM-14 will be addressed in Phase 2b or Phase 3 when a data source is selected.
+   - Impact: Plans 02-11 and 02-12 updated. Backend slot response includes `news: []`.
 
-3. **FantasyCalc rankings endpoint**
-   - What we know: `/rankings?sport=nfl` from CONTEXT.md returns 404. `/rankings/current?sport=nfl` also returns 404.
-   - What's unclear: Whether a consensus rankings endpoint exists at all, or if `overallRank` from `/values/current` is the intended replacement.
-   - Recommendation: Use `overallRank` and `positionRank` from the `/values/current` response as the rankings source. Do not block planning on finding a separate rankings endpoint.
+2. **TM-11: Point spread data — RESOLVED: SLEEPER MATCHUP PROXY**
+   - Resolution: Use Sleeper matchup history as a spread proxy via `GET /v1/league/{id}/matchups/{week}`
+     (already fetched for lineup context). Compute each team's season-average pts_for over last 4 weeks.
+   - Rule: if player's team pts_for_avg >= 25.0 AND opponent pts_against_avg >= 25.0, set
+     `positive_game_script = True` for RB position players only.
+   - This is a win-likelihood proxy, not a Vegas spread. UI copy: 'Based on matchup history.'
+   - Implemented in `LineupOptimizer._compute_game_script()`. Team stats passed as
+     `team_matchup_stats: dict[str, float]`, computed once per `/team/lineup` request.
+   - Impact: Plan 02-12 Task 1 updated to implement `_compute_game_script()` instead of hardcoding False.
+
+3. **FantasyCalc rankings endpoint — RESOLVED: USE overallRank FROM /values/current**
+   - Resolution: Use `overallRank` and `positionRank` fields from the `/values/current` response.
+     No separate rankings endpoint exists; all tested variants return 404.
+   - `overallRank` is populated on every player entry in the confirmed live response.
+   - Impact: CONTEXT.md DECISION-001 updated to remove the `/rankings` entry.
 
 ---
 
