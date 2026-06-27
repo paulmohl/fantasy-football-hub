@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: executing
+stopped_at: Completed 02-02-PLAN.md - cache extensions, NFL stadiums, ProjectionService
+last_updated: "2026-06-27T11:00:06.278Z"
+last_activity: 2026-06-27
+progress:
+  total_phases: 9
+  completed_phases: 1
+  total_plans: 22
+  completed_plans: 12
+  percent: 55
+---
+
 # Project State
 
 ## Project Reference
@@ -10,15 +26,16 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 ## Current Position
 
 Phase: 2 of 8 active phases (Team Manager Core)
-Plan: 1 of 12 in current phase (02-01-PLAN.md complete)
-Status: In progress
-Last activity: 2026-06-27 — 02-01 Wave 0 test scaffolding complete (stubs + fixtures + npm packages)
+Plan: 2 of 12 in current phase (02-01-PLAN.md complete)
+Status: Ready to execute
+Last activity: 2026-06-27
 
-Progress: [██░░░░░░░░] ~15% (Phase 0 complete; Phase 1 complete; Phase 2 plan 1/12 complete)
+Progress: [██████░░░░] 55%
 
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 1
 - Average duration: ~15 minutes
 - Total execution time: ~0.25 hours
@@ -33,6 +50,7 @@ Progress: [██░░░░░░░░] ~15% (Phase 0 complete; Phase 1 compl
 **Recent Trend:** No data yet.
 
 *Updated after each plan completion*
+| Phase 02-team-manager-core P02 | 224 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -47,6 +65,9 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 - DECISION-005 (Navigation): Bottom tab bar mobile + top rail desktop — LOCKED
 - PostgreSQL chosen over SQLite (explicit override for multi-process draft room)
 - Sleeper-first because no OAuth required (fastest MVP path)
+- Used /values/current FantasyCalc endpoint (not /values?sport=nfl which returns 404)
+- SoFi Stadium (LAC/LAR) treated as indoor=True — weather-controlled despite transparent roof
+- build_sleeper_id_index is synchronous — pure dict comprehension, no I/O
 
 ### Pending Todos
 
@@ -73,6 +94,6 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ## Session Continuity
 
-Last session: 2026-06-27
-Stopped at: 02-01 complete (Wave 0 test scaffolding). Next: 02-02 (cache.py extensions + ProjectionService)
+Last session: 2026-06-27T11:00:06.250Z
+Stopped at: Completed 02-02-PLAN.md - cache extensions, NFL stadiums, ProjectionService
 Resume file: None
