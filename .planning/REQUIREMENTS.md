@@ -51,14 +51,16 @@ Requirements committed for Phase 1 through Phase 8. Each maps to exactly one roa
 **: Games with 20+ mph wind, heavy rain, or snow show a weather chip; projection is adjusted down with magnitude shown; indoor stadiums never show weather (V1)
 - [x] **TM-10
 **: If all flex options have confidence below 55, a "no strong call" banner is shown instead of a false high-confidence pick (V1)
-- [ ] **TM-11**: RB on a team favored by 10+ shows "Positive game script" as a factor with projection reflecting expected workload (V1)
+- [x] **TM-11
+**: RB on a team favored by 10+ shows "Positive game script" as a factor with projection reflecting expected workload (V1)
 - [x] **TM-12
 **: FAAB bid recommendation shown with confidence range (e.g., $14 ± $3) for FAAB leagues (V1)
 - [ ] **TM-13**: Per-player season trend chart: weekly points for current season, season totals for last 3 seasons, "vs this opponent" toggle (V1)
 - [ ] **TM-14**: Player news feed shown most-recent-first with source, timestamp, and impact tag (injury, usage, coach quote) (V1)
 - [x] **TM-15
 **: User can manually drag a player into a different slot; projected total and confidence recompute; override is remembered for that week (V1)
-- [ ] **TM-16**: Given Yahoo or ESPN connection with write scope, user can click "Apply suggested lineup" to submit lineup change via host API; host rejection shows a specific error (V1)
+- [x] **TM-16
+**: Given Yahoo or ESPN connection with write scope, user can click "Apply suggested lineup" to submit lineup change via host API; host rejection shows a specific error (V1)
 
 ### Multi-Platform Connectors (Phase 3)
 

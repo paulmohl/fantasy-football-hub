@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-05-PLAN.md
-last_updated: "2026-06-27T11:14:46.816Z"
+stopped_at: Completed 02-06-PLAN.md
+last_updated: "2026-06-27T11:21:48.318Z"
 last_activity: 2026-06-27
 progress:
   total_phases: 9
   completed_phases: 1
   total_plans: 22
-  completed_plans: 15
-  percent: 68
+  completed_plans: 16
+  percent: 73
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 ## Current Position
 
 Phase: 2 of 8 active phases (Team Manager Core)
-Plan: 5 of 12 in current phase (02-01-PLAN.md complete)
+Plan: 6 of 12 in current phase (02-01-PLAN.md complete)
 Status: Ready to execute
 Last activity: 2026-06-27
 
-Progress: [███████░░░] 68%
+Progress: [███████░░░] 73%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [███████░░░] 68%
 | Phase 02-team-manager-core P03 | 138 | 1 tasks | 2 files |
 | Phase 02-team-manager-core P04 | 3 | 1 tasks | 1 files |
 | Phase 02-team-manager-core P05 | 5 minutes | 2 tasks | 2 files |
+| Phase 02-team-manager-core P06 | 20min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 - Both trend_score and composite_score computed per player simultaneously; frontend toggles display (DECISION-003)
 - compare_players always returns exactly 3 factors in fixed priority order: tier, trend, then injury/positional/roster%
 - Confidence in TradeEvaluator capped 10-100 to avoid zero-signal UX problem
+- Adapted team.py to actual model shape: Team.owner_user_id join (not LeagueMember.roster_id), Roster keyed by team_id+week
+- build_optimal_lineup returns list not tuple — total_projected and no_strong_call computed inline
+- detect_waiver_type reads League.scoring_rules (actual field name), not League.settings
 
 ### Pending Todos
 
@@ -104,6 +108,6 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ## Session Continuity
 
-Last session: 2026-06-27T11:14:46.803Z
-Stopped at: Completed 02-05-PLAN.md
+Last session: 2026-06-27T11:21:48.311Z
+Stopped at: Completed 02-06-PLAN.md
 Resume file: None
