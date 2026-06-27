@@ -7,6 +7,7 @@ import { LineupCard } from '@/components/LineupCard'
 import { StandingsCard } from '@/components/StandingsCard'
 import { WaiverCard, WaiverPlayer } from '@/components/WaiverCard'
 import { AddPlayerDialog } from '@/components/AddPlayerDialog'
+import { PlayerDetailDrawer, PlayerSlotData } from '@/components/PlayerDetailDrawer'
 
 interface Player {
   player_id: string
@@ -92,9 +93,32 @@ interface AddPlayerState {
   faabBid: FaabBid | null
 }
 
+interface LineupSlot {
+  slot: string
+  player_id: string | null
+  full_name: string | null
+  position: string | null
+  projected_points: number
+  confidence: number
+  injury_status: string | null
+  is_out: boolean
+  replacement_suggestion: string | null
+  is_swap_suggested: boolean
+  weather: { wind_mph: number; precipitation_mm?: number; weather_code?: number; snowfall_mm?: number; has_chip: boolean } | null
+  matchup_grade?: string | null
+  opponent_rank_vs_position?: number | null
+  recent_usage_trend?: string | null
+  team?: string | null
+}
+
+interface LineupData {
+  optimal_lineup: LineupSlot[]
+  season_type: string
+}
+
 export default function TeamPage() {
   const { activeLeagueId } = useLeagueStore()
-  const [selectedPlayer, setSelectedPlayer] = useState<unknown>(null)
+  const [selectedPlayer, setSelectedPlayer] = useState<PlayerSlotData | null>(null)
   const [addPlayer, setAddPlayer] = useState<AddPlayerState | null>(null)
 
   const { data, isLoading } = useQuery<TeamData>({
@@ -102,6 +126,39 @@ export default function TeamPage() {
     queryFn: () => api.get('/team/my').then((r) => r.data),
     enabled: !!activeLeagueId,
   })
+
+  const { data: lineupData } = useQuery<LineupData>({
+    queryKey: ['team-lineup', activeLeagueId],
+    queryFn: () => api.get('/team/lineup').then((r) => r.data),
+    enabled: !!activeLeagueId,
+    staleTime: 5 * 60 * 1000,
+  })
+
+  const comparePool: PlayerSlotData[] = (lineupData?.optimal_lineup ?? [])
+    .filter((s): s is LineupSlot & { player_id: string } => !!s.player_id)
+    .map((s) => ({
+      player_id: s.player_id,
+      full_name: s.full_name,
+      position: s.position,
+      injury_status: s.injury_status,
+      projected_points: s.projected_points,
+      confidence: s.confidence,
+      matchup_grade: s.matchup_grade,
+      opponent_rank_vs_position: s.opponent_rank_vs_position,
+      recent_usage_trend: s.recent_usage_trend,
+      weather: s.weather
+        ? {
+            wind_mph: s.weather.wind_mph,
+            precipitation_mm: s.weather.precipitation_mm ?? 0,
+            weather_code: s.weather.weather_code ?? 0,
+            snowfall_mm: s.weather.snowfall_mm ?? 0,
+            has_chip: s.weather.has_chip,
+          }
+        : null,
+      team: s.team,
+      is_out: s.is_out,
+      replacement_suggestion: s.replacement_suggestion,
+    }))
 
   return (
     <div className="px-4 pt-10 pb-4 space-y-3">
@@ -136,7 +193,30 @@ export default function TeamPage() {
 
       {activeLeagueId && !isLoading && (
         <div className="space-y-3">
-          <LineupCard onPlayerClick={setSelectedPlayer} />
+          <LineupCard
+            onPlayerClick={(slot) => {
+              if (!slot.player_id) return
+              setSelectedPlayer({
+                player_id: slot.player_id,
+                full_name: slot.full_name,
+                position: slot.position,
+                injury_status: slot.injury_status,
+                projected_points: slot.projected_points,
+                confidence: slot.confidence,
+                is_out: slot.is_out,
+                replacement_suggestion: slot.replacement_suggestion,
+                weather: slot.weather
+                  ? {
+                      wind_mph: slot.weather.wind_mph,
+                      precipitation_mm: (slot.weather as { precipitation_mm?: number }).precipitation_mm ?? 0,
+                      weather_code: (slot.weather as { weather_code?: number }).weather_code ?? 0,
+                      snowfall_mm: (slot.weather as { snowfall_mm?: number }).snowfall_mm ?? 0,
+                      has_chip: slot.weather.has_chip,
+                    }
+                  : null,
+              })
+            }}
+          />
 
           <WaiverCard
             onAddPlayer={(player, waiverType, dropCandidates, faabBid) =>
@@ -148,10 +228,13 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* PlayerDetailDrawer — wired in Plan 11 */}
-      {selectedPlayer && (
-        <div />
-      )}
+      <PlayerDetailDrawer
+        player={selectedPlayer}
+        onClose={() => setSelectedPlayer(null)}
+        seasonType={lineupData?.season_type}
+        activeLeagueId={activeLeagueId}
+        comparePool={comparePool}
+      />
 
       <AddPlayerDialog
         open={!!addPlayer}

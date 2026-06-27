@@ -53,8 +53,8 @@ export function TrendChart({ data, compareData, showCompare = false, isLoading =
           domain={['auto', 'auto']}
         />
         <Tooltip
-          formatter={(v: number, _: string, item: { payload: WeeklyPoint }) => [
-            `${v.toFixed(1)} pts wk ${item.payload.week}`,
+          formatter={(v, _name, item) => [
+            typeof v === 'number' ? `${v.toFixed(1)} pts wk ${(item as { payload: WeeklyPoint }).payload.week}` : String(v),
             'Points',
           ]}
           contentStyle={{
