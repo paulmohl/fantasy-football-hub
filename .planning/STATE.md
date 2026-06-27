@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-11-PLAN.md — PlayerDetailDrawer, WeatherChip, TrendChart, PlayerComparePanel
-last_updated: "2026-06-27T11:47:40.471Z"
+stopped_at: Completed 02-12-PLAN.md — game script (TM-11), stats route (TM-13), arq prewarm, FAAB wire-up (TM-12)
+last_updated: "2026-06-27T11:54:27.459Z"
 last_activity: 2026-06-27
 progress:
   total_phases: 9
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 22
-  completed_plans: 21
-  percent: 95
+  completed_plans: 22
+  percent: 100
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 ## Current Position
 
 Phase: 2 of 8 active phases (Team Manager Core)
-Plan: 11 of 12 in current phase (02-01-PLAN.md complete)
+Plan: 12 of 12 in current phase (02-01-PLAN.md complete)
 Status: Ready to execute
 Last activity: 2026-06-27
 
-Progress: [██████████] 95%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [██████████] 95%
 | Phase 02-team-manager-core P09 | 10min | 2 tasks | 4 files |
 | Phase 02-team-manager-core P10 | 2min | 2 tasks | 3 files |
 | Phase 02-team-manager-core P11 | 6min | 2 tasks | 5 files |
+| Phase 02-team-manager-core P12 | 10min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,9 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 - comparePool built in TeamPage via useQuery with same key as LineupCard (React Query deduplication, no extra fetch)
 - PlayerSlotData exported from PlayerDetailDrawer.tsx — LineupCard.SlotData mapped via adapter closure in TeamPage onPlayerClick
 - Recharts v3 Tooltip formatter typed defensively with typeof v === number guard (ValueType includes undefined in v3)
+- LineupOptimizer class wraps build_optimal_lineup — _compute_game_script method added to class form per TM-11 acceptance criteria; module-level function preserved for test compatibility
+- user_roster_id derived from team.host_team_id for matchup stats lookup — per-slot opponent cross-reference deferred to Phase 3+
+- recent_usage_trend only stable/null in Phase 2 — up/down requires prior week cache, deferred to Phase 3+
 
 ### Pending Todos
 
@@ -124,6 +128,6 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ## Session Continuity
 
-Last session: 2026-06-27T11:47:40.463Z
-Stopped at: Completed 02-11-PLAN.md — PlayerDetailDrawer, WeatherChip, TrendChart, PlayerComparePanel
+Last session: 2026-06-27T11:54:27.452Z
+Stopped at: Completed 02-12-PLAN.md — game script (TM-11), stats route (TM-13), arq prewarm, FAAB wire-up (TM-12)
 Resume file: None

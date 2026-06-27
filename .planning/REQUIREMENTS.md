@@ -57,7 +57,8 @@ Requirements committed for Phase 1 through Phase 8. Each maps to exactly one roa
 **: FAAB bid recommendation shown with confidence range (e.g., $14 ± $3) for FAAB leagues (V1)
 - [x] **TM-13
 **: Per-player season trend chart: weekly points for current season, season totals for last 3 seasons, "vs this opponent" toggle (V1)
-- [ ] **TM-14**: Player news feed shown most-recent-first with source, timestamp, and impact tag (injury, usage, coach quote) (V1)
+- [x] **TM-14
+**: Player news feed shown most-recent-first with source, timestamp, and impact tag (injury, usage, coach quote) (V1)
 - [x] **TM-15
 **: User can manually drag a player into a different slot; projected total and confidence recompute; override is remembered for that week (V1)
 - [x] **TM-16
