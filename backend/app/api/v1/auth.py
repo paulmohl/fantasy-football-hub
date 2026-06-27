@@ -101,7 +101,7 @@ async def login(
         raise HTTPException(status_code=401, detail="Incorrect email or password.")
     if not user.is_verified:
         raise HTTPException(status_code=401, detail="Please verify your email before signing in.")
-    user.last_login_at = datetime.now(UTC)
+    user.last_login_at = datetime.now(UTC).replace(tzinfo=None)
     raw_refresh = await create_user_session(user.id, db)
     set_refresh_cookie(response, raw_refresh)
     return TokenResponse(access_token=create_access_token(str(user.id)), user_id=str(user.id))

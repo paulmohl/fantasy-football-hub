@@ -99,14 +99,14 @@ async def import_league(
                 draft_type=classify_draft(league_data),
                 keeper_flag=_keeper_flag(league_data),
                 dynasty_flag=_dynasty_flag(league_data),
-                last_synced_at=datetime.now(UTC),
+                last_synced_at=datetime.now(UTC).replace(tzinfo=None),
             )
             db.add(league)
         else:
             league.name = league_data["name"]
             league.scoring_rules = scoring_rules
             league.roster_format = roster_format
-            league.last_synced_at = datetime.now(UTC)
+            league.last_synced_at = datetime.now(UTC).replace(tzinfo=None)
         await db.flush()
 
         # Find current user's roster_id from rosters list
@@ -130,7 +130,7 @@ async def import_league(
                 league_id=league.id,
                 host_team_id=member_host_team_id,
                 role="owner",
-                connected_at=datetime.now(UTC),
+                connected_at=datetime.now(UTC).replace(tzinfo=None),
             ))
         else:
             member.host_team_id = member_host_team_id
@@ -173,11 +173,11 @@ async def import_league(
                     team_id=team.id,
                     week=week,
                     snapshot=snapshot_data,
-                    last_synced_at=datetime.now(UTC),
+                    last_synced_at=datetime.now(UTC).replace(tzinfo=None),
                 ))
             else:
                 existing_roster.snapshot = snapshot_data
-                existing_roster.last_synced_at = datetime.now(UTC)
+                existing_roster.last_synced_at = datetime.now(UTC).replace(tzinfo=None)
 
     # Step 5: Cache after successful savepoint commit (outside transaction)
     await redis.set(
@@ -213,7 +213,7 @@ async def refresh_league(
         league.draft_type = classify_draft(league_data)
         league.keeper_flag = _keeper_flag(league_data)
         league.dynasty_flag = _dynasty_flag(league_data)
-        league.last_synced_at = datetime.now(UTC)
+        league.last_synced_at = datetime.now(UTC).replace(tzinfo=None)
 
         for roster in rosters:
             host_team_id = str(roster["roster_id"])
@@ -236,7 +236,7 @@ async def refresh_league(
                         "players": roster.get("players") or [],
                         "settings": roster.get("settings") or {},
                     }
-                    existing_roster.last_synced_at = datetime.now(UTC)
+                    existing_roster.last_synced_at = datetime.now(UTC).replace(tzinfo=None)
 
     # Invalidate and repopulate cache
     await redis.delete(CacheKey.league_settings(str(league.id)))

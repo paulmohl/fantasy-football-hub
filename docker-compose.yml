@@ -46,6 +46,7 @@ services:
     command: npm run dev -- --host
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - backend
 

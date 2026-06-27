@@ -16,5 +16,5 @@ class AuditLog(Base):
     action: Mapped[str]
     target_type: Mapped[str | None] = mapped_column(default=None)
     target_id: Mapped[str | None] = mapped_column(default=None)
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC))
+    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC).replace(tzinfo=None))
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, default=None)

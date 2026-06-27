@@ -34,7 +34,7 @@ class LeagueMember(Base):
     league_id: Mapped[UUID] = mapped_column(ForeignKey("leagues.id", ondelete="CASCADE"))
     host_team_id: Mapped[str | None] = mapped_column(default=None)
     role: Mapped[str] = mapped_column(default="owner")
-    connected_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC))
+    connected_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(UTC).replace(tzinfo=None))
 
 
 class Team(Base):

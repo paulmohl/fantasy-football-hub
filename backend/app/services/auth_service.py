@@ -21,7 +21,7 @@ async def create_user_session(user_id: UUID, db: AsyncSession) -> str:
     session = Session(
         user_id=user_id,
         token_hash=_hash_token(raw_token),
-        expires_at=datetime.now(UTC) + timedelta(days=30),
+        expires_at=datetime.now(UTC).replace(tzinfo=None) + timedelta(days=30),
     )
     db.add(session)
     await db.flush()
@@ -34,7 +34,7 @@ async def verify_refresh_token(raw_token: str, db: AsyncSession) -> Session | No
     result = await db.execute(
         select(Session)
         .where(Session.token_hash == token_hash)
-        .where(Session.expires_at > datetime.now(UTC))
+        .where(Session.expires_at > datetime.now(UTC).replace(tzinfo=None))
     )
     return result.scalar_one_or_none()
 
