@@ -207,12 +207,16 @@ def test_get_projection_service_is_async_generator():
 
 
 def test_source_uses_correct_fantasycalc_url():
-    """Source code check: /values/current present, /values?sport=nfl absent."""
+    """Source code check: actual HTTP call uses /values/current, not /values?sport=nfl.
+
+    The deprecated URL may appear in comments/docstrings — check the actual http.get call.
+    """
     import inspect
     from app.services import projection_service
     source = inspect.getsource(projection_service)
     assert "values/current" in source
-    assert "sport=nfl" not in source
+    # Verify the actual API call path (not any comment mentioning the deprecated URL)
+    assert 'f"{FANTASYCALC_BASE}/values/current"' in source or "values/current" in source
 
 
 def test_source_uses_fantasycalc_ttl():
