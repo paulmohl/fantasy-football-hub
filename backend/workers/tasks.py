@@ -7,8 +7,10 @@ Phase 2 additions:
 Task registry: add all tasks to the WorkerSettings.functions list.
 """
 import json
+import os
 
 import httpx
+from arq.connections import RedisSettings
 from arq.cron import cron
 from redis.asyncio import Redis
 
@@ -52,6 +54,7 @@ class WorkerSettings:
     Run: arq workers.tasks.WorkerSettings
     """
 
+    redis_settings = RedisSettings.from_dsn(os.environ.get("REDIS_URL", "redis://redis:6379/0"))
     functions = [fantasycalc_prewarm]
     cron_jobs = [
         cron(fantasycalc_prewarm, hour=0, minute=5, name="fantasycalc_prewarm_nightly"),
