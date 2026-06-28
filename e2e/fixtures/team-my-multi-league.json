@@ -1,0 +1,21 @@
+{
+  "leagues": [
+    {
+      "league_id": "league-001",
+      "name": "Gridiron Glory 2025",
+      "season": "2025",
+      "platform": "sleeper",
+      "host_team_id": "7",
+      "team_name": "Bazzanimals"
+    },
+    {
+      "league_id": "league-002",
+      "name": "Dynasty Empire 2025",
+      "season": "2025",
+      "platform": "sleeper",
+      "host_team_id": "3",
+      "team_name": "Bazzanimals II"
+    }
+  ],
+  "user_id": "user-test-001"
+}

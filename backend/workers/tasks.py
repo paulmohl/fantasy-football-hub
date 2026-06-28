@@ -9,6 +9,7 @@ Task registry: add all tasks to the WorkerSettings.functions list.
 import json
 
 import httpx
+from arq.cron import cron
 from redis.asyncio import Redis
 
 from app.core.cache import CacheKey, CacheTTL
@@ -53,10 +54,5 @@ class WorkerSettings:
 
     functions = [fantasycalc_prewarm]
     cron_jobs = [
-        {
-            "coroutine": fantasycalc_prewarm,
-            "hour": 0,
-            "minute": 5,
-            "name": "fantasycalc_prewarm_nightly",
-        }
+        cron(fantasycalc_prewarm, hour=0, minute=5, name="fantasycalc_prewarm_nightly"),
     ]

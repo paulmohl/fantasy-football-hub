@@ -1,0 +1,65 @@
+{
+  "league_id": "league-001",
+  "waiver_type": "faab",
+  "mode": "trend",
+  "season_type": "regular",
+  "players": [
+    {
+      "player_id": "5002",
+      "full_name": "Rashid Shaheed",
+      "position": "WR",
+      "team": "NO",
+      "trend_score": 88.1,
+      "composite_score": 78.3,
+      "injury_status": null,
+      "fc_value": 2100,
+      "trending_count": 920
+    },
+    {
+      "player_id": "5001",
+      "full_name": "Kyren Williams",
+      "position": "RB",
+      "team": "LAR",
+      "trend_score": 82.0,
+      "composite_score": 91.5,
+      "injury_status": null,
+      "fc_value": 4200,
+      "trending_count": 850
+    },
+    {
+      "player_id": "5003",
+      "full_name": "Elijah Moore",
+      "position": "WR",
+      "team": "CLE",
+      "trend_score": 65.4,
+      "composite_score": 70.2,
+      "injury_status": "Questionable",
+      "fc_value": 1800,
+      "trending_count": 310
+    },
+    {
+      "player_id": "5004",
+      "full_name": "Zamir White",
+      "position": "RB",
+      "team": "LV",
+      "trend_score": 58.9,
+      "composite_score": 62.7,
+      "injury_status": null,
+      "fc_value": 1500,
+      "trending_count": 250
+    },
+    {
+      "player_id": "5005",
+      "full_name": "Cole Kmet",
+      "position": "TE",
+      "team": "CHI",
+      "trend_score": 50.3,
+      "composite_score": 55.1,
+      "injury_status": null,
+      "fc_value": 1200,
+      "trending_count": 180
+    }
+  ],
+  "drop_suggestions": [],
+  "faab_bid": null
+}

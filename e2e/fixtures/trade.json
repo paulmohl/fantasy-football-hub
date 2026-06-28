@@ -1,0 +1,19 @@
+{
+  "recommendation": "start_a",
+  "point_delta": 51,
+  "confidence": 87,
+  "three_biggest_factors": [
+    {
+      "label": "FantasyCalc trade value",
+      "detail": "Tyreek Hill has 2.6× the FantasyCalc trade value (8200 vs 3100)"
+    },
+    {
+      "label": "Recent scoring average",
+      "detail": "Hill averages 22.1 PPR pts over the last 4 weeks vs Diggs at 10.3"
+    },
+    {
+      "label": "Target share",
+      "detail": "Hill's target share (28%) dominates Diggs' shrinking role (12%)"
+    }
+  ]
+}

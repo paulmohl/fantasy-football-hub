@@ -1,0 +1,19 @@
+{
+  "player_id": "4036",
+  "season": "2025",
+  "weekly_pts": [
+    {"week": 7, "pts": 18.4},
+    {"week": 8, "pts": 24.1},
+    {"week": 9, "pts": 12.3},
+    {"week": 10, "pts": 28.7},
+    {"week": 11, "pts": 16.2},
+    {"week": 12, "pts": 22.5},
+    {"week": 13, "pts": 19.8},
+    {"week": 14, "pts": 25.3}
+  ],
+  "career_avg": {
+    "2024": 21.3,
+    "2023": 19.8
+  },
+  "season_type": "regular"
+}

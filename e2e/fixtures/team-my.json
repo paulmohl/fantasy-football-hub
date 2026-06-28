@@ -1,0 +1,13 @@
+{
+  "leagues": [
+    {
+      "league_id": "league-001",
+      "name": "Gridiron Glory 2025",
+      "season": "2025",
+      "platform": "sleeper",
+      "host_team_id": "7",
+      "team_name": "Bazzanimals"
+    }
+  ],
+  "user_id": "user-test-001"
+}
