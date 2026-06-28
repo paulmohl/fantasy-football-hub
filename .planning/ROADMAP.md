@@ -97,8 +97,22 @@ Plans:
   3. Any Yahoo or ESPN league opens in Team Manager with the same lineup, waiver wire, and player detail experience as a Sleeper league
   4. When Yahoo or ESPN credentials expire, a banner appears on every page with a link to re-authenticate — draft room and other features do not crash
   5. Rate limits for each platform are enforced in Redis; the UI shows a soft toast when a limit is hit and serves the cached value
-**Plans**: TBD
+**Plans**: 12 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 03-01-PLAN.md — DB models (UserCredential, PlayerCrossMap) + Alembic migration 002
+- [ ] 03-02-PLAN.md — CredentialService (Fernet encrypt/decrypt/store/rotate per user+platform)
+- [ ] 03-03-PLAN.md — YahooClient (OAuth flow, token refresh, Fantasy API endpoints)
+- [ ] 03-04-PLAN.md — ESPNClient (cookie-based private auth, unauthenticated public, error handling)
+- [ ] 03-05-PLAN.md — yahoo_service (import Yahoo leagues → unified League/Team/Roster models, MP-09 keeper)
+- [ ] 03-06-PLAN.md — espn_service (import ESPN leagues → unified models, MP-09 keeper)
+- [ ] 03-07-PLAN.md — PlayerCrossMapService (ffb_ids CSV seed, fuzzy fallback, arq weekly refresh)
+- [ ] 03-08-PLAN.md — API routes (/auth/yahoo, /auth/yahoo/callback, /espn/connect, /espn/public, /users/me health)
+- [ ] 03-09-PLAN.md — Rate limiting (Redis fixed-window, check_platform_rate_limit dependency, X-Rate-Limited header)
+- [ ] 03-10-PLAN.md — Expired auth detection (arq health-check task, HealthBanner component, auth store extension)
+- [ ] 03-11-PLAN.md — Frontend connect flows (Yahoo OAuth button, ESPN cookie/public forms, PlatformIcon)
+- [ ] 03-12-PLAN.md — E2E + integration tests (Playwright ESPN/Yahoo/rate-limit, pytest MP-06/MP-07/MP-09)
 
 ### Phase 4: Live Draft Room (Snake)
 **Goal**: Any league connected to the Hub can run a real-time snake draft with the Bloomberg Terminal aesthetic — all data visible simultaneously, picks propagating in under 500ms.
@@ -179,7 +193,7 @@ Plans:
 | 0. Project Setup | -/- | Complete | 2026-06-22 |
 | 1. League Connector MVP | 0/10 | In progress | - |
 | 2. Team Manager Core | 1/12 | In progress | - |
-| 3. Multi-Platform Connectors | 0/TBD | Not started | - |
+| 3. Multi-Platform Connectors | 0/12 | Not started | - |
 | 4. Live Draft Room (Snake) | 0/TBD | Not started | - |
 | 5. Auction Draft Variant | 0/TBD | Not started | - |
 | 6. Video and Audio for Draft | 0/TBD | Not started | - |
