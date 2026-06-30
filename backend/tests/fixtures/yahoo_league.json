@@ -1,0 +1,64 @@
+{
+  "fantasy_content": {
+    "lang": "en-US",
+    "uri": "/fantasy/v2/users;use_login=1/games;game_codes=nfl/leagues",
+    "users": {
+      "0": {
+        "user": [
+          {"guid": "ABC123"},
+          {
+            "games": {
+              "0": {
+                "game": [
+                  {
+                    "game_key": "461",
+                    "game_id": "461",
+                    "name": "Football",
+                    "code": "nfl",
+                    "type": "full",
+                    "season": "2025"
+                  },
+                  {
+                    "leagues": {
+                      "0": {
+                        "league": [
+                          {
+                            "league_key": "461.l.1234",
+                            "league_id": "1234",
+                            "name": "Test NFL League",
+                            "season": "2025",
+                            "num_teams": 10,
+                            "scoring_type": "head",
+                            "draft_status": "predraft"
+                          }
+                        ]
+                      },
+                      "count": 1
+                    }
+                  }
+                ]
+              },
+              "count": 1
+            }
+          }
+        ]
+      },
+      "count": 1
+    },
+    "games": {
+      "0": {
+        "game": [
+          {
+            "game_key": "461",
+            "game_id": "461",
+            "name": "Football",
+            "code": "nfl",
+            "type": "full",
+            "season": "2025"
+          }
+        ]
+      },
+      "count": 1
+    }
+  }
+}

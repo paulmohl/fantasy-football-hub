@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@/store/auth'
+import { useToast } from '@/components/ui/Toast'
 import Layout from '@/components/Layout'
 import LoginPage from '@/pages/LoginPage'
 import ConnectPage from '@/pages/ConnectPage'
@@ -10,6 +11,26 @@ import TradePage from '@/pages/TradePage'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token)
+  const setHasLeagues = useAuthStore((s) => s.setHasLeagues)
+  const setUnhealthyPlatforms = useAuthStore((s) => s.setUnhealthyPlatforms)
+
+  useEffect(() => {
+    if (!token) return
+    fetch('/api/v1/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return
+        setHasLeagues(data.has_leagues)
+        const unhealthy = (data.credential_health ?? [])
+          .filter((c: { platform: string; is_healthy: boolean }) => !c.is_healthy)
+          .map((c: { platform: string }) => c.platform)
+        setUnhealthyPlatforms(unhealthy)
+      })
+      .catch(() => {})
+  }, [token])
+
   if (!token) return <Navigate to="/login" replace />
   return <>{children}</>
 }
@@ -39,9 +60,22 @@ function AuthCallback() {
   return null
 }
 
+function RateLimitListener() {
+  const { toast } = useToast()
+  useEffect(() => {
+    const handler = (e: CustomEvent<{ platform: string }>) => {
+      toast(`${e.detail.platform} data rate-limited — showing cached results`, 'info')
+    }
+    window.addEventListener('rate-limited', handler as EventListener)
+    return () => window.removeEventListener('rate-limited', handler as EventListener)
+  }, [toast])
+  return null
+}
+
 export default function App() {
   return (
     <BrowserRouter>
+      <RateLimitListener />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/auth/callback" element={<AuthCallback />} />

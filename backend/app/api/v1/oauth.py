@@ -15,9 +15,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.deps import get_current_user
 from app.core.security import create_access_token, set_refresh_cookie
 from app.models.user import User
 from app.services.auth_service import create_user_session
+from app.services.credential_service import CredentialService
 
 router = APIRouter(prefix="/auth", tags=["oauth"])
 
@@ -28,6 +30,14 @@ oauth.register(
     client_id=settings.google_client_id,
     client_secret=settings.google_client_secret,
     client_kwargs={"scope": "openid email profile"},
+)
+oauth.register(
+    name="yahoo",
+    client_id=settings.yahoo_client_id,
+    client_secret=settings.yahoo_client_secret,
+    authorize_url="https://api.login.yahoo.com/oauth2/request_auth",
+    access_token_url="https://api.login.yahoo.com/oauth2/get_token",
+    client_kwargs={"scope": "fspt-w"},
 )
 
 
@@ -92,3 +102,41 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
     )
     set_refresh_cookie(response, raw_refresh)
     return response
+
+
+@router.get("/yahoo")
+async def yahoo_login(request: Request):
+    """MP-01: Redirect to Yahoo OAuth consent screen.
+
+    Returns 503 if YAHOO_CLIENT_ID is not configured.
+    """
+    if not settings.yahoo_client_id:
+        raise HTTPException(
+            status_code=503,
+            detail="Yahoo OAuth not configured. Set YAHOO_CLIENT_ID and YAHOO_CLIENT_SECRET.",
+        )
+    return await oauth.yahoo.authorize_redirect(request, settings.yahoo_redirect_uri)
+
+
+@router.get("/yahoo/callback")
+async def yahoo_callback(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """MP-01: Exchange authorization code; store encrypted refresh token; redirect to /connect."""
+    try:
+        token = await oauth.yahoo.authorize_access_token(request)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Yahoo OAuth authorization failed.")
+
+    credential_dict = {
+        "access_token": token["access_token"],
+        "refresh_token": token.get("refresh_token", ""),
+        "expires_at": token.get("expires_at", 0),
+    }
+    cred_svc = CredentialService()
+    async with db.begin_nested():
+        await cred_svc.store_credential(current_user, "yahoo", credential_dict, db)
+
+    return RedirectResponse(url=f"{settings.frontend_url}/connect?platform=yahoo")

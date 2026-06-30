@@ -1,0 +1,57 @@
+{
+  "id": 336541,
+  "scoringPeriodId": 1,
+  "seasonId": 2025,
+  "settings": {
+    "name": "Test ESPN League",
+    "size": 10,
+    "isPublic": false,
+    "scoringSettings": {
+      "scoringItems": [
+        {"statId": 0, "pointsOverrides": {"16": {"value": 6}}},
+        {"statId": 23, "pointsOverrides": {"16": {"value": 4}}}
+      ]
+    },
+    "rosterSettings": {
+      "lineupSlotCounts": {"0": 1, "2": 2, "4": 2, "6": 1, "17": 1, "16": 7, "20": 1, "21": 1}
+    },
+    "scheduleSettings": {
+      "numberOfPlayoffTeams": 4,
+      "playoffSeedingRule": "TOTAL_POINTS_SCORED"
+    }
+  },
+  "teams": [
+    {
+      "id": 1,
+      "location": "Team",
+      "nickname": "Alpha",
+      "abbrev": "ALPHA",
+      "record": {"overall": {"wins": 0, "losses": 0}},
+      "roster": {
+        "entries": [
+          {
+            "playerId": 3054211,
+            "playerPoolEntry": {
+              "player": {
+                "id": 3054211,
+                "fullName": "Patrick Mahomes",
+                "defaultPositionId": 1
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "location": "Team",
+      "nickname": "Beta",
+      "abbrev": "BETA",
+      "record": {"overall": {"wins": 0, "losses": 0}},
+      "roster": {"entries": []}
+    }
+  ],
+  "members": [
+    {"id": "{ABC-123}", "displayName": "Test User", "isLeagueManager": true}
+  ]
+}

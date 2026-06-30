@@ -47,5 +47,11 @@ class Settings(BaseSettings):
     yahoo_client_secret: str = ""
     yahoo_redirect_uri: str = "http://localhost:8000/api/v1/auth/yahoo/callback"
 
+    # ESPN (unofficial API — no auth key, uses session cookies for private leagues)
+    espn_api_base: str = "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl"
+
+    # Active NFL season year — increment each September; used by ESPN routes
+    nfl_season_year: int = 2025
+
 
 settings = Settings()
