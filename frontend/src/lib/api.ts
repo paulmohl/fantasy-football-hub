@@ -17,10 +17,19 @@ let isRefreshing = false
 let failedQueue: Array<{ resolve: (v: string) => void; reject: (e: unknown) => void }> = []
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    if (res.headers['x-rate-limited'] === 'true') {
+      const url = res.config.url ?? ''
+      const platform = url.includes('yahoo') ? 'Yahoo' : url.includes('espn') ? 'ESPN' : 'platform'
+      window.dispatchEvent(new CustomEvent('rate-limited', { detail: { platform } }))
+    }
+    return res
+  },
   async (err) => {
     const originalRequest = err.config
-    if (err.response?.status === 401 && !originalRequest._retry) {
+    const url = originalRequest?.url ?? ''
+    const isPlatformRoute = /\/(espn|yahoo|sleeper)\//.test(url)
+    if (err.response?.status === 401 && !originalRequest._retry && !isPlatformRoute) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })

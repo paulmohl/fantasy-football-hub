@@ -1,11 +1,15 @@
+import json
+
 import sentry_sdk
 import socketio
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api.v1 import router as v1_router
 from app.core.config import settings
 from app.core.logging import configure_logging
+from app.core.rate_limit import RateLimitedWithCache
 from app.core.redis import close_redis, get_redis
 
 configure_logging()
@@ -51,6 +55,16 @@ from starlette.middleware.sessions import SessionMiddleware  # noqa: E402
 app.add_middleware(SessionMiddleware, secret_key=settings.app_secret_key)
 
 app.include_router(v1_router)
+
+
+@app.exception_handler(RateLimitedWithCache)
+async def rate_limited_cache_handler(request: Request, exc: RateLimitedWithCache) -> JSONResponse:
+    """MP-07: Serve cached data with X-Rate-Limited header when rate limit is hit."""
+    return JSONResponse(
+        content=json.loads(exc.cached_data),
+        headers={"X-Rate-Limited": "true"},
+        status_code=200,
+    )
 
 
 @app.on_event("startup")

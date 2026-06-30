@@ -39,6 +39,18 @@ services:
     volumes:
       - ./backend:/app
 
+  worker:
+    build: ./backend
+    command: arq workers.tasks.WorkerSettings
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
   frontend:
     build: ./frontend
     ports:

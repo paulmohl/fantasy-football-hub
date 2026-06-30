@@ -35,6 +35,14 @@ class CacheKey:
         return f"ratelimit:sleeper:{user_id}"
 
     @staticmethod
+    def rate_limit_yahoo(user_id: str) -> str:
+        return f"ratelimit:yahoo:{user_id}"
+
+    @staticmethod
+    def rate_limit_espn(user_id: str) -> str:
+        return f"ratelimit:espn:{user_id}"
+
+    @staticmethod
     def fantasycalc_values(is_dynasty: bool) -> str:
         return f"fantasycalc:values:{'dynasty' if is_dynasty else 'redraft'}"
 
@@ -56,6 +64,7 @@ class CacheKey:
 
 
 class CacheTTL:
+    RATE_WINDOW: int = 600        # 10-minute fixed window for all platform rate limits
     SLEEPER_USER: int = 300       # 5 min
     SLEEPER_LEAGUES: int = 600    # 10 min
     LEAGUE_SETTINGS: int = 21600  # 6 hours

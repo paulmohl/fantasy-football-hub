@@ -2,6 +2,7 @@ import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { Home, Users, Zap, ArrowLeftRight, MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/auth'
+import HealthBanner from '@/components/HealthBanner'
 
 const tabs = [
   { to: '/team', icon: Home, label: 'My Team' },
@@ -20,6 +21,7 @@ export default function Layout() {
 
   return (
     <div className="flex flex-col h-screen bg-bg overflow-hidden">
+      <HealthBanner />
       <main className={cn('flex-1 overflow-y-auto', isDraft && 'pb-0')}>
         <Outlet />
       </main>

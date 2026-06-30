@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
@@ -9,9 +9,10 @@ import { OptionPill } from '@/components/ui/OptionPill'
 import { LeagueCard } from '@/components/ui/LeagueCard'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { ConnectionCard } from '@/components/ui/ConnectionCard'
+import { PlatformIcon } from '@/components/ui/PlatformIcon'
 import { cn } from '@/lib/utils'
 
-type Step = 'platform' | 'username' | 'leagues' | 'importing' | 'done'
+type Step = 'platform' | 'username' | 'leagues' | 'importing' | 'done' | 'espn_type' | 'espn_private' | 'espn_public' | 'yahoo_connected'
 
 interface BubbleEntry {
   id: string
@@ -114,13 +115,15 @@ function MyConnections({ onAddLeague }: { onAddLeague: () => void }) {
 // ──────────────────────────────────────────
 // Conversational onboarding (hasLeagues=false)
 // ──────────────────────────────────────────
-function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
-  const [step, setStep] = useState<Step>('platform')
+function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: () => void; initialStep?: Step }) {
+  const [step, setStep] = useState<Step>(initialStep)
   const [bubbles, setBubbles] = useState<BubbleEntry[]>([
     {
       id: uid(),
       type: 'app',
-      content: 'Hey! Welcome to FantasyHub. Which platform is your league on?',
+      content: initialStep === 'yahoo_connected'
+        ? 'Yahoo connected! Your leagues will be imported. Head to My Team to see your lineup.'
+        : 'Hey! Welcome to FantasyHub. Which platform is your league on?',
     },
   ])
   const [username, setUsername] = useState('')
@@ -128,6 +131,11 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [lookingUp, setLookingUp] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [espnSwid, setEspnSwid] = useState('')
+  const [espnS2, setEspnS2] = useState('')
+  const [espnLeagueId, setEspnLeagueId] = useState('')
+  const [espnError, setEspnError] = useState('')
+  const [espnSubmitting, setEspnSubmitting] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -143,19 +151,76 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
   }
 
   function handlePlatformSelect(platform: string) {
-    if (platform !== 'Sleeper') return
     append({ type: 'user', content: platform })
-    setStep('username')
-    setTimeout(() => {
+    if (platform === 'Sleeper') {
+      setStep('username')
+      setTimeout(() => {
+        append({
+          type: 'app',
+          content: (
+            <div>
+              <p>Got it. What&apos;s your Sleeper username? I&apos;ll find your leagues — no password needed.</p>
+            </div>
+          ),
+        })
+      }, 400)
+    } else if (platform === 'Yahoo') {
       append({
         type: 'app',
-        content: (
-          <div>
-            <p>Got it. What&apos;s your Sleeper username? I&apos;ll find your leagues — no password needed.</p>
-          </div>
-        ),
+        content: <p>Redirecting you to Yahoo to authorize access…</p>,
       })
-    }, 400)
+      setTimeout(() => {
+        window.location.href = '/api/v1/auth/yahoo'
+      }, 600)
+    } else if (platform === 'ESPN') {
+      setStep('espn_type')
+      setTimeout(() => {
+        append({
+          type: 'app',
+          content: <p>Is your ESPN league private (requires cookies) or public?</p>,
+        })
+      }, 400)
+    }
+  }
+
+  async function handleEspnPrivateSubmit() {
+    if (!espnSwid.trim() || !espnS2.trim() || !espnLeagueId.trim()) return
+    setEspnError('')
+    setEspnSubmitting(true)
+    try {
+      await api.post('/espn/connect', {
+        swid: espnSwid.trim(),
+        espn_s2: espnS2.trim(),
+        league_id: espnLeagueId.trim(),
+      })
+      setStep('done')
+      append({ type: 'app', content: <p>ESPN private league connected! Head to My Team.</p> })
+      onComplete()
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+        ?? 'ESPN connection failed. Check your cookies and try again.'
+      setEspnError(detail)
+    } finally {
+      setEspnSubmitting(false)
+    }
+  }
+
+  async function handleEspnPublicSubmit() {
+    if (!espnLeagueId.trim()) return
+    setEspnError('')
+    setEspnSubmitting(true)
+    try {
+      await api.post('/espn/public', { league_id: espnLeagueId.trim() })
+      setStep('done')
+      append({ type: 'app', content: <p>ESPN public league connected! Head to My Team.</p> })
+      onComplete()
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail
+        ?? 'Could not find that ESPN league. Verify the league ID.'
+      setEspnError(detail)
+    } finally {
+      setEspnSubmitting(false)
+    }
   }
 
   async function handleLookup() {
@@ -270,18 +335,95 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
           {step === 'platform' && (
             <div className="flex flex-wrap gap-2">
               <OptionPill onClick={() => handlePlatformSelect('Sleeper')}>
-                Sleeper
+                <span className="flex items-center gap-1.5"><PlatformIcon platform="sleeper" size={20} />Sleeper</span>
               </OptionPill>
-              <OptionPill disabled className="opacity-40 cursor-not-allowed pointer-events-none">
-                Yahoo
+              <OptionPill onClick={() => handlePlatformSelect('Yahoo')}>
+                <span className="flex items-center gap-1.5"><PlatformIcon platform="yahoo" size={20} />Yahoo</span>
               </OptionPill>
-              <OptionPill disabled className="opacity-40 cursor-not-allowed pointer-events-none">
-                ESPN
-              </OptionPill>
-              <OptionPill disabled className="opacity-40 cursor-not-allowed pointer-events-none">
-                Other
+              <OptionPill onClick={() => handlePlatformSelect('ESPN')}>
+                <span className="flex items-center gap-1.5"><PlatformIcon platform="espn" size={20} />ESPN</span>
               </OptionPill>
             </div>
+          )}
+
+          {/* Step: ESPN sub-type selection */}
+          {step === 'espn_type' && (
+            <div className="flex flex-wrap gap-2">
+              <OptionPill onClick={() => { append({ type: 'user', content: 'Private league' }); setStep('espn_private') }}>
+                Private league (cookie paste)
+              </OptionPill>
+              <OptionPill onClick={() => { append({ type: 'user', content: 'Public league' }); setStep('espn_public') }}>
+                Public league (league ID only)
+              </OptionPill>
+            </div>
+          )}
+
+          {/* Step: ESPN private form */}
+          {step === 'espn_private' && (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={espnSwid}
+                onChange={(e) => setEspnSwid(e.target.value)}
+                placeholder="SWID (from browser cookies)"
+                className="w-full bg-raised border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-accent transition-colors min-h-[44px]"
+                aria-label="ESPN SWID cookie"
+              />
+              <input
+                type="text"
+                value={espnS2}
+                onChange={(e) => setEspnS2(e.target.value)}
+                placeholder="espn_s2 (from browser cookies)"
+                className="w-full bg-raised border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-accent transition-colors min-h-[44px]"
+                aria-label="ESPN espn_s2 cookie"
+              />
+              <input
+                type="text"
+                value={espnLeagueId}
+                onChange={(e) => setEspnLeagueId(e.target.value)}
+                placeholder="League ID (from URL)"
+                className="w-full bg-raised border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-accent transition-colors min-h-[44px]"
+                aria-label="ESPN League ID"
+              />
+              {espnError && <p className="text-sm text-danger">{espnError}</p>}
+              <button
+                onClick={handleEspnPrivateSubmit}
+                disabled={espnSubmitting || !espnSwid.trim() || !espnS2.trim() || !espnLeagueId.trim()}
+                className="w-full bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-semibold rounded-lg px-4 py-3 min-h-[44px] transition-colors"
+              >
+                {espnSubmitting ? 'Connecting…' : 'Connect ESPN League →'}
+              </button>
+              <p className="text-xs text-muted">Find SWID and espn_s2 in browser DevTools → Application → Cookies → espn.com</p>
+            </div>
+          )}
+
+          {/* Step: ESPN public form */}
+          {step === 'espn_public' && (
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={espnLeagueId}
+                onChange={(e) => setEspnLeagueId(e.target.value)}
+                placeholder="ESPN League ID"
+                className="w-full bg-raised border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-accent transition-colors min-h-[44px]"
+                aria-label="ESPN League ID"
+              />
+              {espnError && <p className="text-sm text-danger">{espnError}</p>}
+              <button
+                onClick={handleEspnPublicSubmit}
+                disabled={espnSubmitting || !espnLeagueId.trim()}
+                className="w-full bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-semibold rounded-lg px-4 py-3 min-h-[44px] transition-colors"
+              >
+                {espnSubmitting ? 'Connecting…' : 'Connect Public League →'}
+              </button>
+            </div>
+          )}
+
+          {/* Step: Yahoo connected success */}
+          {step === 'yahoo_connected' && (
+            <OptionPill onClick={onComplete} selected>
+              View My Team →
+            </OptionPill>
           )}
 
           {/* Step: username input */}
@@ -359,14 +501,32 @@ function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
 // ──────────────────────────────────────────
 export default function ConnectPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const hasLeagues = useAuthStore((s) => s.hasLeagues)
   const setHasLeagues = useAuthStore((s) => s.setHasLeagues)
   const [showAddFlow, setShowAddFlow] = useState(false)
+
+  const platformParam = searchParams.get('platform')
+  const reconnectParam = searchParams.get('reconnect')
+
+  // /connect?platform=yahoo → returned from Yahoo OAuth callback
+  const isYahooConnected = platformParam === 'yahoo'
+  // /connect?reconnect=yahoo → from HealthBanner; skip to Yahoo step
+  const isReconnect = !!reconnectParam
 
   function handleImportComplete() {
     setHasLeagues(true)
     setShowAddFlow(false)
     navigate('/team', { replace: true })
+  }
+
+  if (isYahooConnected) {
+    return <OnboardingFlow onComplete={handleImportComplete} initialStep="yahoo_connected" />
+  }
+
+  if (isReconnect) {
+    // Skip platform step — open onboarding directly
+    return <OnboardingFlow onComplete={handleImportComplete} />
   }
 
   if (!hasLeagues || showAddFlow) {
