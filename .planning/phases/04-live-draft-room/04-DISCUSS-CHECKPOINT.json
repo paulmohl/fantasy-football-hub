@@ -1,0 +1,39 @@
+{
+  "phase": "4",
+  "phase_name": "Live Draft Room (Snake)",
+  "timestamp": "2026-06-30T00:00:00Z",
+  "areas_completed": ["Panel layout & density", "Pick clock & auto-draft", "Rankings & queue UX"],
+  "areas_remaining": ["Pre-draft flow"],
+  "decisions": {
+    "Panel layout & density": [
+      {"question": "Primary layout arrangement", "answer": "4-column fixed grid: Left sidebar (queue+alerts) | Center-left wide (draft board) | Center-right (best available) | Right sidebar (roster+chat). Fixed proportions, no resizing."},
+      {"question": "Draft board grid", "answer": "Fixed-size cells, horizontal scroll for large leagues. Cell content: player last name + position badge (color-coded) + NFL team abbr."},
+      {"question": "Panel headers", "answer": "Thin header bar with JetBrains Mono label + chevron collapse toggle per panel."},
+      {"question": "Pick cell content", "answer": "Name + position badge + team abbr. Auto-pick flagged with small icon badge. Click for details."},
+      {"question": "On the clock visual", "answer": "Team column highlighted with pulsing accent border. Pick clock in board header: 'TEAM NAME on the clock' + countdown."}
+    ],
+    "Pick clock & auto-draft": [
+      {"question": "Clock authority", "answer": "Server-authoritative: Redis stores pick_deadline. Clients run local countdown from deadline. Server fires auto-draft on timeout."},
+      {"question": "Warning states", "answer": "30s: text-warning (amber). 10s: text-danger (red) + pulse. No audio at warnings."},
+      {"question": "Auto-draft when queue empty", "answer": "Best available with positional need weighting (ADP score + how many starters needed vs spots remaining)."},
+      {"question": "Commissioner pause/resume", "answer": "Pause freezes clock. All clients show semi-transparent 'DRAFT PAUSED' overlay. Resume shows 5-second countdown."},
+      {"question": "Audio cues", "answer": "Two triggers: (1) soft chime when any pick confirmed, all hear. (2) distinct 'your turn' tone when your team on the clock. Both mutable."},
+      {"question": "Reconnect behavior", "answer": "Client tracks last_event_id. On reconnect, server replays all events since that ID from Redis stream. Board rebuilds from replay."}
+    ],
+    "Rankings & queue UX": [
+      {"question": "Initial rankings source", "answer": "FantasyCalc rankings (overallRank + positionRank from ProjectionService already integrated in Phase 2)."},
+      {"question": "Rankings scope", "answer": "Each participant has their own personal rankings and queue. Draft board (pick grid) is shared. Queue is strictly personal."},
+      {"question": "Queue add UX", "answer": "Star/heart button on hover next to each player in best available. Click to queue. Drag-and-drop to reorder. Queue panel shows count."},
+      {"question": "Filter UX", "answer": "Position filter tab strip (ALL | QB | RB | WR | TE | K | DEF) + live search box. Can combine. Matching picks dim (not disappear) per DR-13."},
+      {"question": "Tier display", "answer": "Visual tier dividers in best available list. Horizontal divider row: 'TIER 1 (1-3)', etc. Tiers auto-calculated from ADP gaps."},
+      {"question": "Pick suggestions on the clock", "answer": "Best available list shows 'From your queue' section at top (top 3 queued players) then full ranked list below when it's your turn."}
+    ]
+  },
+  "deferred_ideas": [],
+  "canonical_refs": [
+    ".planning/ROADMAP.md (Phase 4 — DR-01 through DR-15)",
+    ".planning/REQUIREMENTS.md (DR-01 through DR-15)",
+    ".planning/PROJECT.md (DECISION-003 Bloomberg Terminal locked, Socket.IO + Redis namespaces /draft)",
+    ".planning/phases/01-league-connector-mvp/01-UI-SPEC.md (design tokens, typography scale, component patterns)"
+  ]
+}
