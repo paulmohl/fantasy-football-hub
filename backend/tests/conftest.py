@@ -67,6 +67,36 @@ def mock_redis():
     redis.delete = AsyncMock(return_value=1)
     redis.incr = AsyncMock(return_value=1)
     redis.expire = AsyncMock(return_value=True)
+    redis.xadd = AsyncMock(return_value=b"1714000000000-0")
+    redis.xrange = AsyncMock(return_value=[])
+    redis.xlen = AsyncMock(return_value=0)
+    redis.sadd = AsyncMock(return_value=1)
+    redis.srem = AsyncMock(return_value=1)
+    redis.sismember = AsyncMock(return_value=True)
+    redis.smembers = AsyncMock(return_value=set())
+    redis.scard = AsyncMock(return_value=0)
+    return redis
+
+
+@pytest.fixture
+def mock_redis_streams():
+    """Redis mock with realistic xadd/xrange return values for stream tests."""
+    redis = MagicMock()
+    redis.get = AsyncMock(return_value=None)
+    redis.set = AsyncMock(return_value=True)
+    redis.delete = AsyncMock(return_value=1)
+    redis.incr = AsyncMock(return_value=1)
+    redis.expire = AsyncMock(return_value=True)
+    redis.xadd = AsyncMock(return_value=b"1714000000001-0")
+    redis.xrange = AsyncMock(return_value=[
+        (b"1714000000001-0", {b"type": b"pick_confirmed", b"player_id": b"6783", b"pick_num": b"1"}),
+    ])
+    redis.xlen = AsyncMock(return_value=1)
+    redis.sadd = AsyncMock(return_value=1)
+    redis.srem = AsyncMock(return_value=1)
+    redis.sismember = AsyncMock(return_value=True)
+    redis.smembers = AsyncMock(return_value={b"6783", b"4046", b"1234"})
+    redis.scard = AsyncMock(return_value=3)
     return redis
 
 
