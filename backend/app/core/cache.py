@@ -62,6 +62,30 @@ class CacheKey:
     def open_meteo_weather(team_abbr: str, game_date: str) -> str:
         return f"weather:{team_abbr}:{game_date}"
 
+    @staticmethod
+    def draft_events_stream(draft_id: str) -> str:
+        return f"draft:{draft_id}:events"
+
+    @staticmethod
+    def draft_state(draft_id: str) -> str:
+        return f"draft:{draft_id}:state"
+
+    @staticmethod
+    def draft_current_pick(draft_id: str) -> str:
+        return f"draft:{draft_id}:current_pick"
+
+    @staticmethod
+    def draft_deadline(draft_id: str) -> str:
+        return f"draft:{draft_id}:pick_deadline"
+
+    @staticmethod
+    def draft_lock(draft_id: str) -> str:
+        return f"draft:{draft_id}:pick_lock"
+
+    @staticmethod
+    def draft_available(draft_id: str) -> str:
+        return f"draft:{draft_id}:available"
+
 
 class CacheTTL:
     RATE_WINDOW: int = 600        # 10-minute fixed window for all platform rate limits

@@ -48,7 +48,7 @@ def test_auto_draft_selection(mock_redis_streams):
 @pytest.mark.xfail(strict=False, reason="stub: app.services.draft_service created in plan 04-03")
 def test_positional_need_weighting():
     from app.services.draft_service import positional_need_bonus
-    roster = ["qb1"]   # 1 QB already
+    roster = ["QB"]   # 1 QB already (position string, not player ID)
     # roster_format: QB has 1 starter slot → 0 unfilled → 0 bonus
     bonus_qb = positional_need_bonus(roster, "QB", {"QB": {"slots": 1}})
     assert bonus_qb == 0.0
