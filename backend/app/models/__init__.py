@@ -3,3 +3,4 @@ from app.models.league import League, LeagueMember, Team, Roster  # noqa: F401
 from app.models.audit import AuditLog  # noqa: F401
 from app.models.credential import UserCredential  # noqa: F401
 from app.models.player import PlayerCrossMap  # noqa: F401
+from app.models.draft import Draft, DraftPick, DraftQueue, DraftChatMessage, UserDraftRanking  # noqa: F401
