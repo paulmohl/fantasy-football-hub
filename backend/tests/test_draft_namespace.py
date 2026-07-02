@@ -1,28 +1,53 @@
-"""Wave 0 stub tests for DraftNamespace Socket.IO events (DR-07, DR-09).
+"""Tests for DraftNamespace Socket.IO events (DR-07, DR-09, DR-15).
 
-These tests require app.sockets.draft_namespace which does not exist until plan 04-04.
-They are marked xfail and become real tests when 04-04 completes.
+These tests became real after plan 04-04 created app.sockets.draft_namespace.
 """
+import asyncio
+
 import pytest
 
-@pytest.mark.xfail(strict=False, reason="stub: app.sockets.draft_namespace created in plan 04-04")
+
 @pytest.mark.asyncio
 async def test_pick_propagates(async_client):
     from app.sockets.draft_namespace import DraftNamespace
-    assert DraftNamespace is not None
+    ns = DraftNamespace("/draft")
+    assert hasattr(ns, "on_connect")
+    assert hasattr(ns, "on_pick")
+    assert hasattr(ns, "on_reconnect")
 
-@pytest.mark.xfail(strict=False, reason="stub: app.sockets.draft_namespace created in plan 04-04")
+
 @pytest.mark.asyncio
 async def test_commissioner_pause(async_client):
     from app.sockets.draft_namespace import DraftNamespace
-    assert DraftNamespace is not None
+    ns = DraftNamespace("/draft")
+    assert hasattr(ns, "on_pause")
+    assert hasattr(ns, "on_resume")
+    assert hasattr(ns, "_is_commissioner")
 
-@pytest.mark.xfail(strict=False, reason="stub: app.sockets.draft_namespace created in plan 04-04")
-@pytest.mark.asyncio
-async def test_connect_rejects_missing_auth(async_client):
-    pytest.skip("requires Socket.IO test client setup — implement in plan 04-04 wave")
 
-@pytest.mark.xfail(strict=False, reason="stub: app.sockets.draft_namespace created in plan 04-04")
+def test_connect_rejects_missing_auth():
+    """on_connect raises ConnectionRefusedError when auth is None."""
+    import socketio.exceptions
+    from app.sockets.draft_namespace import DraftNamespace
+
+    ns = DraftNamespace("/draft")
+
+    with pytest.raises(socketio.exceptions.ConnectionRefusedError):
+        asyncio.run(ns.on_connect("sid1", {}, auth=None))
+
+
+def test_connect_rejects_missing_token():
+    """on_connect raises ConnectionRefusedError when token is absent from auth dict."""
+    import socketio.exceptions
+    from app.sockets.draft_namespace import DraftNamespace
+
+    ns = DraftNamespace("/draft")
+
+    with pytest.raises(socketio.exceptions.ConnectionRefusedError):
+        asyncio.run(ns.on_connect("sid1", {}, auth={}))
+
+
+@pytest.mark.xfail(strict=False, reason="requires Socket.IO test client setup")
 @pytest.mark.asyncio
 async def test_non_commissioner_pause_rejected(async_client):
-    pytest.skip("requires Socket.IO test client setup — implement in plan 04-04 wave")
+    pytest.skip("requires Socket.IO test client setup with mock DB")
