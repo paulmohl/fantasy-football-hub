@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 04-01-PLAN.md — Wave 0 test scaffolding, dep additions, conftest extensions
-last_updated: "2026-07-02T23:02:42.404Z"
+stopped_at: Completed 04-02-PLAN.md — draft models (Draft, DraftPick, DraftQueue, DraftChatMessage, UserDraftRanking) and migration 003
+last_updated: "2026-07-02T23:12:27.260Z"
 last_activity: 2026-07-02
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 44
-  completed_plans: 35
-  percent: 80
+  completed_plans: 36
+  percent: 82
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: 12 of 12 in current phase (02-01-PLAN.md complete)
 Status: Phase complete — ready for verification
 Last activity: 2026-07-02
 
-Progress: [████████░░] 80%
+Progress: [████████░░] 82%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [████████░░] 80%
 | Phase 02-team-manager-core P11 | 6min | 2 tasks | 5 files |
 | Phase 02-team-manager-core P12 | 10min | 2 tasks | 6 files |
 | Phase 04-live-draft-room P01 | 6 minutes | 2 tasks | 8 files |
+| Phase 04-live-draft-room P02 | 5 minutes | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -106,6 +107,8 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 - icalendar>=7.2.0 added as runtime dep (production ICS generation in email handler)
 - html2canvas placed in dependencies (user-facing PNG export feature)
 - mock_redis_streams added as separate fixture to avoid coupling default mock to Stream return shapes
+- DraftPick UniqueConstraints named (uq_draft_picks_draft_pick_num, uq_draft_picks_draft_player) to enforce T-4-01 threat mitigations at DB level
+- Migration 003 uses sa.JSON() for JSONB columns for SQLite test compatibility; models use JSONB for production Postgres indexing
 
 ### Pending Todos
 
@@ -132,6 +135,6 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ## Session Continuity
 
-Last session: 2026-07-02T23:02:42.393Z
-Stopped at: Completed 04-01-PLAN.md — Wave 0 test scaffolding, dep additions, conftest extensions
+Last session: 2026-07-02T23:12:27.246Z
+Stopped at: Completed 04-02-PLAN.md — draft models (Draft, DraftPick, DraftQueue, DraftChatMessage, UserDraftRanking) and migration 003
 Resume file: None

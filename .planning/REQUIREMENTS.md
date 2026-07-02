@@ -94,8 +94,10 @@ Requirements committed for Phase 1 through Phase 8. Each maps to exactly one roa
 **: On timeout, highest-ranked queued player is auto-drafted; if queue is empty, best available by ADP is taken; pick is flagged as auto-picked
 - [x] **DR-09
 **: Commissioner can pause the draft (clock stops for all, overlay shown) and resume (5-second countdown before clock restarts)
-- [ ] **DR-10**: Draft chat messages are visible to all participants within 200ms; panel scrolls to new message without stealing focus from the board; pre-draft history is preserved through the draft
-- [ ] **DR-11**: Tapping a pick opens an emoji reaction set (fire, laugh, skeptical, applause); reactions show as small badges on the pick card
+- [x] **DR-10
+**: Draft chat messages are visible to all participants within 200ms; panel scrolls to new message without stealing focus from the board; pre-draft history is preserved through the draft
+- [x] **DR-11
+**: Tapping a pick opens an emoji reaction set (fire, laugh, skeptical, applause); reactions show as small badges on the pick card
 - [ ] **DR-12**: Draft board grid updates in real time for every pick; clicking a pick shows details (when, who suggested it, alternates)
 - [x] **DR-13
 **: Position filter highlights matching picks and dims others
