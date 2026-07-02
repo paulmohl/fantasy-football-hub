@@ -945,27 +945,31 @@ def draft_available(draft_id: str) -> str:
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Draft order import from host platform (D-12, Step 3)**
    - What we know: Sleeper API exposes draft order; Yahoo and ESPN likely do too but not verified
    - What's unclear: Exact API endpoint and response format for Yahoo/ESPN draft order
    - Recommendation: Implement manual + randomize first (covers most users); add import-from-host as a stretch in the last wave
+   - **RESOLVED (OQ1):** Defer to post-Phase-4. Plan 04-05 implements Randomize and Manual modes only. Import-from-host is added as a TODO stub — a disabled button with tooltip "Import draft order from [Platform] — coming in a future update" in the PreDraftLobby UI. The backend `update_draft_order` route accepts `draft_order_method='import'` but treats it identically to `'manual'`. See W4/B7 in plan 04-05 Task 1.
 
 2. **@dnd-kit/sortable v10 API compatibility**
    - What we know: `@dnd-kit/sortable` v10 in package.json; existing code uses v9 API (Phase 2 uses `@dnd-kit/core` 6.3.1)
    - What's unclear: v10 is the new `@dnd-kit/react` package rewrite; `useSortable` may require `index` prop in addition to `id`
    - Recommendation: Check the existing `LineupCard.tsx` drag implementation pattern; replicate exactly for queue reorder
+   - **RESOLVED (OQ2):** Check existing LineupCard.tsx usage — v10 `useSortable` uses `{id}` only (no `index` prop). `QueuePanel.tsx` follows the same pattern as `LineupCard.tsx`. Executor must read `LineupCard.tsx` before implementing QueuePanel.
 
 3. **Player pool for availability SET initialization**
    - What we know: FantasyCalc covers top ~460 dynasty / ~200 redraft players; Sleeper player pool covers all NFL players
    - What's unclear: Should the available SET be Sleeper's full player pool or filtered to "draftable" positions?
    - Recommendation: Filter to fantasy-relevant positions (QB, RB, WR, TE, K, DEF) from Sleeper player pool; initialize at draft start
+   - **RESOLVED (OQ3):** Use Sleeper's full active player pool filtered to QB/RB/WR/TE/K/DEF. `get_all_players()` is already in SleeperClient (Phase 1, cached). See plan 04-05 Task 1 `lock_and_start` branch for implementation (B6 fix).
 
 4. **Royalty-free audio files for pick.mp3 and your-turn.mp3**
    - What we know: Must be pre-bundled, ≤100KB each, no external CDN (D-06)
    - What's unclear: Specific audio file selection is Claude's discretion (per CONTEXT.md)
    - Recommendation: Use Freesound.org CC0 licensed short chime files; encode to MP3 at 64kbps ≤ 100KB
+   - **RESOLVED (OQ4):** Two audio files must be added: `public/sounds/pick.mp3` and `public/sounds/your-turn.mp3` (royalty-free CC0 license, ≤100KB each, sourced from freesound.org). Executor for plan 04-07 must add these files before TypeScript verification. Acceptance criteria: both files exist and are ≤100KB.
 
 ---
 
