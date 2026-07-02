@@ -4,6 +4,7 @@ These tests import from app.services.draft_service which does not exist until pl
 They are marked xfail and become real tests when 04-03 completes.
 """
 import pytest
+from unittest.mock import AsyncMock
 
 @pytest.mark.xfail(strict=False, reason="stub: app.services.draft_service created in plan 04-03")
 def test_snake_pick_to_slot():
@@ -41,9 +42,26 @@ def test_tier_boundaries():
     boundaries = compute_tier_boundaries(players)
     assert 3 in boundaries  # tier break at index 3 (after rank 3 → rank 20)
 
+@pytest.mark.asyncio
 @pytest.mark.xfail(strict=False, reason="stub: app.services.draft_service created in plan 04-03")
-def test_auto_draft_selection(mock_redis_streams):
-    pytest.skip("async test — implement after 04-03 with async fixture")
+async def test_auto_draft_selection(mock_redis_streams):
+    from app.services.draft_service import select_auto_draft_player
+    mock_redis_streams.sismember = AsyncMock(return_value=True)
+    players = [
+        {"player_id": "qb1", "overall_rank": 1, "position": "QB"},
+        {"player_id": "rb1", "overall_rank": 2, "position": "RB"},
+    ]
+    # Non-empty queue: should return top queued player
+    result = await select_auto_draft_player(
+        mock_redis_streams, "draft-1", ["rb1"], players, [], {}
+    )
+    assert result == "rb1"
+
+    # Empty queue: should return best ADP player (rank 1 = qb1)
+    result2 = await select_auto_draft_player(
+        mock_redis_streams, "draft-1", [], players, [], {}
+    )
+    assert result2 == "qb1"
 
 @pytest.mark.xfail(strict=False, reason="stub: app.services.draft_service created in plan 04-03")
 def test_positional_need_weighting():
@@ -60,9 +78,20 @@ def test_positional_need_weighting():
 def test_csv_rankings_import():
     pytest.skip("async db test — implement after 04-03")
 
+@pytest.mark.asyncio
 @pytest.mark.xfail(strict=False, reason="stub: app.services.draft_service created in plan 04-03")
-def test_redis_stream_replay():
-    pytest.skip("async redis test — implement after 04-03")
+async def test_redis_stream_replay(mock_redis_streams):
+    from app.services.draft_service import replay_since
+    # mock_redis_streams.xrange returns one event: 1714000000001-0
+    events = await replay_since(mock_redis_streams, "draft-1", "1714000000000-0")
+    assert len(events) == 1
+    event_id, fields = events[0]
+    assert event_id == "1714000000001-0"
+    assert fields["type"] == "pick_confirmed"
+    # Verify exclusive boundary was used
+    mock_redis_streams.xrange.assert_called_once_with(
+        "draft:draft-1:events", min="(1714000000000-0", max="+"
+    )
 
 @pytest.mark.xfail(strict=False, reason="stub: app.services.draft_service created in plan 04-03")
 def test_adp_grade_computation():
