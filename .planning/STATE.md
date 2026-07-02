@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 02-12-PLAN.md — game script (TM-11), stats route (TM-13), arq prewarm, FAAB wire-up (TM-12)
-last_updated: "2026-06-27T11:54:27.459Z"
-last_activity: 2026-06-27
+status: verifying
+stopped_at: Completed 04-01-PLAN.md — Wave 0 test scaffolding, dep additions, conftest extensions
+last_updated: "2026-07-02T23:02:42.404Z"
+last_activity: 2026-07-02
 progress:
   total_phases: 9
-  completed_phases: 2
-  total_plans: 22
-  completed_plans: 22
-  percent: 100
+  completed_phases: 3
+  total_plans: 44
+  completed_plans: 35
+  percent: 80
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 
 Phase: 2 of 8 active phases (Team Manager Core)
 Plan: 12 of 12 in current phase (02-01-PLAN.md complete)
-Status: Ready to execute
-Last activity: 2026-06-27
+Status: Phase complete — ready for verification
+Last activity: 2026-07-02
 
-Progress: [██████████] 100%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [██████████] 100%
 | Phase 02-team-manager-core P10 | 2min | 2 tasks | 3 files |
 | Phase 02-team-manager-core P11 | 6min | 2 tasks | 5 files |
 | Phase 02-team-manager-core P12 | 10min | 2 tasks | 6 files |
+| Phase 04-live-draft-room P01 | 6 minutes | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,9 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 - LineupOptimizer class wraps build_optimal_lineup — _compute_game_script method added to class form per TM-11 acceptance criteria; module-level function preserved for test compatibility
 - user_roster_id derived from team.host_team_id for matchup stats lookup — per-slot opponent cross-reference deferred to Phase 3+
 - recent_usage_trend only stable/null in Phase 2 — up/down requires prior week cache, deferred to Phase 3+
+- icalendar>=7.2.0 added as runtime dep (production ICS generation in email handler)
+- html2canvas placed in dependencies (user-facing PNG export feature)
+- mock_redis_streams added as separate fixture to avoid coupling default mock to Stream return shapes
 
 ### Pending Todos
 
@@ -128,6 +132,6 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ## Session Continuity
 
-Last session: 2026-06-27T11:54:27.452Z
-Stopped at: Completed 02-12-PLAN.md — game script (TM-11), stats route (TM-13), arq prewarm, FAAB wire-up (TM-12)
+Last session: 2026-07-02T23:02:42.393Z
+Stopped at: Completed 04-01-PLAN.md — Wave 0 test scaffolding, dep additions, conftest extensions
 Resume file: None

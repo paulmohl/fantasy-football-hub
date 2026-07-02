@@ -78,21 +78,31 @@ Requirements committed for Phase 1 through Phase 8. Each maps to exactly one roa
 
 ### Live Draft Room — Snake (Phase 4)
 
-- [ ] **DR-01**: Commissioner can schedule a draft (date, time, timezone, pick clock, roster preview window); all league members receive an ICS calendar invite and in-app notification
-- [ ] **DR-02**: Commissioner can randomize, manually order, or import draft order; order is locked when draft starts
-- [ ] **DR-03**: User can import custom rankings from host platform and edit in a side panel via drag-and-drop multi-select
-- [ ] **DR-04**: Players are grouped into tiered cheat sheets per position; user can toggle expert sources and star players to queue
+- [x] **DR-01
+**: Commissioner can schedule a draft (date, time, timezone, pick clock, roster preview window); all league members receive an ICS calendar invite and in-app notification
+- [x] **DR-02
+**: Commissioner can randomize, manually order, or import draft order; order is locked when draft starts
+- [x] **DR-03
+**: User can import custom rankings from host platform and edit in a side panel via drag-and-drop multi-select
+- [x] **DR-04
+**: Players are grouped into tiered cheat sheets per position; user can toggle expert sources and star players to queue
 - [ ] **DR-05**: Draft room shell presents Bloomberg Terminal aesthetic (DECISION-003, locked): draft board, best available, roster, queue, chat, and alerts simultaneously visible; shows who is on the clock, who is next, and time remaining
 - [ ] **DR-06**: "On the clock" stage shows team name, large countdown, queue, and auto-pick suggestions; desktop and push notifications are triggered
-- [ ] **DR-07**: When a pick is made all participants see it on the board within 500ms; audio cue plays (configurable mute); next picker is announced
-- [ ] **DR-08**: On timeout, highest-ranked queued player is auto-drafted; if queue is empty, best available by ADP is taken; pick is flagged as auto-picked
-- [ ] **DR-09**: Commissioner can pause the draft (clock stops for all, overlay shown) and resume (5-second countdown before clock restarts)
+- [x] **DR-07
+**: When a pick is made all participants see it on the board within 500ms; audio cue plays (configurable mute); next picker is announced
+- [x] **DR-08
+**: On timeout, highest-ranked queued player is auto-drafted; if queue is empty, best available by ADP is taken; pick is flagged as auto-picked
+- [x] **DR-09
+**: Commissioner can pause the draft (clock stops for all, overlay shown) and resume (5-second countdown before clock restarts)
 - [ ] **DR-10**: Draft chat messages are visible to all participants within 200ms; panel scrolls to new message without stealing focus from the board; pre-draft history is preserved through the draft
 - [ ] **DR-11**: Tapping a pick opens an emoji reaction set (fire, laugh, skeptical, applause); reactions show as small badges on the pick card
 - [ ] **DR-12**: Draft board grid updates in real time for every pick; clicking a pick shows details (when, who suggested it, alternates)
-- [ ] **DR-13**: Position filter highlights matching picks and dims others
-- [ ] **DR-14**: Post-draft recap auto-loads showing team grades, value picks, reaches, position-need scores, and full pick log; exportable as image or PDF
-- [ ] **DR-15**: Real-time infra: Socket.IO + Redis adapter + draft lock (one writer per draft); clients track last event ID and replay missed events on reconnect from Redis stream
+- [x] **DR-13
+**: Position filter highlights matching picks and dims others
+- [x] **DR-14
+**: Post-draft recap auto-loads showing team grades, value picks, reaches, position-need scores, and full pick log; exportable as image or PDF
+- [x] **DR-15
+**: Real-time infra: Socket.IO + Redis adapter + draft lock (one writer per draft); clients track last event ID and replay missed events on reconnect from Redis stream
 
 ### Auction Draft Variant (Phase 5)
 
