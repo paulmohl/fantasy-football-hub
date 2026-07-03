@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 04-03-PLAN.md — draft_service.py with all draft business logic and CacheKey draft methods
-last_updated: "2026-07-02T23:30:33.965Z"
-last_activity: 2026-07-02
+stopped_at: Completed 04-05-PLAN.md — Draft REST API + arq tasks
+last_updated: "2026-07-03T13:10:48.156Z"
+last_activity: 2026-07-03
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 44
-  completed_plans: 37
-  percent: 84
+  completed_plans: 39
+  percent: 89
 ---
 
 # Project State
@@ -28,9 +28,9 @@ See: .planning/PROJECT.md (updated 2026-06-22)
 Phase: 2 of 8 active phases (Team Manager Core)
 Plan: 12 of 12 in current phase (02-01-PLAN.md complete)
 Status: Phase complete — ready for verification
-Last activity: 2026-07-02
+Last activity: 2026-07-03
 
-Progress: [████████░░] 84%
+Progress: [█████████░] 89%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [████████░░] 84%
 | Phase 04-live-draft-room P01 | 6 minutes | 2 tasks | 8 files |
 | Phase 04-live-draft-room P02 | 5 minutes | 2 tasks | 3 files |
 | Phase 04-live-draft-room P03 | 11min | 2 tasks | 3 files |
+| Phase 04-live-draft-room P05 | 12 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,9 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 - replay_since uses exclusive XRANGE lower bound f'({last_event_id}' to prevent boundary event re-delivery on reconnect (DR-15)
 - positional_need_bonus accepts position strings not player IDs — callers in select_auto_draft_player pass team_positions list
 - compute_adp_grades grades by percentile rank within the draft (top 15%=A+, etc.) — relative not absolute grading
+- Route /league/{league_id} registered before /{draft_id} to prevent Starlette matching literal 'league' as UUID draft_id
+- get_draft_for_user returns 404 (not 403) for non-member access per T-4-01 threat model
+- num_teams hardcoded to 12 in create_draft — League model has no num_teams field
 
 ### Pending Todos
 
@@ -139,6 +143,6 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ## Session Continuity
 
-Last session: 2026-07-02T23:30:33.953Z
-Stopped at: Completed 04-03-PLAN.md — draft_service.py with all draft business logic and CacheKey draft methods
+Last session: 2026-07-03T13:10:48.147Z
+Stopped at: Completed 04-05-PLAN.md — Draft REST API + arq tasks
 Resume file: None
