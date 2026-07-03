@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 04-07-PLAN.md — DraftRoom Bloomberg shell, DraftBoard snake grid, PickCell, PickClock, PositionBadge
-last_updated: "2026-07-03T13:46:31.900Z"
+stopped_at: Completed 04-08-PLAN.md — BestAvailable and QueuePanel
+last_updated: "2026-07-03T13:59:23.700Z"
 last_activity: 2026-07-03
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 44
-  completed_plans: 41
-  percent: 93
+  completed_plans: 42
+  percent: 95
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: 12 of 12 in current phase (02-01-PLAN.md complete)
 Status: Phase complete — ready for verification
 Last activity: 2026-07-03
 
-Progress: [█████████░] 93%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -67,6 +67,7 @@ Progress: [█████████░] 93%
 | Phase 04-live-draft-room P05 | 12 | 2 tasks | 4 files |
 | Phase 04-live-draft-room P06 | 9min | 2 tasks | 5 files |
 | Phase 04-live-draft-room P07 | 7 | 2 tasks | 7 files |
+| Phase 04-live-draft-room P08 | 6min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -124,6 +125,7 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 - vite-env.d.ts added as standard Vite boilerplate — required for import.meta.env type safety in socket.ts
 - snakePickToSlot (DraftBoard) and snakeSlot (DraftRoom) are different helpers with different mathematical bases: former maps 1-based pick_num to [round, slot], latter maps 0-based currentPickNum to on-clock slot
 - Audio files in public/sounds/ are placeholder 44-byte MPEG frames — replace with CC0 audio from freesound.org before plan 04-13 E2E tests
+- rawSearch state drives input value (immediate display), search state drives debounced filter (150ms) — prevents noUnusedLocals TS error and eliminates 150ms input lag
 
 ### Pending Todos
 
@@ -150,6 +152,6 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ## Session Continuity
 
-Last session: 2026-07-03T13:46:31.887Z
-Stopped at: Completed 04-07-PLAN.md — DraftRoom Bloomberg shell, DraftBoard snake grid, PickCell, PickClock, PositionBadge
+Last session: 2026-07-03T13:59:23.685Z
+Stopped at: Completed 04-08-PLAN.md — BestAvailable and QueuePanel
 Resume file: None
