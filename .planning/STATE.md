@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 04-08-PLAN.md — BestAvailable and QueuePanel
-last_updated: "2026-07-03T13:59:23.700Z"
+stopped_at: Completed 04-09-PLAN.md (ChatPanel, AlertsPanel, RosterPanel)
+last_updated: "2026-07-03T14:10:34.291Z"
 last_activity: 2026-07-03
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 44
-  completed_plans: 42
-  percent: 95
+  completed_plans: 43
+  percent: 98
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: 12 of 12 in current phase (02-01-PLAN.md complete)
 Status: Phase complete — ready for verification
 Last activity: 2026-07-03
 
-Progress: [██████████] 95%
+Progress: [██████████] 98%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [██████████] 95%
 | Phase 04-live-draft-room P06 | 9min | 2 tasks | 5 files |
 | Phase 04-live-draft-room P07 | 7 | 2 tasks | 7 files |
 | Phase 04-live-draft-room P08 | 6min | 2 tasks | 2 files |
+| Phase 04-live-draft-room P09 | 4min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -126,6 +127,8 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 - snakePickToSlot (DraftBoard) and snakeSlot (DraftRoom) are different helpers with different mathematical bases: former maps 1-based pick_num to [round, slot], latter maps 0-based currentPickNum to on-clock slot
 - Audio files in public/sounds/ are placeholder 44-byte MPEG frames — replace with CC0 audio from freesound.org before plan 04-13 E2E tests
 - rawSearch state drives input value (immediate display), search state drives debounced filter (150ms) — prevents noUnusedLocals TS error and eliminates 150ms input lag
+- useAuthStore(s => s.userId) not s.user_id — auth.ts field is camelCase userId; plan used (s as any).user_id which always returns undefined
+- RosterPanel groups myRoster by round not position — plan spec says grouped by round; position grouping deferred to 04-11 wiring
 
 ### Pending Todos
 
@@ -152,6 +155,6 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ## Session Continuity
 
-Last session: 2026-07-03T13:59:23.685Z
-Stopped at: Completed 04-08-PLAN.md — BestAvailable and QueuePanel
+Last session: 2026-07-03T14:10:34.282Z
+Stopped at: Completed 04-09-PLAN.md (ChatPanel, AlertsPanel, RosterPanel)
 Resume file: None
