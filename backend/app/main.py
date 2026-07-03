@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.logging import configure_logging
 from app.core.rate_limit import RateLimitedWithCache
 from app.core.redis import close_redis, get_redis
+from app.sockets.draft_namespace import DraftNamespace
 
 configure_logging()
 
@@ -35,6 +36,9 @@ async def connect(sid: str, environ: dict, auth: dict | None = None) -> None:
 async def disconnect(sid: str) -> None:
     pass
 
+
+# DR-07 / D-01 LOCKED: register /draft namespace before ASGIApp construction
+sio.register_namespace(DraftNamespace('/draft'))
 
 app = FastAPI(
     title="Fantasy Football Hub",
