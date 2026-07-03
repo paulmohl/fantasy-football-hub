@@ -86,8 +86,10 @@ Requirements committed for Phase 1 through Phase 8. Each maps to exactly one roa
 **: User can import custom rankings from host platform and edit in a side panel via drag-and-drop multi-select
 - [x] **DR-04
 **: Players are grouped into tiered cheat sheets per position; user can toggle expert sources and star players to queue
-- [ ] **DR-05**: Draft room shell presents Bloomberg Terminal aesthetic (DECISION-003, locked): draft board, best available, roster, queue, chat, and alerts simultaneously visible; shows who is on the clock, who is next, and time remaining
-- [ ] **DR-06**: "On the clock" stage shows team name, large countdown, queue, and auto-pick suggestions; desktop and push notifications are triggered
+- [x] **DR-05
+**: Draft room shell presents Bloomberg Terminal aesthetic (DECISION-003, locked): draft board, best available, roster, queue, chat, and alerts simultaneously visible; shows who is on the clock, who is next, and time remaining
+- [x] **DR-06
+**: "On the clock" stage shows team name, large countdown, queue, and auto-pick suggestions; desktop and push notifications are triggered
 - [x] **DR-07
 **: When a pick is made all participants see it on the board within 500ms; audio cue plays (configurable mute); next picker is announced
 - [x] **DR-08

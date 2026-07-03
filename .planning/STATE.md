@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 04-05-PLAN.md — Draft REST API + arq tasks
-last_updated: "2026-07-03T13:10:48.156Z"
+stopped_at: Completed 04-06-PLAN.md — Draft store, socket client, DraftPage shell, TradePage stub
+last_updated: "2026-07-03T13:28:40.944Z"
 last_activity: 2026-07-03
 progress:
   total_phases: 9
   completed_phases: 3
   total_plans: 44
-  completed_plans: 39
-  percent: 89
+  completed_plans: 40
+  percent: 91
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: 12 of 12 in current phase (02-01-PLAN.md complete)
 Status: Phase complete — ready for verification
 Last activity: 2026-07-03
 
-Progress: [█████████░] 89%
+Progress: [█████████░] 91%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [█████████░] 89%
 | Phase 04-live-draft-room P02 | 5 minutes | 2 tasks | 3 files |
 | Phase 04-live-draft-room P03 | 11min | 2 tasks | 3 files |
 | Phase 04-live-draft-room P05 | 12 | 2 tasks | 4 files |
+| Phase 04-live-draft-room P06 | 9min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -117,6 +118,9 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 - Route /league/{league_id} registered before /{draft_id} to prevent Starlette matching literal 'league' as UUID draft_id
 - get_draft_for_user returns 404 (not 403) for non-member access per T-4-01 threat model
 - num_teams hardcoded to 12 in create_draft — League model has no num_teams field
+- ReplayEventData interface defines flat string fields for Redis XRANGE stream replay — pick_num/round coerced via Number() at use site
+- DraftPage exports both named and default — App.tsx uses default imports; plan acceptance criteria specifies named exports
+- vite-env.d.ts added as standard Vite boilerplate — required for import.meta.env type safety in socket.ts
 
 ### Pending Todos
 
@@ -143,6 +147,6 @@ All locked decisions are in PROJECT.md Key Decisions table. Summary for current 
 
 ## Session Continuity
 
-Last session: 2026-07-03T13:10:48.147Z
-Stopped at: Completed 04-05-PLAN.md — Draft REST API + arq tasks
+Last session: 2026-07-03T13:28:40.932Z
+Stopped at: Completed 04-06-PLAN.md — Draft store, socket client, DraftPage shell, TradePage stub
 Resume file: None
