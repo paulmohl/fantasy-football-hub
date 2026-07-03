@@ -1,4 +1,4 @@
-"""FastAPI dependency injection: auth guard + league ownership guard."""
+"""FastAPI dependency injection: auth guard + league/draft ownership guards."""
 from uuid import UUID
 
 from fastapi import Depends, HTTPException
@@ -54,3 +54,28 @@ async def get_league_for_user(
     if not league:
         raise HTTPException(status_code=404, detail="League not found")
     return league
+
+
+async def get_draft_for_user(
+    draft_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Resolve draft_id to a Draft the current user is a member of.
+
+    Row-level isolation: joins through league_members to verify membership.
+    Returns 404 (not 403) to avoid confirming existence of other users' drafts.
+    Satisfies T-4-01 (Spoofing — never reveal draft existence to non-members).
+    """
+    from app.models.draft import Draft
+
+    result = await db.execute(
+        select(Draft)
+        .join(LeagueMember, LeagueMember.league_id == Draft.league_id)
+        .where(LeagueMember.user_id == current_user.id)
+        .where(Draft.id == draft_id)
+    )
+    draft = result.scalar_one_or_none()
+    if not draft:
+        raise HTTPException(status_code=404, detail="Draft not found")
+    return draft
