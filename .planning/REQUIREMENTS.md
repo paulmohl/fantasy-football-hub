@@ -100,7 +100,8 @@ Requirements committed for Phase 1 through Phase 8. Each maps to exactly one roa
 **: Draft chat messages are visible to all participants within 200ms; panel scrolls to new message without stealing focus from the board; pre-draft history is preserved through the draft
 - [x] **DR-11
 **: Tapping a pick opens an emoji reaction set (fire, laugh, skeptical, applause); reactions show as small badges on the pick card
-- [ ] **DR-12**: Draft board grid updates in real time for every pick; clicking a pick shows details (when, who suggested it, alternates)
+- [x] **DR-12
+**: Draft board grid updates in real time for every pick; clicking a pick shows details (when, who suggested it, alternates)
 - [x] **DR-13
 **: Position filter highlights matching picks and dims others
 - [x] **DR-14
