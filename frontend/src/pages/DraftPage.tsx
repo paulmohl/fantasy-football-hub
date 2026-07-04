@@ -15,6 +15,8 @@ import { useDraftStore } from '@/store/draft'
 import type { DraftPick } from '@/store/draft'
 import { connectDraftSocket, disconnectDraftSocket } from '@/lib/socket'
 import { api } from '@/lib/api'
+import { DraftRoom } from '@/components/draft/DraftRoom'
+import { PreDraftLobby } from '@/components/draft/PreDraftLobby'
 
 type DraftStatus = 'pending' | 'live' | 'paused' | 'complete' | 'loading' | 'error'
 
@@ -227,14 +229,8 @@ export function DraftPage() {
     )
   }
 
-  // Phase 04-11 will replace these placeholder divs with real component imports:
-  // PreDraftLobby, DraftRoom, DraftRecap
   if (status === 'pending') {
-    return (
-      <div className="flex h-screen items-center justify-center bg-bg text-amber-400 font-mono text-sm" data-testid="pre-draft-lobby-placeholder">
-        PRE-DRAFT LOBBY — status: {status}
-      </div>
-    )
+    return <PreDraftLobby />
   }
 
   if (status === 'complete') {
@@ -246,13 +242,7 @@ export function DraftPage() {
   }
 
   // 'live' | 'paused'
-  return (
-    <div className="h-screen bg-bg text-text font-mono" data-testid="draft-room-placeholder">
-      <div className="flex items-center justify-center h-full text-sm text-text-muted">
-        DRAFT ROOM — pick #{useDraftStore.getState().currentPickNum + 1} — status: {status}
-      </div>
-    </div>
-  )
+  return <DraftRoom />
 }
 
 export default DraftPage
