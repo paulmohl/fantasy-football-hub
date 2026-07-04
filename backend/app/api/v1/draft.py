@@ -99,6 +99,14 @@ async def create_draft(
 
     await db.commit()
 
+    # In-app notification for all league members (DR-01)
+    background_tasks.add_task(
+        _push_draft_notifications,
+        draft_id=draft_id,
+        league_id=str(body.league_id),
+        league_name=league.name,
+    )
+
     # Send ICS invites in background (non-blocking)
     background_tasks.add_task(
         _send_draft_invites,
@@ -500,3 +508,47 @@ async def _send_draft_invites(
     except Exception as exc:
         from app.core.logging import logger
         logger.error("draft.invite.send_failed", draft_id=draft_id, error=str(exc))
+
+
+async def _push_draft_notifications(
+    draft_id: str,
+    league_id: str,
+    league_name: str,
+) -> None:
+    """Push in-app notification to all league members when draft is scheduled (DR-01)."""
+    import json
+    from datetime import UTC as _UTC, datetime
+    from uuid import UUID
+
+    try:
+        from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+        engine = create_async_engine(settings.database_url)
+        SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+        async with SessionLocal() as db:
+            members_result = await db.execute(
+                select(LeagueMember).where(LeagueMember.league_id == UUID(league_id))
+            )
+            user_ids = [str(m.user_id) for m in members_result.scalars()]
+        await engine.dispose()
+
+        from app.core.redis import get_redis as _get_redis
+        redis = await _get_redis()
+
+        notification = json.dumps({
+            "type": "draft_scheduled",
+            "draft_id": draft_id,
+            "league_name": league_name,
+            "message": f"A draft has been scheduled for {league_name}",
+            "created_at": datetime.now(_UTC).isoformat(),
+        })
+
+        for uid in user_ids:
+            key = f"notifications:{uid}"
+            await redis.rpush(key, notification)
+            await redis.expire(key, 604800)  # 7 days
+
+    except Exception as exc:
+        from app.core.logging import logger
+        logger.error("draft.notification.push_failed", draft_id=draft_id, error=str(exc))
