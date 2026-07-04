@@ -17,6 +17,7 @@ import { connectDraftSocket, disconnectDraftSocket } from '@/lib/socket'
 import { api } from '@/lib/api'
 import { DraftRoom } from '@/components/draft/DraftRoom'
 import { PreDraftLobby } from '@/components/draft/PreDraftLobby'
+import { DraftRecap } from '@/components/draft/DraftRecap'
 
 type DraftStatus = 'pending' | 'live' | 'paused' | 'complete' | 'loading' | 'error'
 
@@ -245,11 +246,7 @@ export function DraftPage() {
   }
 
   if (status === 'complete') {
-    return (
-      <div className="flex h-screen items-center justify-center bg-bg text-emerald-400 font-mono text-sm" data-testid="draft-recap-placeholder">
-        DRAFT RECAP — status: {status}
-      </div>
-    )
+    return <DraftRecap />
   }
 
   // 'live' | 'paused'
