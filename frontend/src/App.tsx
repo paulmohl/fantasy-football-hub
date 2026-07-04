@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@/store/auth'
 import { useToast } from '@/components/ui/Toast'
+import { api } from '@/lib/api'
 import Layout from '@/components/Layout'
 import LoginPage from '@/pages/LoginPage'
 import ConnectPage from '@/pages/ConnectPage'
@@ -13,6 +14,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   const token = useAuthStore((s) => s.token)
   const setHasLeagues = useAuthStore((s) => s.setHasLeagues)
   const setUnhealthyPlatforms = useAuthStore((s) => s.setUnhealthyPlatforms)
+  const { toast } = useToast()
 
   useEffect(() => {
     if (!token) return
@@ -27,6 +29,17 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
           .filter((c: { platform: string; is_healthy: boolean }) => !c.is_healthy)
           .map((c: { platform: string }) => c.platform)
         setUnhealthyPlatforms(unhealthy)
+      })
+      .catch(() => {})
+
+    // Notification fetch — in-app notification for scheduled drafts (DR-01)
+    api
+      .get('/notifications')
+      .then((res) => {
+        const notifications: Array<{ type: string; message: string }> = res.data
+        notifications.forEach((n) => {
+          toast(n.message, 'info')
+        })
       })
       .catch(() => {})
   }, [token])
