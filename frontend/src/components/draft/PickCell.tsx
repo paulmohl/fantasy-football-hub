@@ -8,9 +8,11 @@
  *   my-pick   — my team filled this slot (ring-my-pick, per D-12)
  *   tier-start — first cell in a new tier (border-t-2 border-accent, per D-11)
  */
+import { useState } from 'react'
 import type { DraftPick, DraftPlayer } from '@/store/draft'
 import { useDraftStore } from '@/store/draft'
 import { PositionBadge } from './PositionBadge'
+import { ReactionPicker } from './ReactionPicker'
 
 interface PickCellProps {
   pickNum: number
@@ -28,6 +30,15 @@ export function PickCell({
   pickNum, round, teamSlot, pick, player, isActive, isMyTeam, isTierStart, onClick
 }: PickCellProps) {
   const reactions = useDraftStore((s) => s.reactions[pickNum])
+  const [reactionPickerPos, setReactionPickerPos] = useState<{ top: number; left: number } | null>(null)
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (!pick) return
+    setReactionPickerPos({ top: e.clientY, left: e.clientX })
+  }
+
+  const handleCloseReaction = () => setReactionPickerPos(null)
 
   const borderClass = isTierStart ? 'border-t-2 border-accent' : 'border-t border-border'
   const ringClass = isActive
@@ -43,6 +54,7 @@ export function PickCell({
         ${bgClass} border-r border-border ${borderClass} ${ringClass}
         hover:bg-surface-hover transition-colors`}
       onClick={() => onClick?.(pickNum)}
+      onContextMenu={handleContextMenu}
       data-pick-num={pickNum}
       data-testid={`pick-cell-${pickNum}`}
       aria-label={pick ? `Pick ${pickNum}: ${player?.name ?? pick.player_id}` : `Pick ${pickNum}: empty`}
@@ -86,6 +98,14 @@ export function PickCell({
             </span>
           ))}
         </div>
+      )}
+
+      {reactionPickerPos && (
+        <ReactionPicker
+          pickNum={pickNum}
+          onClose={handleCloseReaction}
+          position={reactionPickerPos}
+        />
       )}
     </div>
   )
