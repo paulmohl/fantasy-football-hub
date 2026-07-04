@@ -46,6 +46,7 @@ export function DraftPage() {
   const lastEventId = useDraftStore((s) => s.lastEventId)
   const muteAudio = useDraftStore((s) => s.muteAudio)
   const setConfig = useDraftStore((s) => s.setConfig)
+  const setAvailablePlayers = useDraftStore((s) => s.setAvailablePlayers)
   const addPick = useDraftStore((s) => s.addPick)
   const setPickDeadline = useDraftStore((s) => s.setPickDeadline)
   const setPaused = useDraftStore((s) => s.setPaused)
@@ -82,10 +83,20 @@ export function DraftPage() {
           num_rounds: data.num_rounds,
           pick_clock_seconds: data.pick_clock_seconds,
           my_team_id: data.my_team_id ?? '',
+          commissioner_user_id: data.commissioner_user_id ?? '',
           draft_order: data.draft_order ?? [],
           status: data.status,
         })
         setStatus(data.status as DraftStatus)
+        // SC-3: Populate availablePlayers so BestAvailable and PickCell can show player names
+        api
+          .get(`/drafts/${draftId}/players`)
+          .then((playersRes) => {
+            setAvailablePlayers(playersRes.data)
+          })
+          .catch(() => {
+            // Non-critical: draft can function with empty player list (IDs shown instead of names)
+          })
       })
       .catch(() => {
         setStatus('error')

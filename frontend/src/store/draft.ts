@@ -40,6 +40,7 @@ export interface DraftConfig {
   num_rounds: number
   pick_clock_seconds: number
   my_team_id: string
+  commissioner_user_id: string
   draft_order: string[]  // team_id[] in snake order
   status: 'pending' | 'live' | 'paused' | 'complete'
 }
