@@ -18,7 +18,11 @@ function snakePickToSlot(pickNum: number, numTeams: number): [number, number] {
   return [roundNum, teamSlot]
 }
 
-export function DraftBoard() {
+interface DraftBoardProps {
+  onPickClick?: (pickNum: number) => void
+}
+
+export function DraftBoard({ onPickClick }: DraftBoardProps) {
   const config = useDraftStore((s) => s.config)
   const picks = useDraftStore((s) => s.picks)
   const availablePlayers = useDraftStore((s) => s.availablePlayers)
@@ -56,10 +60,6 @@ export function DraftBoard() {
     }
     return s
   }, [picks, pickByNum, playerById])
-
-  const handlePickClick = (_pickNum: number) => {
-    // Plan 04-10 will wire the PickDrawer here via store action
-  }
 
   // Build grid: [roundIdx][teamSlot] → pick_num
   const grid = useMemo(() => {
@@ -130,7 +130,7 @@ export function DraftBoard() {
                   isActive={isActive}
                   isMyTeam={isMyTeam}
                   isTierStart={tierStartPicks.has(pickNum)}
-                  onClick={handlePickClick}
+                  onClick={onPickClick}
                 />
               )
             })}

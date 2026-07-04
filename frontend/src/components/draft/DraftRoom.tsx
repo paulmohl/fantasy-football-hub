@@ -2,19 +2,27 @@
  * DraftRoom — Bloomberg Terminal 4-column layout shell (D-01 LOCKED).
  *
  * Columns (left to right, per D-01):
- *   [200px]  Col 1 — Left sidebar: Queue + Alerts stacked (wired in 04-11)
- *   [1fr]    Col 2 — Center-left: DraftBoard — primary focal point (this plan)
- *   [320px]  Col 3 — Center-right: BestAvailable (wired in 04-11)
- *   [200px]  Col 4 — Right sidebar: Roster + Chat stacked (wired in 04-11)
- *
- * Cols 1, 3, 4 use placeholder divs here. Plan 04-11 replaces them with real components.
+ *   [200px]  Col 1 — Left sidebar: QueuePanel + AlertsPanel stacked
+ *   [1fr]    Col 2 — Center-left: DraftBoard — primary focal point
+ *   [320px]  Col 3 — Center-right: BestAvailable
+ *   [200px]  Col 4 — Right sidebar: RosterPanel + ChatPanel stacked
  *
  * CRITICAL (04-UI-SPEC Section 5A): center column requires min-w-0 to prevent
  * CSS grid blowout when the inner board is wider than the available viewport space.
+ * CRITICAL: outer div must be `relative` for PauseOverlay `absolute inset-0` to work.
  */
+import { useState } from 'react'
 import { useDraftStore } from '@/store/draft'
 import { DraftBoard } from './DraftBoard'
 import { PickClock } from './PickClock'
+import { QueuePanel } from './QueuePanel'
+import { AlertsPanel } from './AlertsPanel'
+import { BestAvailable } from './BestAvailable'
+import { RosterPanel } from './RosterPanel'
+import { ChatPanel } from './ChatPanel'
+import { PauseOverlay } from './PauseOverlay'
+import { PickDrawer } from './PickDrawer'
+import type { PickDrawerState } from './PickDrawer'
 
 /**
  * Derives the 0-based team slot that is currently on the clock.
@@ -32,8 +40,26 @@ export function DraftRoom() {
   const isPaused = useDraftStore((s) => s.isPaused)
   const currentPickNum = useDraftStore((s) => s.currentPickNum)
 
-  // draft_order is string[] (team IDs). Display team ID as label until
-  // team-name lookup is wired in 04-11 (PreDraftLobby populates team metadata).
+  const [drawerState, setDrawerState] = useState<PickDrawerState>({
+    pickNum: 0,
+    playerId: null,
+    isOpen: false,
+  })
+
+  const handlePickClick = (pickNum: number) => {
+    const picks = useDraftStore.getState().picks
+    const existingPick = picks.find((p) => p.pick_num === pickNum)
+    setDrawerState({
+      pickNum,
+      playerId: existingPick?.player_id ?? null,
+      isOpen: true,
+    })
+  }
+
+  const handleDrawerClose = () => {
+    setDrawerState((prev) => ({ ...prev, isOpen: false }))
+  }
+
   const activeTeamName = config?.draft_order
     ? (config.draft_order[snakeSlot(currentPickNum, config.draft_order.length)] ?? '—')
     : '—'
@@ -42,22 +68,31 @@ export function DraftRoom() {
     ? Math.floor(currentPickNum / config.num_teams) + 1
     : 1
 
-  return (
-    <div className="grid grid-cols-[200px_1fr_320px_200px] h-screen overflow-hidden bg-bg">
+  // commissioner_user_id added to config in plan 04-12; null until then
+  const commissionerUserId = (config as (typeof config & { commissioner_user_id?: string }) | null)?.commissioner_user_id ?? null
 
-      {/* Column 1: Left sidebar — Queue + Alerts stacked (wired in 04-11) */}
+  return (
+    <div className="relative grid grid-cols-[200px_1fr_320px_200px] h-screen overflow-hidden bg-bg">
+
+      {/* Column 1: Left sidebar — QueuePanel + AlertsPanel stacked */}
       <div className="flex flex-col border-r border-border overflow-hidden" data-testid="queue-alerts-column">
         <div className="h-8 flex items-center px-3 border-b border-border bg-surface flex-shrink-0">
           <span className="font-mono text-[10px] font-semibold tracking-widest text-muted uppercase">Queue</span>
         </div>
-        <div className="flex-1 flex items-center justify-center text-muted font-mono text-xs">
-          Loading...
+        <div className="flex-[3] min-h-0 overflow-hidden">
+          <QueuePanel />
+        </div>
+        <div className="h-px bg-border flex-shrink-0" />
+        <div className="h-8 flex items-center px-3 border-b border-border bg-surface flex-shrink-0">
+          <span className="font-mono text-[10px] font-semibold tracking-widest text-muted uppercase">Alerts</span>
+        </div>
+        <div className="flex-[2] min-h-0 overflow-hidden">
+          <AlertsPanel />
         </div>
       </div>
 
       {/* Column 2: Center-left — DraftBoard (MUST have min-w-0 — see comment above) */}
       <div className="flex flex-col min-w-0 overflow-hidden" data-testid="draft-board-column">
-        {/* Board header bar — primary focal point: team name + pick clock */}
         <div className="h-10 flex items-center gap-4 px-3 border-b border-border bg-surface flex-shrink-0">
           <span className="font-mono text-sm font-semibold text-text flex-1 truncate">
             {isPaused
@@ -72,31 +107,43 @@ export function DraftRoom() {
           </span>
         </div>
 
-        {/* Draft board fills remaining height */}
         <div className="flex-1 min-h-0 overflow-hidden">
-          <DraftBoard />
+          <DraftBoard onPickClick={handlePickClick} />
         </div>
       </div>
 
-      {/* Column 3: Center-right — BestAvailable (wired in 04-11) */}
+      {/* Column 3: Center-right — BestAvailable */}
       <div className="flex flex-col border-l border-border overflow-hidden" data-testid="best-available-column">
         <div className="h-8 flex items-center px-3 border-b border-border bg-surface flex-shrink-0">
           <span className="font-mono text-[10px] font-semibold tracking-widest text-muted uppercase">Best Available</span>
         </div>
-        <div className="flex-1 flex items-center justify-center text-muted font-mono text-xs">
-          Loading...
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <BestAvailable />
         </div>
       </div>
 
-      {/* Column 4: Right sidebar — Roster + Chat stacked (wired in 04-11) */}
+      {/* Column 4: Right sidebar — RosterPanel + ChatPanel stacked */}
       <div className="flex flex-col border-l border-border overflow-hidden" data-testid="roster-chat-column">
         <div className="h-8 flex items-center px-3 border-b border-border bg-surface flex-shrink-0">
           <span className="font-mono text-[10px] font-semibold tracking-widest text-muted uppercase">My Roster</span>
         </div>
-        <div className="flex-1 flex items-center justify-center text-muted font-mono text-xs">
-          Loading...
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <RosterPanel />
+        </div>
+        <div className="h-px bg-border flex-shrink-0" />
+        <div className="h-8 flex items-center px-3 border-b border-border bg-surface flex-shrink-0">
+          <span className="font-mono text-[10px] font-semibold tracking-widest text-muted uppercase">Chat</span>
+        </div>
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <ChatPanel />
         </div>
       </div>
+
+      {/* PauseOverlay — absolute inset-0 z-50 (D-05 LOCKED) */}
+      <PauseOverlay commissionerUserId={commissionerUserId} />
+
+      {/* PickDrawer — fixed bottom sheet, managed by DraftRoom */}
+      <PickDrawer state={drawerState} onClose={handleDrawerClose} />
 
     </div>
   )
