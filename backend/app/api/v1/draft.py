@@ -21,7 +21,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user, get_draft_for_user
 from app.core.redis import get_redis
 from app.models.draft import Draft, DraftPick
-from app.models.league import League, LeagueMember
+from app.models.league import League, LeagueMember, Team
 from app.models.user import User
 from app.services.draft_service import (
     build_draft_ics,
@@ -143,6 +143,7 @@ async def list_drafts_for_league(
 @router.get("/{draft_id}")
 async def get_draft(
     draft=Depends(get_draft_for_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Get draft details including current status, order, and pick count."""
@@ -160,6 +161,16 @@ async def get_draft(
         }
         for p in picks_result.scalars()
     ]
+
+    team_result = await db.execute(
+        select(Team).where(
+            Team.league_id == draft.league_id,
+            Team.owner_user_id == current_user.id,
+        )
+    )
+    my_team = team_result.scalar_one_or_none()
+    my_team_id = str(my_team.id) if my_team else ""
+
     return {
         "id": str(draft.id),
         "status": draft.status,
@@ -171,6 +182,8 @@ async def get_draft(
         "timezone": draft.timezone,
         "draft_order": draft.draft_order,
         "picks": picks,
+        "my_team_id": my_team_id,
+        "commissioner_user_id": str(draft.commissioner_user_id),
     }
 
 
