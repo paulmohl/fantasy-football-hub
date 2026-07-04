@@ -278,6 +278,71 @@ async def get_recap(
     }
 
 
+@router.get("/{draft_id}/players")
+async def get_draft_players(
+    draft=Depends(get_draft_for_user),
+    redis: Redis = Depends(get_redis),
+) -> list[dict]:
+    """Return enriched player data for BestAvailable panel.
+
+    Joins Sleeper player pool (names, positions, teams) with FantasyCalc
+    redraft rankings (overall_rank). Returns only active draftable positions
+    sorted by overall_rank ascending (lower = better).
+
+    SC-3: Called by DraftPage on mount to populate availablePlayers in store.
+    """
+    sleeper_raw = await redis.get(CacheKey.sleeper_players_nfl())
+    sleeper_players: dict = {}
+    if sleeper_raw:
+        try:
+            sleeper_players = json.loads(
+                sleeper_raw.decode() if isinstance(sleeper_raw, bytes) else sleeper_raw
+            )
+        except Exception:
+            pass
+
+    fc_raw = await redis.get(CacheKey.fantasycalc_values(False))
+    fc_rank: dict[str, int] = {}
+    if fc_raw:
+        try:
+            fc_data = json.loads(
+                fc_raw.decode() if isinstance(fc_raw, bytes) else fc_raw
+            )
+            for entry in fc_data:
+                pid = str(
+                    entry.get("player", {}).get("sleeperId", "")
+                    or entry.get("sleeperId", "")
+                )
+                if pid:
+                    fc_rank[pid] = int(entry.get("overallRank", 9999))
+        except Exception:
+            pass
+
+    DRAFTABLE = {"QB", "RB", "WR", "TE", "K", "DEF"}
+    players = []
+    for pid, p in sleeper_players.items():
+        if p.get("position") not in DRAFTABLE:
+            continue
+        if not p.get("active", False):
+            continue
+        first = p.get("first_name", "")
+        last = p.get("last_name", "")
+        name = f"{first} {last}".strip() if first or last else p.get("full_name", pid)
+        overall_rank = fc_rank.get(pid, 9999)
+        players.append({
+            "player_id": pid,
+            "name": name,
+            "position": p.get("position", ""),
+            "nfl_team": p.get("team", "FA"),
+            "bye_week": p.get("bye_week"),
+            "overall_rank": overall_rank,
+        })
+
+    players.sort(key=lambda x: x["overall_rank"])
+
+    return players
+
+
 @router.put("/{draft_id}/order")
 async def update_draft_order(
     body: UpdateOrderRequest,
