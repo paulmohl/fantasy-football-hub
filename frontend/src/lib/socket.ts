@@ -24,7 +24,7 @@ export function connectDraftSocket(auth: DraftSocketAuth): Socket {
     _socket.disconnect()
   }
 
-  const baseUrl = import.meta.env.VITE_API_URL as string
+  const baseUrl = import.meta.env.VITE_API_URL ?? ''
 
   _socket = io(`${baseUrl}/draft`, {
     path: '/ws',
