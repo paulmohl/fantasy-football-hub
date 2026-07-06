@@ -1,5 +1,10 @@
 name: fantasy-football-hub
 region: nyc
+domains:
+  - domain: predictfantasyfootball.com
+    type: PRIMARY
+  - domain: www.predictfantasyfootball.com
+    type: ALIAS
 
 services:
   - name: backend
