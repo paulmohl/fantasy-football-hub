@@ -1,0 +1,45 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Digital Ocean
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            echo "==> Pulling latest code"
+            git pull origin master
+
+            echo "==> Building and restarting containers"
+            docker compose pull --quiet
+            docker compose up --build -d --remove-orphans
+
+            echo "==> Running migrations"
+            docker compose exec -T backend alembic upgrade head
+
+            echo "==> Pruning old images"
+            docker image prune -f
+
+            echo "==> Health check"
+            sleep 5
+            curl --fail --silent http://localhost:8000/api/v1/health || (echo "Health check failed" && exit 1)
+
+            echo "==> Deploy complete"
