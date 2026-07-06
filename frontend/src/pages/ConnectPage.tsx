@@ -11,6 +11,7 @@ import { ProgressBar } from '@/components/ui/ProgressBar'
 import { ConnectionCard } from '@/components/ui/ConnectionCard'
 import { PlatformIcon } from '@/components/ui/PlatformIcon'
 import { cn } from '@/lib/utils'
+import { EspnCookieNative, isNative } from '@/plugins/espn-cookie'
 
 type Step = 'platform' | 'username' | 'leagues' | 'importing' | 'done' | 'espn_type' | 'espn_private' | 'espn_public' | 'yahoo_connected'
 
@@ -136,7 +137,36 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
   const [espnLeagueId, setEspnLeagueId] = useState('')
   const [espnError, setEspnError] = useState('')
   const [espnSubmitting, setEspnSubmitting] = useState(false)
+  const [espnManual, setEspnManual] = useState(false)
+  const [espnNativeLoading, setEspnNativeLoading] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
+
+  // Handle bookmarklet redirect: /connect?espn_swid=...&espn_s2=...&espn_lid=...
+  useEffect(() => {
+    const swid = searchParams.get('espn_swid')
+    const s2 = searchParams.get('espn_s2')
+    const lid = searchParams.get('espn_lid')
+    if (swid && s2) {
+      setEspnSwid(swid)
+      setEspnS2(s2)
+      if (lid) setEspnLeagueId(lid)
+      setPlatform('ESPN')
+      setStep('espn_private')
+      append({ type: 'user', content: 'ESPN' })
+      append({ type: 'user', content: 'Private league' })
+      append({
+        type: 'app',
+        content: (
+          <p>
+            Got your ESPN credentials automatically.{' '}
+            {lid ? 'League ID detected too — ' : 'Just enter your League ID and '}
+            hit Connect.
+          </p>
+        ),
+      })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -202,6 +232,32 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
       setEspnError(detail)
     } finally {
       setEspnSubmitting(false)
+    }
+  }
+
+  async function handleEspnNativeConnect() {
+    setEspnNativeLoading(true)
+    setEspnError('')
+    try {
+      const result = await EspnCookieNative.extractCookies()
+      setEspnSwid(result.swid)
+      setEspnS2(result.espnS2)
+      if (result.leagueId) setEspnLeagueId(result.leagueId)
+      append({
+        type: 'app',
+        content: (
+          <p>
+            Got your ESPN credentials.{' '}
+            {result.leagueId ? 'League ID detected too — ' : 'Enter your League ID and '}
+            hit Connect.
+          </p>
+        ),
+      })
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!msg.includes('cancelled')) setEspnError('Could not sign in to ESPN. Please try again.')
+    } finally {
+      setEspnNativeLoading(false)
     }
   }
 
@@ -358,44 +414,150 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
             </div>
           )}
 
-          {/* Step: ESPN private form */}
-          {step === 'espn_private' && (
-            <div className="space-y-2">
-              <input
-                type="text"
-                value={espnSwid}
-                onChange={(e) => setEspnSwid(e.target.value)}
-                placeholder="SWID (from browser cookies)"
-                className="w-full bg-raised border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-accent transition-colors min-h-[44px]"
-                aria-label="ESPN SWID cookie"
-              />
-              <input
-                type="text"
-                value={espnS2}
-                onChange={(e) => setEspnS2(e.target.value)}
-                placeholder="espn_s2 (from browser cookies)"
-                className="w-full bg-raised border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-accent transition-colors min-h-[44px]"
-                aria-label="ESPN espn_s2 cookie"
-              />
-              <input
-                type="text"
-                value={espnLeagueId}
-                onChange={(e) => setEspnLeagueId(e.target.value)}
-                placeholder="League ID (from URL)"
-                className="w-full bg-raised border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-accent transition-colors min-h-[44px]"
-                aria-label="ESPN League ID"
-              />
-              {espnError && <p className="text-sm text-danger">{espnError}</p>}
-              <button
-                onClick={handleEspnPrivateSubmit}
-                disabled={espnSubmitting || !espnSwid.trim() || !espnS2.trim() || !espnLeagueId.trim()}
-                className="w-full bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-semibold rounded-lg px-4 py-3 min-h-[44px] transition-colors"
-              >
-                {espnSubmitting ? 'Connecting…' : 'Connect ESPN League →'}
-              </button>
-              <p className="text-xs text-muted">Find SWID and espn_s2 in browser DevTools → Application → Cookies → espn.com</p>
-            </div>
-          )}
+          {/* Step: ESPN private — bookmarklet-first flow */}
+          {step === 'espn_private' && (() => {
+            const bookmarklet = `javascript:(function(){var d=document.cookie,swid=(d.match(/(?:^|;\\s*)SWID=([^;]+)/)||[])[1],s2=(d.match(/(?:^|;\\s*)espn_s2=([^;]+)/)||[])[1],lid=(location.search.match(/[?&]leagueId=(\\d+)/)||[])[1]||'';if(swid&&s2){location.href='${window.location.origin}/connect?espn_swid='+encodeURIComponent(swid)+'&espn_s2='+encodeURIComponent(s2)+'&espn_lid='+encodeURIComponent(lid);}else{alert('Couldn\\'t find your ESPN login. Make sure you are signed in to espn.com and try again.');}})();`
+            const alreadyFilled = espnSwid && espnS2
+            return (
+              <div className="space-y-3">
+                {!alreadyFilled && !espnManual ? (
+                  <>
+                    {isNative() ? (
+                      /* Native app: single "Sign in to ESPN" button */
+                      <div className="space-y-3">
+                        <div className="bg-raised border border-border rounded-lg p-4 space-y-2">
+                          <p className="text-sm font-semibold text-text">Sign in to ESPN</p>
+                          <p className="text-sm text-muted">
+                            We'll open ESPN inside the app. Sign in and we'll automatically
+                            detect your league credentials.
+                          </p>
+                        </div>
+                        {espnError && <p className="text-sm text-danger">{espnError}</p>}
+                        <button
+                          onClick={handleEspnNativeConnect}
+                          disabled={espnNativeLoading}
+                          className="w-full bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-semibold rounded-lg px-4 py-3 min-h-[44px] transition-colors"
+                        >
+                          {espnNativeLoading ? 'Opening ESPN…' : 'Sign in to ESPN →'}
+                        </button>
+                        <button
+                          onClick={() => setEspnManual(true)}
+                          className="text-xs text-muted underline w-full text-center"
+                        >
+                          Enter cookies manually
+                        </button>
+                      </div>
+                    ) : (
+                    /* Web: bookmarklet card */
+                    <div className="bg-raised border border-border rounded-lg p-4 space-y-3">
+                      <p className="text-sm font-semibold text-text">Connect in 3 steps — no technical knowledge needed</p>
+                      <div className="space-y-3 text-sm text-muted">
+                        <div className="flex gap-3 items-start">
+                          <span className="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">1</span>
+                          <div>
+                            <p className="text-text font-medium">Drag this button to your bookmarks bar</p>
+                            <p className="text-xs mt-0.5 mb-2">If your bookmarks bar isn't visible: <strong className="text-text">View → Show Bookmarks Bar</strong></p>
+                            <a
+                              href={bookmarklet}
+                              onClick={(e) => e.preventDefault()}
+                              draggable
+                              className="inline-flex items-center gap-1.5 bg-surface border-2 border-accent text-accent text-xs font-semibold rounded-lg px-3 py-2 cursor-grab active:cursor-grabbing select-none"
+                              title="Drag me to your bookmarks bar"
+                            >
+                              ⭐ ESPN Connect
+                            </a>
+                            <p className="text-xs mt-1.5 text-muted">Drag the button above into your browser's bookmarks bar.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3 items-start">
+                          <span className="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">2</span>
+                          <div>
+                            <p className="text-text font-medium">Go to your ESPN fantasy league page</p>
+                            <a
+                              href="https://fantasy.espn.com/football/league"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-accent text-xs underline"
+                            >
+                              Open ESPN Fantasy →
+                            </a>
+                            <p className="text-xs mt-0.5">Make sure you're signed in to your ESPN account.</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-3 items-start">
+                          <span className="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">3</span>
+                          <div>
+                            <p className="text-text font-medium">Click the "ESPN Connect" bookmark</p>
+                            <p className="text-xs mt-0.5">You'll be brought back here automatically with everything filled in.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setEspnManual(true)}
+                      className="text-xs text-muted underline w-full text-center"
+                    >
+                      I'm a developer — enter cookies manually
+                    </button>
+                    </div>
+                    /* end web bookmarklet */
+                    )}
+                  </>
+                ) : (
+                  /* Form — shown after bookmarklet redirect or manual toggle */
+                  <div className="space-y-2">
+                    {alreadyFilled && (
+                      <div className="flex items-center gap-2 bg-success/10 border border-success/30 rounded-lg px-3 py-2">
+                        <span className="text-success text-sm">✓</span>
+                        <p className="text-xs text-success">ESPN credentials extracted automatically.</p>
+                      </div>
+                    )}
+                    <div>
+                      <label className="block text-xs text-muted mb-1 ml-0.5">SWID cookie</label>
+                      <input
+                        type="text"
+                        value={espnSwid}
+                        onChange={(e) => setEspnSwid(e.target.value)}
+                        placeholder="{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}"
+                        className="w-full bg-raised border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-accent transition-colors min-h-[44px] font-mono"
+                        aria-label="ESPN SWID cookie"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-muted mb-1 ml-0.5">espn_s2 cookie</label>
+                      <input
+                        type="text"
+                        value={espnS2}
+                        onChange={(e) => setEspnS2(e.target.value)}
+                        placeholder="AExxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…"
+                        className="w-full bg-raised border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-accent transition-colors min-h-[44px] font-mono"
+                        aria-label="ESPN espn_s2 cookie"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-muted mb-1 ml-0.5">League ID</label>
+                      <input
+                        type="text"
+                        value={espnLeagueId}
+                        onChange={(e) => setEspnLeagueId(e.target.value)}
+                        placeholder="e.g. 336584  (from the ESPN URL: /league?leagueId=...)"
+                        className="w-full bg-raised border border-border rounded-lg px-3 py-3 text-sm text-text placeholder:text-muted focus:outline-none focus:border-accent transition-colors min-h-[44px]"
+                        aria-label="ESPN League ID"
+                      />
+                    </div>
+                    {espnError && <p className="text-sm text-danger">{espnError}</p>}
+                    <button
+                      onClick={handleEspnPrivateSubmit}
+                      disabled={espnSubmitting || !espnSwid.trim() || !espnS2.trim() || !espnLeagueId.trim()}
+                      className="w-full bg-accent hover:bg-accent/90 disabled:opacity-50 text-white font-semibold rounded-lg px-4 py-3 min-h-[44px] transition-colors"
+                    >
+                      {espnSubmitting ? 'Connecting…' : 'Connect ESPN League →'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           {/* Step: ESPN public form */}
           {step === 'espn_public' && (
