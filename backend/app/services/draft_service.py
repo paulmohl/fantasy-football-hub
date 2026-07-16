@@ -7,8 +7,8 @@ for availability checks — the DB UniqueConstraint is the final guard.
 import csv
 import io
 import time
-from datetime import UTC, datetime, timedelta
-from uuid import UUID, uuid4
+from datetime import datetime, timedelta
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from icalendar import Calendar, Event
@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.cache import CacheKey
 from app.core.logging import logger
-from app.models.draft import Draft, DraftPick, DraftQueue, UserDraftRanking
+from app.models.draft import UserDraftRanking
 
 
 def snake_pick_to_slot(pick_num: int, num_teams: int) -> tuple[int, int]:

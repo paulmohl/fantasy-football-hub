@@ -223,6 +223,7 @@ export function DraftPage() {
       socket.off('replay_event')
       disconnectDraftSocket()
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftId, token])
 
   if (status === 'loading') {

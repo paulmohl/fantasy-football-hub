@@ -73,7 +73,7 @@ async def rate_limited_cache_handler(request: Request, exc: RateLimitedWithCache
 
 @app.on_event("startup")
 async def startup() -> None:
-    redis = await get_redis()
+    await get_redis()
     mgr = socketio.AsyncRedisManager(settings.redis_url)
     sio.manager = mgr
 

@@ -94,7 +94,6 @@ async def check_platform_credentials(ctx: dict) -> None:
     Scheduled every 6 hours. For Yahoo: calls get_game_key with current token.
     For ESPN private: calls get_league_settings. Sets is_healthy=False on auth error.
     """
-    import base64
     import json as _json
 
     from sqlalchemy import select as _select
@@ -289,7 +288,7 @@ async def auto_draft_pick(ctx: dict, draft_id: str, pick_num: int) -> None:
                 pass
 
         # team_positions: positions already on this team's roster (from picks so far)
-        picks_result = await db.execute(
+        await db.execute(
             _select(DraftPick).where(
                 DraftPick.draft_id == UUID(draft_id),
                 DraftPick.team_id == UUID(str(team_id)),
