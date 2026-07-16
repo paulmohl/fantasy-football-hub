@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,8 +11,17 @@ class Settings(BaseSettings):
     app_base_url: str = "http://localhost:8000"
     frontend_url: str = "http://localhost:5173"
 
-    # Database
+    # Database — DO provides postgresql://, asyncpg needs postgresql+asyncpg://
     database_url: str = "postgresql+asyncpg://ffhub:ffhub@localhost:5432/ffhub"
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def fix_db_scheme(cls, v: str) -> str:
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        return v
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"

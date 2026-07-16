@@ -67,13 +67,13 @@ workers:
         value: ${db.DATABASE_URL}
       - key: REDIS_URL
         scope: RUN_TIME
-        value: ${backend.REDIS_URL}
+        type: SECRET
       - key: JWT_SECRET
         scope: RUN_TIME
-        value: ${backend.JWT_SECRET}
+        type: SECRET
       - key: APP_SECRET_KEY
         scope: RUN_TIME
-        value: ${backend.APP_SECRET_KEY}
+        type: SECRET
       - key: IS_PRODUCTION
         scope: RUN_TIME
         value: "true"

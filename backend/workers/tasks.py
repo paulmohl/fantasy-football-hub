@@ -471,7 +471,10 @@ class WorkerSettings:
     Run: arq workers.tasks.WorkerSettings
     """
 
-    redis_settings = RedisSettings.from_dsn(os.environ.get("REDIS_URL", "redis://redis:6379/0"))
+    redis_settings = RedisSettings.from_dsn(
+        (os.environ.get("REDIS_URL") or "redis://localhost:6379/0").replace("rediss://", "redis://", 1),
+        ssl=os.environ.get("REDIS_URL", "").startswith("rediss://"),
+    )
     functions = [
         fantasycalc_prewarm,
         seed_player_cross_map,
