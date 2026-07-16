@@ -50,6 +50,7 @@ services:
         scope: RUN_TIME
         value: https://api.sleeper.app/v1
 
+workers:
   - name: worker
     github:
       repo: paulmohl/fantasy-football-hub
