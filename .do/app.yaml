@@ -33,7 +33,7 @@ services:
         value: ${db.DATABASE_URL}
       - key: REDIS_URL
         scope: RUN_TIME
-        value: ${redis.REDIS_URL}
+        type: SECRET
       - key: JWT_SECRET
         scope: RUN_TIME
         type: SECRET
@@ -67,7 +67,7 @@ workers:
         value: ${db.DATABASE_URL}
       - key: REDIS_URL
         scope: RUN_TIME
-        value: ${redis.REDIS_URL}
+        value: ${backend.REDIS_URL}
       - key: JWT_SECRET
         scope: RUN_TIME
         value: ${backend.JWT_SECRET}
@@ -112,10 +112,4 @@ databases:
     engine: PG
     version: "16"
     size: db-s-dev-database
-    num_nodes: 1
-
-  - name: redis
-    engine: REDIS
-    version: "7"
-    size: db-s-1vcpu-1gb
     num_nodes: 1
