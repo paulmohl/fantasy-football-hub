@@ -223,7 +223,9 @@ def build_optimal_lineup(
             if (
                 bench_entry["slot"] == "BN"
                 and bench_entry["player_id"]
-                and out_player["position"] in player_lookup.get(bench_entry["player_id"], {}).get("fantasy_positions", [])
+                and out_player["position"] in player_lookup.get(
+                    bench_entry["player_id"], {}
+                ).get("fantasy_positions", [])
             ):
                 replacement = bench_entry["player_id"]
                 break
