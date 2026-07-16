@@ -448,59 +448,58 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
                         </button>
                       </div>
                     ) : (
-                    /* Web: bookmarklet card */
-                    <div className="bg-raised border border-border rounded-lg p-4 space-y-3">
-                      <p className="text-sm font-semibold text-text">Connect in 3 steps — no technical knowledge needed</p>
-                      <div className="space-y-3 text-sm text-muted">
-                        <div className="flex gap-3 items-start">
-                          <span className="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">1</span>
-                          <div>
-                            <p className="text-text font-medium">Drag this button to your bookmarks bar</p>
-                            <p className="text-xs mt-0.5 mb-2">If your bookmarks bar isn't visible: <strong className="text-text">View → Show Bookmarks Bar</strong></p>
-                            <a
-                              href={bookmarklet}
-                              onClick={(e) => e.preventDefault()}
-                              draggable
-                              className="inline-flex items-center gap-1.5 bg-surface border-2 border-accent text-accent text-xs font-semibold rounded-lg px-3 py-2 cursor-grab active:cursor-grabbing select-none"
-                              title="Drag me to your bookmarks bar"
-                            >
-                              ⭐ ESPN Connect
-                            </a>
-                            <p className="text-xs mt-1.5 text-muted">Drag the button above into your browser's bookmarks bar.</p>
+                    <>
+                      <div className="bg-raised border border-border rounded-lg p-4 space-y-3">
+                        <p className="text-sm font-semibold text-text">Connect in 3 steps — no technical knowledge needed</p>
+                        <div className="space-y-3 text-sm text-muted">
+                          <div className="flex gap-3 items-start">
+                            <span className="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">1</span>
+                            <div>
+                              <p className="text-text font-medium">Drag this button to your bookmarks bar</p>
+                              <p className="text-xs mt-0.5 mb-2">If your bookmarks bar isn't visible: <strong className="text-text">View → Show Bookmarks Bar</strong></p>
+                              <a
+                                href={bookmarklet}
+                                onClick={(e) => e.preventDefault()}
+                                draggable
+                                className="inline-flex items-center gap-1.5 bg-surface border-2 border-accent text-accent text-xs font-semibold rounded-lg px-3 py-2 cursor-grab active:cursor-grabbing select-none"
+                                title="Drag me to your bookmarks bar"
+                              >
+                                ⭐ ESPN Connect
+                              </a>
+                              <p className="text-xs mt-1.5 text-muted">Drag the button above into your browser's bookmarks bar.</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex gap-3 items-start">
-                          <span className="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">2</span>
-                          <div>
-                            <p className="text-text font-medium">Go to your ESPN fantasy league page</p>
-                            <a
-                              href="https://fantasy.espn.com/football/league"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-accent text-xs underline"
-                            >
-                              Open ESPN Fantasy →
-                            </a>
-                            <p className="text-xs mt-0.5">Make sure you're signed in to your ESPN account.</p>
+                          <div className="flex gap-3 items-start">
+                            <span className="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">2</span>
+                            <div>
+                              <p className="text-text font-medium">Go to your ESPN fantasy league page</p>
+                              <a
+                                href="https://fantasy.espn.com/football/league"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-accent text-xs underline"
+                              >
+                                Open ESPN Fantasy →
+                              </a>
+                              <p className="text-xs mt-0.5">Make sure you're signed in to your ESPN account.</p>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex gap-3 items-start">
-                          <span className="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">3</span>
-                          <div>
-                            <p className="text-text font-medium">Click the "ESPN Connect" bookmark</p>
-                            <p className="text-xs mt-0.5">You'll be brought back here automatically with everything filled in.</p>
+                          <div className="flex gap-3 items-start">
+                            <span className="bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">3</span>
+                            <div>
+                              <p className="text-text font-medium">Click the "ESPN Connect" bookmark</p>
+                              <p className="text-xs mt-0.5">You'll be brought back here automatically with everything filled in.</p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    <button
-                      onClick={() => setEspnManual(true)}
-                      className="text-xs text-muted underline w-full text-center"
-                    >
-                      I'm a developer — enter cookies manually
-                    </button>
-                    </div>
-                    /* end web bookmarklet */
+                      <button
+                        onClick={() => setEspnManual(true)}
+                        className="text-xs text-muted underline w-full text-center"
+                      >
+                        I'm a developer — enter cookies manually
+                      </button>
+                    </>
                     )}
                   </>
                 ) : (
