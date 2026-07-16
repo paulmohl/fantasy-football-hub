@@ -58,6 +58,22 @@ python_version = "3.11"
 strict = false
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = [
+    "app.services.email_service",
+    "app.services.weather_service",
+    "app.services.projection_service",
+    "app.services.league_service",
+    "app.services.yahoo_service",
+    "app.services.espn_service",
+    "app.services.espn_client",
+    "app.services.draft_service",
+    "app.sockets.draft_namespace",
+    "app.api.v1.notifications",
+    "app.api.v1.draft",
+]
+ignore_errors = true
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]

@@ -93,7 +93,7 @@ async def import_yahoo_leagues(
     if not body.league_ids:
         raise HTTPException(status_code=422, detail="Select at least one league.")
 
-    yahoo, _, http = await _get_yahoo_client_for_user(current_user, db)
+    yahoo, _tok, http = await _get_yahoo_client_for_user(current_user, db)
     results, errors = [], []
     try:
         for league_id in body.league_ids:

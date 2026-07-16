@@ -286,8 +286,8 @@ async def import_csv_rankings(
                 UserDraftRanking.user_id == user_id,
             )
         )
-        for row in existing.scalars():
-            await db.delete(row)
+        for existing_row in existing.scalars():
+            await db.delete(existing_row)
         await db.flush()
 
         for i, row in enumerate(rows, start=1):
