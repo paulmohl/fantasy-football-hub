@@ -11,6 +11,7 @@ Task registry: add all tasks to the WorkerSettings.functions list.
 """
 import json
 import os
+from urllib.parse import urlparse
 
 import httpx
 from arq.connections import RedisSettings
@@ -465,16 +466,25 @@ async def post_draft_recap(ctx: dict, draft_id: str) -> None:
     await engine.dispose()
 
 
+def _make_redis_settings() -> RedisSettings:
+    url = os.environ.get("REDIS_URL") or "redis://localhost:6379/0"
+    parsed = urlparse(url)
+    return RedisSettings(
+        host=parsed.hostname or "localhost",
+        port=parsed.port or 6379,
+        password=parsed.password or None,
+        database=int((parsed.path or "/0").lstrip("/") or "0"),
+        ssl=parsed.scheme == "rediss",
+    )
+
+
 class WorkerSettings:
     """arq worker configuration.
 
     Run: arq workers.tasks.WorkerSettings
     """
 
-    redis_settings = RedisSettings.from_dsn(
-        (os.environ.get("REDIS_URL") or "redis://localhost:6379/0").replace("rediss://", "redis://", 1),
-        ssl=os.environ.get("REDIS_URL", "").startswith("rediss://"),
-    )
+    redis_settings = _make_redis_settings()
     functions = [
         fantasycalc_prewarm,
         seed_player_cross_map,
