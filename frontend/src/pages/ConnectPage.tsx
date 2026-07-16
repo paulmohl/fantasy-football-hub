@@ -140,6 +140,7 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
   const [espnManual, setEspnManual] = useState(false)
   const [espnNativeLoading, setEspnNativeLoading] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const [searchParams] = useSearchParams()
 
   // Handle bookmarklet redirect: /connect?espn_swid=...&espn_s2=...&espn_lid=...
   useEffect(() => {
@@ -150,7 +151,6 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
       setEspnSwid(swid)
       setEspnS2(s2)
       if (lid) setEspnLeagueId(lid)
-      setPlatform('ESPN')
       setStep('espn_private')
       append({ type: 'user', content: 'ESPN' })
       append({ type: 'user', content: 'Private league' })
