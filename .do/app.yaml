@@ -13,11 +13,6 @@ ingress:
       match:
         path:
           prefix: /ws
-    - component:
-        name: frontend
-      match:
-        path:
-          prefix: /
 
 services:
   - name: backend
