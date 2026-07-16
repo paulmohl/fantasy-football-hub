@@ -74,7 +74,7 @@ async def create_draft(
         raise HTTPException(status_code=404, detail="League not found")
 
     # Parse scheduled_at
-    from datetime import UTC as _UTC, datetime
+    from datetime import datetime
     scheduled_at = None
     if body.scheduled_at:
         try:

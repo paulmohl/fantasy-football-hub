@@ -3,7 +3,6 @@ import base64
 import httpx
 
 from app.core.config import settings
-from app.core.logging import logger
 
 YAHOO_FANTASY_BASE = "https://fantasysports.yahooapis.com/fantasy/v2"
 YAHOO_TOKEN_URL = "https://api.login.yahoo.com/oauth2/get_token"

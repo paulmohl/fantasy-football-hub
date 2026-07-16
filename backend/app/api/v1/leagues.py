@@ -4,9 +4,8 @@ All endpoints use get_league_for_user dependency which JOINs through league_memb
 filtered by current_user.id. This satisfies LC-09 row-level isolation.
 """
 import json
-from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends
 from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

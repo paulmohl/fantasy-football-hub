@@ -104,7 +104,6 @@ class DraftNamespace(socketio.AsyncNamespace):
         """
         session = await self.get_session(sid)
         draft_id = session["draft_id"]
-        user_id = session["user_id"]
         team_id = session.get("team_id")
         player_id = str(data.get("player_id", ""))
 

@@ -42,6 +42,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
         })
       })
       .catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
   if (!token) return <Navigate to="/login" replace />
@@ -68,6 +69,7 @@ function AuthCallback() {
     } else {
       navigate('/login', { replace: true })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return null
