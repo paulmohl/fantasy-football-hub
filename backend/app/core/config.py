@@ -26,6 +26,16 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
+    @field_validator("redis_url", mode="before")
+    @classmethod
+    def fix_redis_scheme(cls, v: str) -> str:
+        v = (v or "").strip().strip("\"'")
+        if not v:
+            return "redis://localhost:6379/0"
+        if not v.startswith(("redis://", "rediss://", "unix://")):
+            return f"redis://{v}"
+        return v
+
     # JWT
     jwt_secret: str = "change-me-in-production"
     jwt_algorithm: str = "HS256"
