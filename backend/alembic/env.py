@@ -2,6 +2,7 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.config import settings
@@ -35,6 +36,9 @@ def do_run_migrations(connection):
 async def run_migrations_online() -> None:
     engine = create_async_engine(settings.database_url)
     async with engine.connect() as conn:
+        # PG15+ revoked default CREATE on public schema; grant it before migrating
+        await conn.execute(text("GRANT ALL ON SCHEMA public TO CURRENT_USER"))
+        await conn.commit()
         await conn.run_sync(do_run_migrations)
     await engine.dispose()
 
