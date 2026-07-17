@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     @field_validator("redis_url", mode="before")
     @classmethod
     def fix_redis_scheme(cls, v: str) -> str:
-        v = (v or "").strip()
+        v = (v or "").strip().strip("\"'")
         if not v:
             return "redis://localhost:6379/0"
         if not v.startswith(("redis://", "rediss://", "unix://")):
