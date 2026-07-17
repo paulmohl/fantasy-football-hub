@@ -36,11 +36,13 @@ def do_run_migrations(connection):
 async def run_migrations_online() -> None:
     engine = create_async_engine(settings.database_url)
     async with engine.connect() as conn:
-        # PG15+ revoked default CREATE on public schema — try to grant it.
-        # Wrapped in try/except: if doadmin isn't schema owner this fails silently;
-        # run the GRANT manually in the DO database console instead.
+        # PG15+ revoked default CREATE on public schema.
+        # SET ROLE pg_database_owner grants us schema ownership for the session
+        # so we can GRANT it back to the app user permanently.
         try:
+            await conn.execute(text("SET ROLE pg_database_owner"))
             await conn.execute(text("GRANT ALL ON SCHEMA public TO CURRENT_USER"))
+            await conn.execute(text("RESET ROLE"))
             await conn.commit()
         except Exception:
             await conn.rollback()
