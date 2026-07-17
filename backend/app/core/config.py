@@ -1,3 +1,5 @@
+import re
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -18,9 +20,11 @@ class Settings(BaseSettings):
     @classmethod
     def fix_db_scheme(cls, v: str) -> str:
         if v.startswith("postgresql://"):
-            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
-        if v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+            v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif v.startswith("postgres://"):
+            v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+        # asyncpg doesn't accept sslmode (psycopg2-only param) — strip it
+        v = re.sub(r"[?&]sslmode=[^&]*", "", v).rstrip("?&")
         return v
 
     # Redis
