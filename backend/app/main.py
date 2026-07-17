@@ -73,9 +73,13 @@ async def rate_limited_cache_handler(request: Request, exc: RateLimitedWithCache
 
 @app.on_event("startup")
 async def startup() -> None:
-    await get_redis()
-    mgr = socketio.AsyncRedisManager(settings.redis_url)
-    sio.manager = mgr
+    try:
+        await get_redis()
+        mgr = socketio.AsyncRedisManager(settings.redis_url)
+        sio.manager = mgr
+    except Exception:
+        # Redis not yet provisioned — app boots in degraded mode (no draft room / caching)
+        pass
 
 
 @app.on_event("shutdown")
