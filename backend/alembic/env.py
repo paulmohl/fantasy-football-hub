@@ -36,9 +36,14 @@ def do_run_migrations(connection):
 async def run_migrations_online() -> None:
     engine = create_async_engine(settings.database_url)
     async with engine.connect() as conn:
-        # PG15+ revoked default CREATE on public schema; grant it before migrating
-        await conn.execute(text("GRANT ALL ON SCHEMA public TO CURRENT_USER"))
-        await conn.commit()
+        # PG15+ revoked default CREATE on public schema — try to grant it.
+        # Wrapped in try/except: if doadmin isn't schema owner this fails silently;
+        # run the GRANT manually in the DO database console instead.
+        try:
+            await conn.execute(text("GRANT ALL ON SCHEMA public TO CURRENT_USER"))
+            await conn.commit()
+        except Exception:
+            await conn.rollback()
         await conn.run_sync(do_run_migrations)
     await engine.dispose()
 
