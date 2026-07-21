@@ -27,29 +27,31 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+APP_SCHEMA = "app"
+
+
 def do_run_migrations(connection):
-    context.configure(connection=connection, target_metadata=target_metadata)
+    # version_table_schema puts alembic_version in our owned schema too
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        version_table_schema=APP_SCHEMA,
+    )
     with context.begin_transaction():
         context.run_migrations()
 
 
 async def run_migrations_online() -> None:
-    engine = create_async_engine(settings.database_url)
+    # Use 'app' schema owned by doadmin to avoid public schema permission issues
+    # on DO Managed PostgreSQL (PG15+ revoked public CREATE from non-owners).
+    engine = create_async_engine(
+        settings.database_url,
+        connect_args={"server_settings": {"search_path": APP_SCHEMA}},
+    )
     async with engine.connect() as conn:
-        # PG15+: public schema owned by pg_database_owner, not the login user.
-        # doadmin can't GRANT on a schema it doesn't own, so skip the GRANT.
-        # SET ROLE (without LOCAL) persists past commit for the session,
-        # so alembic's own transaction runs as pg_database_owner and can CREATE TABLE.
-        try:
-            await conn.execute(text("SET ROLE pg_database_owner"))
-            await conn.commit()
-            print("INFO: running migrations as pg_database_owner", flush=True)
-        except Exception as e:
-            print(f"WARNING: SET ROLE pg_database_owner failed ({e}); migrations may fail", flush=True)
-            try:
-                await conn.rollback()
-            except Exception:
-                pass
+        await conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {APP_SCHEMA}"))
+        await conn.commit()
+        print(f"INFO: running migrations in schema '{APP_SCHEMA}'", flush=True)
         await conn.run_sync(do_run_migrations)
     await engine.dispose()
 
