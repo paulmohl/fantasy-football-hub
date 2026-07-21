@@ -27,31 +27,31 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-APP_SCHEMA = "app"
-
-
 def do_run_migrations(connection):
-    # version_table_schema puts alembic_version in our owned schema too
-    context.configure(
-        connection=connection,
-        target_metadata=target_metadata,
-        version_table_schema=APP_SCHEMA,
-    )
+    context.configure(connection=connection, target_metadata=target_metadata)
     with context.begin_transaction():
         context.run_migrations()
 
 
 async def run_migrations_online() -> None:
-    # Use 'app' schema owned by doadmin to avoid public schema permission issues
-    # on DO Managed PostgreSQL (PG15+ revoked public CREATE from non-owners).
-    engine = create_async_engine(
-        settings.database_url,
-        connect_args={"server_settings": {"search_path": APP_SCHEMA}},
-    )
+    engine = create_async_engine(settings.database_url)
     async with engine.connect() as conn:
-        await conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {APP_SCHEMA}"))
-        await conn.commit()
-        print(f"INFO: running migrations in schema '{APP_SCHEMA}'", flush=True)
+        # Diagnostic: log who we're connecting as and what DDL we can do
+        try:
+            r = await conn.execute(text(
+                "SELECT current_user, session_user, "
+                "has_database_privilege(current_database(), 'CREATE') AS db_create, "
+                "has_schema_privilege('public', 'CREATE') AS pub_create"
+            ))
+            row = r.first()
+            print(
+                f"INFO: current_user={row[0]} session_user={row[1]} "
+                f"db_create={row[2]} public_schema_create={row[3]}",
+                flush=True,
+            )
+            await conn.rollback()
+        except Exception as e:
+            print(f"INFO: privilege check failed: {e}", flush=True)
         await conn.run_sync(do_run_migrations)
     await engine.dispose()
 
