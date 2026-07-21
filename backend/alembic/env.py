@@ -36,9 +36,17 @@ def do_run_migrations(connection):
 async def run_migrations_online() -> None:
     engine = create_async_engine(settings.database_url)
     async with engine.connect() as conn:
-        # PG15+ revoked default CREATE on public schema; grant it before migrating
-        await conn.execute(text("GRANT ALL ON SCHEMA public TO CURRENT_USER"))
-        await conn.commit()
+        # PG15+ revoked default CREATE on public schema.
+        # SET ROLE pg_database_owner lets us grant schema privileges.
+        # SESSION_USER (not CURRENT_USER) stays as the login user after SET ROLE.
+        try:
+            await conn.execute(text("SET ROLE pg_database_owner"))
+            await conn.execute(text("GRANT ALL ON SCHEMA public TO SESSION_USER"))
+            await conn.execute(text("RESET ROLE"))
+            await conn.commit()
+        except Exception as e:
+            print(f"WARNING: public schema grant failed ({e}), proceeding anyway", flush=True)
+            await conn.rollback()
         await conn.run_sync(do_run_migrations)
     await engine.dispose()
 
