@@ -10,6 +10,7 @@ engine = create_async_engine(
     pool_size=10,
     max_overflow=20,
     echo=not settings.is_production,
+    connect_args={"server_settings": {"search_path": "app"}},
 )
 
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
