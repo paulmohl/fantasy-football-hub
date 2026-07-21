@@ -1,4 +1,4 @@
-import re
+from urllib.parse import urlparse, urlunparse
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -26,8 +26,10 @@ class Settings(BaseSettings):
             v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
         elif v.startswith("postgres://"):
             v = v.replace("postgres://", "postgresql+asyncpg://", 1)
-        # asyncpg doesn't accept sslmode (psycopg2-only param) — strip it
-        v = re.sub(r"[?&]sslmode=[^&]*", "", v).rstrip("?&")
+        # asyncpg doesn't accept URL query params (sslmode, channel_binding, etc.)
+        # Strip the entire query string — SSL is handled by asyncpg defaults.
+        parsed = urlparse(v)
+        v = urlunparse(parsed._replace(query="", fragment=""))
         return v
 
     # Redis
