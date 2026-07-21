@@ -10,9 +10,6 @@ engine = create_async_engine(
     pool_size=10,
     max_overflow=20,
     echo=not settings.is_production,
-    # search_path=app so all unqualified table references resolve to the 'app' schema
-    # (DO Managed PG15+ revoked CREATE on public; we migrate into 'app' instead)
-    connect_args={"server_settings": {"search_path": "app"}},
 )
 
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
