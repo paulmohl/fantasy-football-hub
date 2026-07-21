@@ -30,7 +30,7 @@ services:
     envs:
       - key: DATABASE_URL
         scope: RUN_TIME
-        value: ${db.DATABASE_URL}
+        type: SECRET
       - key: REDIS_URL
         scope: RUN_TIME
         type: SECRET
@@ -64,7 +64,7 @@ workers:
     envs:
       - key: DATABASE_URL
         scope: RUN_TIME
-        value: ${db.DATABASE_URL}
+        type: SECRET
       - key: REDIS_URL
         scope: RUN_TIME
         type: SECRET
@@ -94,7 +94,7 @@ jobs:
     envs:
       - key: DATABASE_URL
         scope: RUN_TIME
-        value: ${db.DATABASE_URL}
+        type: SECRET
 
 static_sites:
   - name: frontend
@@ -106,10 +106,3 @@ static_sites:
     build_command: npm ci && npm run build
     output_dir: dist
     catchall_document: index.html
-
-databases:
-  - name: db
-    engine: PG
-    version: "16"
-    size: db-s-dev-database
-    num_nodes: 1
