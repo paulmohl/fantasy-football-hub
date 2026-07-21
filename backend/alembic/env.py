@@ -36,17 +36,20 @@ def do_run_migrations(connection):
 async def run_migrations_online() -> None:
     engine = create_async_engine(settings.database_url)
     async with engine.connect() as conn:
-        # PG15+ revoked default CREATE on public schema.
-        # SET ROLE pg_database_owner lets us grant schema privileges.
-        # SESSION_USER (not CURRENT_USER) stays as the login user after SET ROLE.
+        # PG15+: public schema is owned by pg_database_owner, not the login user.
+        # doadmin can't GRANT on a schema it doesn't own, so skip the GRANT.
+        # Instead, run migrations AS pg_database_owner — SET ROLE (without LOCAL)
+        # persists beyond commit for the session, so alembic's transaction inherits it.
         try:
             await conn.execute(text("SET ROLE pg_database_owner"))
-            await conn.execute(text("GRANT ALL ON SCHEMA public TO SESSION_USER"))
-            await conn.execute(text("RESET ROLE"))
             await conn.commit()
+            print("INFO: running migrations as pg_database_owner", flush=True)
         except Exception as e:
-            print(f"WARNING: public schema grant failed ({e}), proceeding anyway", flush=True)
-            await conn.rollback()
+            print(f"WARNING: SET ROLE pg_database_owner failed ({e}); migrations may fail", flush=True)
+            try:
+                await conn.rollback()
+            except Exception:
+                pass
         await conn.run_sync(do_run_migrations)
     await engine.dispose()
 
