@@ -41,10 +41,13 @@ async def run_migrations_online() -> None:
         # so we can GRANT it back to the app user permanently.
         try:
             await conn.execute(text("SET ROLE pg_database_owner"))
-            await conn.execute(text("GRANT ALL ON SCHEMA public TO CURRENT_USER"))
+            # SESSION_USER stays as the login user (doadmin) even after SET ROLE;
+            # CURRENT_USER would be pg_database_owner here — wrong target
+            await conn.execute(text("GRANT ALL ON SCHEMA public TO SESSION_USER"))
             await conn.execute(text("RESET ROLE"))
             await conn.commit()
-        except Exception:
+        except Exception as e:
+            print(f"WARNING: public schema grant failed ({e}), proceeding anyway", flush=True)
             await conn.rollback()
         await conn.run_sync(do_run_migrations)
     await engine.dispose()
