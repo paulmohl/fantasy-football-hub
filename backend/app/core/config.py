@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     @field_validator("database_url", mode="before")
     @classmethod
     def fix_db_scheme(cls, v: str) -> str:
+        v = (v or "").strip().strip("\"'")
+        if not v:
+            return "postgresql+asyncpg://ffhub:ffhub@localhost:5432/ffhub"
         if v.startswith("postgresql://"):
             v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
         elif v.startswith("postgres://"):
