@@ -10,7 +10,6 @@ Phase 3 additions:
 Task registry: add all tasks to the WorkerSettings.functions list.
 """
 import json
-import os
 from urllib.parse import urlparse
 
 import httpx
@@ -466,8 +465,8 @@ async def post_draft_recap(ctx: dict, draft_id: str) -> None:
 
 
 def _make_redis_settings() -> RedisSettings:
-    url = os.environ.get("REDIS_URL") or "redis://localhost:6379/0"
-    parsed = urlparse(url)
+    from app.core.config import settings
+    parsed = urlparse(settings.redis_url)
     return RedisSettings(
         host=parsed.hostname or "localhost",
         port=parsed.port or 6379,
