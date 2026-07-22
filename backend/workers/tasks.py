@@ -466,14 +466,10 @@ async def post_draft_recap(ctx: dict, draft_id: str) -> None:
 
 def _make_redis_settings() -> RedisSettings:
     from app.core.config import settings
-    parsed = urlparse(settings.redis_url)
-    return RedisSettings(
-        host=parsed.hostname or "localhost",
-        port=parsed.port or 6379,
-        password=parsed.password or None,
-        database=int((parsed.path or "/0").lstrip("/") or "0"),
-        ssl=parsed.scheme == "rediss",
-    )
+    url = settings.redis_url
+    host = urlparse(url).hostname or "unknown"
+    logger.info("worker.redis.init", host=host, scheme=urlparse(url).scheme)
+    return RedisSettings.from_dsn(url)
 
 
 class WorkerSettings:
