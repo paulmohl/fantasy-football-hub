@@ -26,7 +26,7 @@ services:
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
     health_check:
-      http_path: /api/v1/health
+      http_path: /v1/health
     envs:
       - key: DATABASE_URL
         scope: RUN_TIME
