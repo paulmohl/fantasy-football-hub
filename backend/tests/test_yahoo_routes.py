@@ -33,7 +33,7 @@ async def test_yahoo_leagues_no_credential(async_client, test_db):
 
     token = create_access_token(str(user.id))
     resp = await async_client.get(
-        "/api/v1/yahoo/leagues",
+        "/v1/yahoo/leagues",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 401
@@ -72,7 +72,7 @@ async def test_yahoo_leagues_valid_credential(async_client, test_db):
         mock_http_cls.return_value.aclose = AsyncMock()
 
         resp = await async_client.get(
-            "/api/v1/yahoo/leagues",
+            "/v1/yahoo/leagues",
             headers={"Authorization": f"Bearer {token}"},
         )
 
@@ -103,7 +103,7 @@ async def test_yahoo_import_empty_list(async_client, test_db):
 
     token = create_access_token(str(user.id))
     resp = await async_client.post(
-        "/api/v1/yahoo/import",
+        "/v1/yahoo/import",
         json={"league_ids": [], "game_key": "nfl.l.2025"},
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -113,6 +113,6 @@ async def test_yahoo_import_empty_list(async_client, test_db):
 @pytest.mark.asyncio
 async def test_yahoo_login_unconfigured(async_client):
     """GET /auth/yahoo returns 503 when YAHOO_CLIENT_ID is not set."""
-    resp = await async_client.get("/api/v1/auth/yahoo", follow_redirects=False)
+    resp = await async_client.get("/v1/auth/yahoo", follow_redirects=False)
     assert resp.status_code == 503
     assert "not configured" in resp.json()["detail"].lower()
