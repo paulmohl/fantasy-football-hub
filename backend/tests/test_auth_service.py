@@ -24,7 +24,7 @@ async def test_get_me_no_credentials_returns_empty_health(async_client, test_db)
     await test_db.refresh(user)
 
     token = create_access_token(str(user.id))
-    resp = await async_client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
+    resp = await async_client.get("/v1/users/me", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     assert resp.json()["credential_health"] == []
 
@@ -44,7 +44,7 @@ async def test_get_me_with_healthy_yahoo_credential(async_client, test_db):
     await test_db.commit()
 
     token = create_access_token(str(user.id))
-    resp = await async_client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
+    resp = await async_client.get("/v1/users/me", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     health = resp.json()["credential_health"]
     assert any(c["platform"] == "yahoo" and c["is_healthy"] is True for c in health)
@@ -67,7 +67,7 @@ async def test_get_me_with_unhealthy_espn_credential(async_client, test_db):
     await test_db.commit()
 
     token = create_access_token(str(user.id))
-    resp = await async_client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
+    resp = await async_client.get("/v1/users/me", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 200
     health = resp.json()["credential_health"]
     assert any(c["platform"] == "espn" and c["is_healthy"] is False for c in health)
@@ -94,7 +94,7 @@ async def test_rate_limit_yahoo_returns_429_when_exceeded(async_client, test_db,
     mock_redis.get = AsyncMock(return_value=None)
 
     token = create_access_token(str(user.id))
-    resp = await async_client.get("/api/v1/yahoo/leagues", headers={"Authorization": f"Bearer {token}"})
+    resp = await async_client.get("/v1/yahoo/leagues", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 429
     assert resp.headers.get("x-rate-limited") == "true"
 
@@ -124,7 +124,7 @@ async def test_rate_limit_within_budget_returns_200(async_client, test_db, mock_
     with patch("app.api.v1.yahoo.YahooClient", return_value=mock_yahoo), \
          patch("app.api.v1.yahoo.httpx.AsyncClient") as mock_http_cls:
         mock_http_cls.return_value.aclose = AsyncMock()
-        resp = await async_client.get("/api/v1/yahoo/leagues", headers={"Authorization": f"Bearer {token}"})
+        resp = await async_client.get("/v1/yahoo/leagues", headers={"Authorization": f"Bearer {token}"})
 
     assert resp.status_code == 200
     assert resp.headers.get("x-rate-limited") is None
@@ -145,7 +145,7 @@ async def test_rate_limit_espn_budget_100(async_client, test_db, mock_redis):
 
     token = create_access_token(str(user.id))
     resp = await async_client.post(
-        "/api/v1/espn/public",
+        "/v1/espn/public",
         json={"league_id": "42"},
         headers={"Authorization": f"Bearer {token}"},
     )
