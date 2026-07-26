@@ -9,7 +9,7 @@ async def test_me_no_leagues(async_client, test_db):
     from app.models.user import User
 
     # Register
-    await async_client.post("/api/v1/auth/register", json={
+    await async_client.post("/v1/auth/register", json={
         "email": "me_test@example.com",
         "password": "securepassword123",
     })
@@ -21,7 +21,7 @@ async def test_me_no_leagues(async_client, test_db):
     await test_db.commit()
 
     # Login to get access token
-    login_resp = await async_client.post("/api/v1/auth/login", json={
+    login_resp = await async_client.post("/v1/auth/login", json={
         "email": "me_test@example.com",
         "password": "securepassword123",
     })
@@ -30,7 +30,7 @@ async def test_me_no_leagues(async_client, test_db):
 
     # Call /users/me
     me_resp = await async_client.get(
-        "/api/v1/users/me",
+        "/v1/users/me",
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert me_resp.status_code == 200
@@ -50,7 +50,7 @@ async def test_me_with_unhealthy_credential(async_client, test_db):
     from app.models.user import User
     from app.services.credential_service import CredentialService
 
-    await async_client.post("/api/v1/auth/register", json={
+    await async_client.post("/v1/auth/register", json={
         "email": "me_unhealthy@example.com",
         "password": "securepassword123",
     })
@@ -67,14 +67,14 @@ async def test_me_with_unhealthy_credential(async_client, test_db):
     await cred_svc.mark_unhealthy(user.id, "yahoo", test_db)
     await test_db.commit()
 
-    login_resp = await async_client.post("/api/v1/auth/login", json={
+    login_resp = await async_client.post("/v1/auth/login", json={
         "email": "me_unhealthy@example.com",
         "password": "securepassword123",
     })
     access_token = login_resp.json()["access_token"]
 
     me_resp = await async_client.get(
-        "/api/v1/users/me",
+        "/v1/users/me",
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert me_resp.status_code == 200
