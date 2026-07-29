@@ -18,14 +18,14 @@ from app.models.user import User
 
 async def _register_and_login(async_client, test_db, email: str, password: str = "testpass123") -> str:
     """Register, verify, and login a user; return the JWT access token."""
-    await async_client.post("/v1/auth/register", json={"email": email, "password": password})
+    await async_client.post("/api/v1/auth/register", json={"email": email, "password": password})
 
     result = await test_db.execute(select(User).where(User.email == email))
     user = result.scalar_one()
     user.is_verified = True
     await test_db.commit()
 
-    resp = await async_client.post("/v1/auth/login", json={"email": email, "password": password})
+    resp = await async_client.post("/api/v1/auth/login", json={"email": email, "password": password})
     assert resp.status_code == 200, f"Login failed: {resp.text}"
     return resp.json()["access_token"]
 
@@ -79,7 +79,7 @@ async def test_get_my_team_returns_200(async_client, test_db):
     """Route: GET /team/my — returns 200 with leagues list for authenticated user."""
     token = await _register_and_login(async_client, test_db, "myteam@example.com")
     resp = await async_client.get(
-        "/v1/team/my",
+        "/api/v1/team/my",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200
@@ -100,7 +100,7 @@ async def test_get_my_team_with_league(async_client, test_db):
     await _create_league_for_user(test_db, user)
 
     resp = await async_client.get(
-        "/v1/team/my",
+        "/api/v1/team/my",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 200
@@ -113,7 +113,7 @@ async def test_get_my_team_with_league(async_client, test_db):
 @pytest.mark.asyncio
 async def test_my_team_unauthenticated_returns_401(async_client):
     """Unauthenticated request to /team/my must return 401."""
-    resp = await async_client.get("/v1/team/my")
+    resp = await async_client.get("/api/v1/team/my")
     assert resp.status_code == 401
 
 
@@ -137,7 +137,7 @@ async def test_team_isolation(async_client, test_db):
 
     # User B tries to access User A's league_id — must get 404
     resp = await async_client.get(
-        f"/v1/team/lineup?league_id={league_a.id}",
+        f"/api/v1/team/lineup?league_id={league_a.id}",
         headers={"Authorization": f"Bearer {token_b}"},
     )
     assert resp.status_code == 404, f"Expected 404 for cross-user access, got {resp.status_code}"
@@ -179,7 +179,7 @@ async def test_lineup_no_roster_returns_404(async_client, test_db):
 
     # Week 1 roster doesn't exist; Sleeper/NFL state call will fail in unit test environment.
     # We assert only that auth gate works (401 without token).
-    resp_unauth = await async_client.get(f"/v1/team/lineup?league_id={league.id}")
+    resp_unauth = await async_client.get(f"/api/v1/team/lineup?league_id={league.id}")
     assert resp_unauth.status_code == 401
 
 
@@ -188,7 +188,7 @@ async def test_lineup_apply_stub_returns_501(async_client, test_db):
     """TM-16: POST /team/lineup/apply returns 501 Not Implemented for all authenticated users."""
     token = await _register_and_login(async_client, test_db, "stub501@example.com")
     resp = await async_client.post(
-        "/v1/team/lineup/apply",
+        "/api/v1/team/lineup/apply",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 501
@@ -198,14 +198,14 @@ async def test_lineup_apply_stub_returns_501(async_client, test_db):
 @pytest.mark.asyncio
 async def test_waiver_unauthenticated_returns_401(async_client, test_db):
     """Unauthenticated request to /team/waiver must return 401."""
-    resp = await async_client.get("/v1/team/waiver?league_id=00000000-0000-0000-0000-000000000000")
+    resp = await async_client.get("/api/v1/team/waiver?league_id=00000000-0000-0000-0000-000000000000")
     assert resp.status_code == 401
 
 
 @pytest.mark.asyncio
 async def test_standings_unauthenticated_returns_401(async_client, test_db):
     """Unauthenticated request to /team/standings must return 401."""
-    resp = await async_client.get("/v1/team/standings?league_id=00000000-0000-0000-0000-000000000000")
+    resp = await async_client.get("/api/v1/team/standings?league_id=00000000-0000-0000-0000-000000000000")
     assert resp.status_code == 401
 
 
@@ -213,7 +213,7 @@ async def test_standings_unauthenticated_returns_401(async_client, test_db):
 async def test_trade_unauthenticated_returns_401(async_client, test_db):
     """Unauthenticated request to /team/trade must return 401."""
     resp = await async_client.get(
-        "/v1/team/trade?league_id=00000000-0000-0000-0000-000000000000&player_a=123&player_b=456"
+        "/api/v1/team/trade?league_id=00000000-0000-0000-0000-000000000000&player_a=123&player_b=456"
     )
     assert resp.status_code == 401
 
@@ -224,7 +224,7 @@ async def test_wrong_league_id_returns_404(async_client, test_db):
     token = await _register_and_login(async_client, test_db, "badleague@example.com")
     fake_id = "00000000-0000-0000-0000-000000000000"
     resp = await async_client.get(
-        f"/v1/team/standings?league_id={fake_id}",
+        f"/api/v1/team/standings?league_id={fake_id}",
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 404
