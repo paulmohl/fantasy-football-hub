@@ -15,7 +15,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.deps import get_current_user
 from app.core.security import create_access_token, decode_token, set_refresh_cookie
 from app.models.user import User
 from app.services.auth_service import create_user_session
