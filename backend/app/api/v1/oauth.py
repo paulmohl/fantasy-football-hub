@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.deps import get_current_user
-from app.core.security import create_access_token, set_refresh_cookie
+from app.core.security import create_access_token, decode_token, set_refresh_cookie
 from app.models.user import User
 from app.services.auth_service import create_user_session
 from app.services.credential_service import CredentialService
@@ -105,9 +105,11 @@ async def google_callback(request: Request, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/yahoo")
-async def yahoo_login(request: Request):
+async def yahoo_login(request: Request, token: str | None = None):
     """MP-01: Redirect to Yahoo OAuth consent screen.
 
+    Accepts ?token=<jwt> so the frontend can pass identity through a browser redirect.
+    Stores user_id in the Starlette session for the callback to retrieve.
     Returns 503 if YAHOO_CLIENT_ID is not configured.
     """
     if not settings.yahoo_client_id:
@@ -115,16 +117,24 @@ async def yahoo_login(request: Request):
             status_code=503,
             detail="Yahoo OAuth not configured. Set YAHOO_CLIENT_ID and YAHOO_CLIENT_SECRET.",
         )
+    if token:
+        user_id = decode_token(token)
+        if user_id:
+            request.session["yahoo_user_id"] = user_id
     return await oauth.yahoo.authorize_redirect(request, settings.yahoo_redirect_uri)
 
 
 @router.get("/yahoo/callback")
-async def yahoo_callback(
-    request: Request,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+async def yahoo_callback(request: Request, db: AsyncSession = Depends(get_db)):
     """MP-01: Exchange authorization code; store encrypted refresh token; redirect to /connect."""
+    from uuid import UUID
+    user_id = request.session.get("yahoo_user_id")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    user = await db.get(User, UUID(user_id))
+    if not user or not user.is_verified:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
     try:
         token = await oauth.yahoo.authorize_access_token(request)
     except Exception:
@@ -137,6 +147,6 @@ async def yahoo_callback(
     }
     cred_svc = CredentialService()
     async with db.begin_nested():
-        await cred_svc.store_credential(current_user, "yahoo", credential_dict, db)
+        await cred_svc.store_credential(user, "yahoo", credential_dict, db)
 
     return RedirectResponse(url=f"{settings.frontend_url}/connect?platform=yahoo")

@@ -200,7 +200,8 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
         content: <p>Redirecting you to Yahoo to authorize access…</p>,
       })
       setTimeout(() => {
-        window.location.href = '/api/v1/auth/yahoo'
+        const token = useAuthStore.getState().token
+        window.location.href = `/api/v1/auth/yahoo${token ? `?token=${token}` : ''}`
       }, 600)
     } else if (platform === 'ESPN') {
       setStep('espn_type')
