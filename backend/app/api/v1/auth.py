@@ -1,10 +1,12 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, HTTPException, Response
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, EmailStr, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import (
     create_access_token,
@@ -84,8 +86,12 @@ async def verify_email(
     user.is_verified = True
     await db.flush()
     raw_refresh = await create_user_session(user.id, db)
-    set_refresh_cookie(response, raw_refresh)
-    return TokenResponse(access_token=create_access_token(str(user.id)), user_id=str(user.id))
+    access_token = create_access_token(str(user.id))
+    redirect = RedirectResponse(
+        url=f"{settings.app_base_url}/auth/callback?token={access_token}&user_id={user.id}"
+    )
+    set_refresh_cookie(redirect, raw_refresh)
+    return redirect
 
 
 @router.post("/login")

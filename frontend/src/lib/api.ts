@@ -29,7 +29,8 @@ api.interceptors.response.use(
     const originalRequest = err.config
     const url = originalRequest?.url ?? ''
     const isPlatformRoute = /\/(espn|yahoo|sleeper)\//.test(url)
-    if (err.response?.status === 401 && !originalRequest._retry && !isPlatformRoute) {
+    const isAuthRoute = /\/auth\/(login|register|verify|forgot|reset|resend)/.test(url)
+    if (err.response?.status === 401 && !originalRequest._retry && !isPlatformRoute && !isAuthRoute) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
