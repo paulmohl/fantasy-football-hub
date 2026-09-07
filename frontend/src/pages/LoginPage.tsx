@@ -17,6 +17,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [resetSent, setResetSent] = useState(false)
+  const [resendSent, setResendSent] = useState(false)
+
+  const isVerifyError = error?.toLowerCase().includes('verify')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -180,9 +183,25 @@ export default function LoginPage() {
           )}
 
           {error && (
-            <p id="auth-error" role="alert" className="text-danger text-sm bg-danger/10 border border-danger/20 rounded-lg px-3 py-2">
-              {error}
-            </p>
+            <div id="auth-error" role="alert" className="text-danger text-sm bg-danger/10 border border-danger/20 rounded-lg px-3 py-2 space-y-2">
+              <p>{error}</p>
+              {isVerifyError && (
+                resendSent ? (
+                  <p className="text-muted">Verification email sent — check your inbox.</p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await api.post('/auth/resend-verification', { email }).catch(() => {})
+                      setResendSent(true)
+                    }}
+                    className="text-accent hover:underline text-sm"
+                  >
+                    Resend verification email
+                  </button>
+                )
+              )}
+            </div>
           )}
 
           <button
