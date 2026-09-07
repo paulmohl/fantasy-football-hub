@@ -8,7 +8,7 @@ from app.core.logging import logger
 
 
 async def send_verification_email(email: str, token: str) -> None:
-    verify_url = f"{settings.app_base_url}/verify-email?token={token}"
+    verify_url = f"{settings.app_base_url}/api/v1/auth/verify-email?token={token}"
     if not settings.mail_server:
         logger.info("email.verification.skipped", email=email, url=verify_url)
         return
