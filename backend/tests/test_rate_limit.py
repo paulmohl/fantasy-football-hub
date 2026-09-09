@@ -100,7 +100,7 @@ async def test_within_limit_passes():
     redis.get = AsyncMock(return_value=None)
 
     request = MagicMock()
-    request.url.path = "/v1/yahoo/leagues"
+    request.url.path = "/api/v1/yahoo/leagues"
 
     user = MagicMock()
     user.id = "user-1"
@@ -121,7 +121,7 @@ async def test_yahoo_rate_limit_hit_no_cache():
     redis.get = AsyncMock(return_value=None)
 
     request = MagicMock()
-    request.url.path = "/v1/yahoo/leagues"
+    request.url.path = "/api/v1/yahoo/leagues"
 
     user = MagicMock()
     user.id = "user-1"
@@ -145,7 +145,7 @@ async def test_yahoo_rate_limit_hit_with_cache():
     redis.get = AsyncMock(return_value=cached)
 
     request = MagicMock()
-    request.url.path = "/v1/yahoo/leagues"
+    request.url.path = "/api/v1/yahoo/leagues"
 
     user = MagicMock()
     user.id = "user-1"
@@ -168,7 +168,7 @@ async def test_espn_rate_limit_hit():
     redis.get = AsyncMock(return_value=None)
 
     request = MagicMock()
-    request.url.path = "/v1/espn/connect"
+    request.url.path = "/api/v1/espn/connect"
 
     user = MagicMock()
     user.id = "user-2"

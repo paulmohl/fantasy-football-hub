@@ -36,7 +36,7 @@ async def test_espn_connect_invalid_cookies(async_client, test_db):
         mock_http.return_value.__aexit__ = AsyncMock(return_value=None)
 
         resp = await async_client.post(
-            "/v1/espn/connect",
+            "/api/v1/espn/connect",
             json={"swid": "bad-swid", "espn_s2": "bad-s2", "league_id": "123"},
             headers={"Authorization": f"Bearer {token}"},
         )
@@ -67,7 +67,7 @@ async def test_espn_connect_league_not_found(async_client, test_db):
         mock_http.return_value.__aexit__ = AsyncMock(return_value=None)
 
         resp = await async_client.post(
-            "/v1/espn/connect",
+            "/api/v1/espn/connect",
             json={"swid": "swid", "espn_s2": "s2", "league_id": "999"},
             headers={"Authorization": f"Bearer {token}"},
         )
@@ -98,7 +98,7 @@ async def test_espn_connect_success(async_client, test_db):
         mock_http.return_value.__aexit__ = AsyncMock(return_value=None)
 
         resp = await async_client.post(
-            "/v1/espn/connect",
+            "/api/v1/espn/connect",
             json={"swid": "valid-swid", "espn_s2": "valid-s2", "league_id": "42"},
             headers={"Authorization": f"Bearer {token}"},
         )
@@ -133,7 +133,7 @@ async def test_espn_public_success(async_client, test_db):
         mock_http.return_value.__aexit__ = AsyncMock(return_value=None)
 
         resp = await async_client.post(
-            "/v1/espn/public",
+            "/api/v1/espn/public",
             json={"league_id": "77"},
             headers={"Authorization": f"Bearer {token}"},
         )
@@ -165,7 +165,7 @@ async def test_espn_public_requires_cookie_returns_403(async_client, test_db):
         mock_http.return_value.__aexit__ = AsyncMock(return_value=None)
 
         resp = await async_client.post(
-            "/v1/espn/public",
+            "/api/v1/espn/public",
             json={"league_id": "55"},
             headers={"Authorization": f"Bearer {token}"},
         )

@@ -26,7 +26,7 @@ services:
     instance_count: 1
     instance_size_slug: apps-s-1vcpu-0.5gb
     health_check:
-      http_path: /v1/health
+      http_path: /api/v1/health
     envs:
       - key: DATABASE_URL
         scope: RUN_TIME
@@ -49,6 +49,12 @@ services:
       - key: SLEEPER_API_BASE
         scope: RUN_TIME
         value: https://api.sleeper.app/v1
+      - key: FRONTEND_URL
+        scope: RUN_TIME
+        value: https://predictfantasyfootball.com
+      - key: APP_BASE_URL
+        scope: RUN_TIME
+        value: https://predictfantasyfootball.com
 
 workers:
   - name: worker
