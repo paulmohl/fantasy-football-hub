@@ -49,6 +49,12 @@ services:
       - key: SLEEPER_API_BASE
         scope: RUN_TIME
         value: https://api.sleeper.app/v1
+      - key: FRONTEND_URL
+        scope: RUN_TIME
+        value: https://predictfantasyfootball.com
+      - key: APP_BASE_URL
+        scope: RUN_TIME
+        value: https://predictfantasyfootball.com
 
 workers:
   - name: worker
