@@ -14,7 +14,7 @@
 
 - Chromium only (Chrome, Edge, Brave, Arc). No Firefox/Safari work.
 - Extension never persists cookies and never contacts our backend.
-- `externally_connectable.matches` limited to our own origins (`http://localhost:5173/*` plus the production frontend origin).
+- `externally_connectable.matches` limited to our own origins (`http://localhost:5173/*` and `https://predictfantasyfootball.com/*`).
 - Extension ID is stable via a pinned manifest `key`; the frontend reads it from `VITE_ESPN_EXTENSION_ID`.
 - Native (Capacitor) ESPN flow unchanged; bookmarklet and manual paste stay behind an "Advanced" link.
 - Secrets in `.env`, never hardcoded. No comments that explain what code does. Conventional commits, no emoji.
@@ -44,7 +44,7 @@
 - [ ] **Step 1: Write failing tests** in `extension/test/background.test.js` using a fake `chrome` object: `ping` returns `{installed:true, version}`; `espn.connect` with Allow decision and both cookies returns `{swid, espn_s2}` with `espn_s2` containing `%2B` unchanged; Deny returns `{error:"denied"}`; popup window closed with no decision returns `{error:"denied"}`; missing `espn_s2` returns `{error:"not_signed_in"}` and calls `chrome.tabs.create` with the ESPN login URL; second concurrent `espn.connect` returns `{error:"busy"}`; sender origin not in `allowedOrigins` returns `{error:"forbidden"}`.
 - [ ] **Step 2: Run** `cd extension && npm test` -> FAIL (module missing).
 - [ ] **Step 3: Implement `background.js` and `approve.{html,js}`.** Popup opened with `chrome.windows.create({url: approve.html?origin=...})`; decision passed back via `chrome.runtime.sendMessage({type:"approval", allow})`; `chrome.windows.onRemoved` resolves as deny. Cookies read with `chrome.cookies.get({url:"https://www.espn.com", name})` for `SWID` and `espn_s2`.
-- [ ] **Step 4: Write `manifest.json`:** MV3, permissions `["cookies"]`, `host_permissions: ["https://*.espn.com/*"]`, `externally_connectable.matches` per Global Constraints, `key` generated with `openssl genrsa 2048 | openssl rsa -pubout -outform DER | base64 -w0`. Document in `extension/README.md` how to derive the extension ID from the key and how to load unpacked.
+- [ ] **Step 4: Write `manifest.json`:** MV3, permissions `["cookies"]`, `host_permissions: ["https://*.espn.com/*"]`, `externally_connectable.matches` per Global Constraints (`http://localhost:5173/*`, `https://predictfantasyfootball.com/*`), `key` generated with `openssl genrsa 2048 | openssl rsa -pubout -outform DER | base64 -w0`. Document in `extension/README.md` how to derive the extension ID from the key and how to load unpacked.
 - [ ] **Step 5: Run** `npm test` -> PASS.
 - [ ] **Step 6: Manual check** (checklist in README): load unpacked, from the page console on `localhost:5173` run `chrome.runtime.sendMessage("<id>", {type:"ping"}, console.log)` -> `{installed:true,...}`; run `espn.connect` while signed in to espn.com -> popup -> Allow -> cookies logged.
 - [ ] **Step 7: Commit** `feat(extension): add ESPN cookie connect extension`.
