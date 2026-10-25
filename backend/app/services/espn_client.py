@@ -14,6 +14,10 @@ class ESPNLeagueNotFound(Exception):
         super().__init__(f"ESPN league not found: {league_id}")
 
 
+FAN_API_BASE = "https://fan.api.espn.com/apis/v2/fans"
+FOOTBALL_GAME_ID = 1
+
+
 class ESPNClient:
     """Thin async wrapper for the unofficial ESPN Fantasy Football API.
 
@@ -71,3 +75,38 @@ class ESPNClient:
             raise ESPNLeagueNotFound(league_id)
         r.raise_for_status()
         return r.json()
+
+    async def get_fan_leagues(self, swid: str) -> list[dict]:
+        """List the football leagues a SWID belongs to via ESPN's fan API.
+
+        Raises ESPNAuthExpired for 401/403. Entries without a football group are skipped.
+        """
+        params = {
+            "displayEvents": "false",
+            "displayHiddenPrefs": "true",
+            "context": "fantasy",
+            "source": "fan_api_fantasy",
+            "useCookies": "true",
+            "lang": "en",
+        }
+        r = await self.http.get(f"{FAN_API_BASE}/{swid}", params=params, cookies=self.cookies)
+        if r.status_code in (401, 403):
+            raise ESPNAuthExpired("ESPN credentials expired or invalid")
+        r.raise_for_status()
+
+        leagues = []
+        for pref in r.json().get("preferences") or []:
+            entry = (pref.get("metaData") or {}).get("entry") or {}
+            if entry.get("gameId") != FOOTBALL_GAME_ID:
+                continue
+            for group in entry.get("groups") or []:
+                if group.get("groupId") is None:
+                    continue
+                leagues.append(
+                    {
+                        "league_id": str(group["groupId"]),
+                        "name": group.get("groupName") or f"League {group['groupId']}",
+                        "season": entry.get("seasonId"),
+                    }
+                )
+        return leagues
