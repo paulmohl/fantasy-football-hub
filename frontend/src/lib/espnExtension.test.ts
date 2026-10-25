@@ -5,7 +5,7 @@ type Reply = Record<string, unknown> | undefined
 
 function stubChrome(reply: Reply, lastError?: string) {
   const sendMessage = vi.fn((_id: string, _msg: unknown, cb: (r: Reply) => void) => {
-    ;(globalThis as any).chrome.runtime.lastError = lastError ? { message: lastError } : undefined
+    (globalThis as any).chrome.runtime.lastError = lastError ? { message: lastError } : undefined
     cb(reply)
   })
   ;(globalThis as any).chrome = { runtime: { sendMessage, lastError: undefined } }

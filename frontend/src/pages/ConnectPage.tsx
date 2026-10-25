@@ -12,6 +12,7 @@ import { ConnectionCard } from '@/components/ui/ConnectionCard'
 import { PlatformIcon } from '@/components/ui/PlatformIcon'
 import { cn } from '@/lib/utils'
 import { EspnCookieNative, isNative } from '@/plugins/espn-cookie'
+import EspnExtensionConnect from '@/components/EspnExtensionConnect'
 
 type Step = 'platform' | 'username' | 'leagues' | 'importing' | 'done' | 'espn_type' | 'espn_private' | 'espn_public' | 'yahoo_connected'
 
@@ -124,7 +125,9 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
       type: 'app',
       content: initialStep === 'yahoo_connected'
         ? 'Yahoo connected! Your leagues will be imported. Head to My Team to see your lineup.'
-        : 'Hey! Welcome to FantasyHub. Which platform is your league on?',
+        : initialStep === 'espn_private'
+          ? 'Your ESPN connection needs to be refreshed. Approve access again to reconnect.'
+          : 'Hey! Welcome to FantasyHub. Which platform is your league on?',
     },
   ])
   const [username, setUsername] = useState('')
@@ -138,6 +141,7 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
   const [espnError, setEspnError] = useState('')
   const [espnSubmitting, setEspnSubmitting] = useState(false)
   const [espnManual, setEspnManual] = useState(false)
+  const [espnAdvanced, setEspnAdvanced] = useState(false)
   const [espnNativeLoading, setEspnNativeLoading] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const [searchParams] = useSearchParams()
@@ -448,6 +452,15 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
                           Enter cookies manually
                         </button>
                       </div>
+                    ) : !espnAdvanced ? (
+                      <EspnExtensionConnect
+                        onConnected={() => {
+                          setStep('done')
+                          append({ type: 'app', content: <p>ESPN private league connected! Head to My Team.</p> })
+                          onComplete()
+                        }}
+                        onAdvanced={() => setEspnAdvanced(true)}
+                      />
                     ) : (
                     <>
                       <div className="bg-raised border border-border rounded-lg p-4 space-y-3">
@@ -687,8 +700,12 @@ export default function ConnectPage() {
   }
 
   if (isReconnect) {
-    // Skip platform step — open onboarding directly
-    return <OnboardingFlow onComplete={handleImportComplete} />
+    return (
+      <OnboardingFlow
+        onComplete={handleImportComplete}
+        initialStep={reconnectParam === 'espn' ? 'espn_private' : 'platform'}
+      />
+    )
   }
 
   if (!hasLeagues || showAddFlow) {
