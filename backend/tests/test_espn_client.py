@@ -142,3 +142,49 @@ def test_base_url_from_settings():
     client = ESPNClient(http)
     assert client.base == settings.espn_api_base
     assert "lm-api-reads" in client.base
+
+
+# ── Fan API league discovery ──────────────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_get_fan_leagues_parses_football_only():
+    http = MagicMock(spec=httpx.AsyncClient)
+    http.get = AsyncMock(return_value=_mock_response(200, _fixture("espn_fan.json")))
+    client = ESPNClient(http, swid="{ABC-123}", espn_s2="tok")
+    leagues = await client.get_fan_leagues("{ABC-123}")
+    assert leagues == [{"league_id": "1409037", "name": "Sunday Degenerates", "season": 2026}]
+
+
+@pytest.mark.asyncio
+async def test_get_fan_leagues_empty():
+    http = MagicMock(spec=httpx.AsyncClient)
+    http.get = AsyncMock(return_value=_mock_response(200, {"preferences": []}))
+    client = ESPNClient(http, swid="{ABC-123}", espn_s2="tok")
+    assert await client.get_fan_leagues("{ABC-123}") == []
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status", [401, 403])
+async def test_get_fan_leagues_auth_failure_raises_auth_expired(status):
+    http = MagicMock(spec=httpx.AsyncClient)
+    http.get = AsyncMock(return_value=_mock_response(status))
+    client = ESPNClient(http, swid="{ABC-123}", espn_s2="tok")
+    with pytest.raises(ESPNAuthExpired):
+        await client.get_fan_leagues("{ABC-123}")
+
+
+@pytest.mark.asyncio
+async def test_get_fan_leagues_sends_cookies_and_swid_in_url():
+    captured = {}
+
+    async def capture_get(url, **kwargs):
+        captured["url"] = url
+        captured["cookies"] = kwargs.get("cookies")
+        return _mock_response(200, {"preferences": []})
+
+    http = MagicMock(spec=httpx.AsyncClient)
+    http.get = capture_get
+    client = ESPNClient(http, swid="{ABC-123}", espn_s2="AE%2Bx")
+    await client.get_fan_leagues("{ABC-123}")
+    assert "{ABC-123}" in captured["url"]
+    assert captured["cookies"] == {"SWID": "{ABC-123}", "espn_s2": "AE%2Bx"}

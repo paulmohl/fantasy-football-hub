@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Connect ESPN</title>
+  <style>
+    body { font: 14px system-ui, sans-serif; margin: 0; padding: 20px; background: #0f1419; color: #e6edf3; }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    p { margin: 0 0 16px; color: #9aa7b4; line-height: 1.4; }
+    code { color: #e6edf3; }
+    .row { display: flex; gap: 8px; }
+    button { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #2b3540; font-size: 14px; cursor: pointer; }
+    #allow { background: #3ea6ff; color: #fff; border-color: #3ea6ff; font-weight: 600; }
+    #deny { background: transparent; color: #e6edf3; }
+  </style>
+</head>
+<body>
+  <h1>Connect your ESPN account?</h1>
+  <p><code id="origin"></code> wants to read your ESPN fantasy leagues. Your ESPN password is never shared.</p>
+  <div class="row">
+    <button id="deny">Deny</button>
+    <button id="allow">Allow</button>
+  </div>
+  <script src="approve.js"></script>
+</body>
+</html>

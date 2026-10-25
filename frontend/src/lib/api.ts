@@ -30,7 +30,14 @@ api.interceptors.response.use(
     const url = originalRequest?.url ?? ''
     const isPlatformRoute = /\/(espn|yahoo|sleeper)\//.test(url)
     const isAuthRoute = /\/auth\/(login|register|verify|forgot|reset|resend)/.test(url)
-    if (err.response?.status === 401 && !originalRequest._retry && !isPlatformRoute && !isAuthRoute) {
+    const detail = err.response?.data?.detail
+    const isAppAuthError = detail === 'Invalid or expired token' || detail === 'Unauthorized' || detail === 'Not authenticated'
+    if (
+      err.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthRoute &&
+      (!isPlatformRoute || isAppAuthError)
+    ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })

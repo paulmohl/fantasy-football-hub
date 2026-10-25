@@ -19,6 +19,7 @@ from redis.asyncio import Redis
 
 from app.core.cache import CacheKey, CacheTTL
 from app.core.logging import logger
+from app.services.espn_client import ESPNAuthExpired, ESPNClient
 
 FANTASYCALC_BASE = "https://api.fantasycalc.com"
 
@@ -87,6 +88,24 @@ async def seed_player_cross_map(ctx: dict) -> None:
     logger.info("player_cross_map.seed.task_complete", rows_upserted=count)
 
 
+async def espn_credential_is_healthy(http: httpx.AsyncClient, credential: dict) -> bool:
+    """Private ESPN credentials are healthy unless ESPN explicitly rejects the cookies.
+
+    Uses the fan API (league-independent) so it works without a stored league ID.
+    Transient errors are logged and treated as healthy to avoid false disconnects.
+    """
+    if credential.get("is_public", False):
+        return True
+    espn = ESPNClient(http, swid=credential.get("swid"), espn_s2=credential.get("espn_s2"))
+    try:
+        await espn.get_fan_leagues(credential.get("swid", ""))
+    except ESPNAuthExpired:
+        return False
+    except Exception as exc:
+        logger.warning("credential.check.espn_error", error=str(exc))
+    return True
+
+
 async def check_platform_credentials(ctx: dict) -> None:
     """MP-06: Validate all stored platform credentials; mark unhealthy on auth failure.
 
@@ -103,7 +122,6 @@ async def check_platform_credentials(ctx: dict) -> None:
     from app.models.credential import UserCredential
     from app.models.user import User
     from app.services.credential_service import CredentialService
-    from app.services.espn_client import ESPNAuthExpired, ESPNClient
     from app.services.yahoo_client import YahooAuthExpired, YahooClient
 
     engine = create_async_engine(_settings.database_url)
@@ -148,23 +166,7 @@ async def check_platform_credentials(ctx: dict) -> None:
                         error=str(exc),
                     )
             elif cred_row.platform == "espn":
-                if not decrypted.get("is_public", False):
-                    espn = ESPNClient(
-                        http,
-                        swid=decrypted.get("swid"),
-                        espn_s2=decrypted.get("espn_s2"),
-                    )
-                    league_id = decrypted.get("league_id", decrypted.get("swid", "1"))
-                    try:
-                        await espn.get_league_settings(str(league_id), _settings.nfl_season_year)
-                    except ESPNAuthExpired:
-                        is_healthy = False
-                    except Exception as exc:
-                        logger.warning(
-                            "credential.check.espn_error",
-                            user_id=str(user_row.id),
-                            error=str(exc),
-                        )
+                is_healthy = await espn_credential_is_healthy(http, decrypted)
 
         if not is_healthy:
             async with _SessionLocal() as db:

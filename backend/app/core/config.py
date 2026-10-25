@@ -1,7 +1,14 @@
+from datetime import date
 from urllib.parse import urlparse, urlunparse
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def current_nfl_season(today: date | None = None) -> int:
+    """ESPN's season rolls over in March; Jan/Feb still belong to the prior season."""
+    today = today or date.today()
+    return today.year if today.month >= 3 else today.year - 1
 
 
 class Settings(BaseSettings):
@@ -80,7 +87,7 @@ class Settings(BaseSettings):
     espn_api_base: str = "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl"
 
     # Active NFL season year — increment each September; used by ESPN routes
-    nfl_season_year: int = 2025
+    nfl_season_year: int = Field(default_factory=lambda: current_nfl_season())
 
 
 settings = Settings()
