@@ -24,6 +24,11 @@ class ESPNConnectRequest(BaseModel):
     league_id: str
 
 
+class ESPNLeaguesRequest(BaseModel):
+    swid: str
+    espn_s2: str
+
+
 class ESPNPublicRequest(BaseModel):
     league_id: str
 
@@ -59,7 +64,12 @@ async def espn_connect_private(
             )
 
         cred_svc = CredentialService()
-        credential_dict = {"swid": body.swid, "espn_s2": body.espn_s2, "is_public": False}
+        credential_dict = {
+            "swid": body.swid,
+            "espn_s2": body.espn_s2,
+            "league_id": body.league_id,
+            "is_public": False,
+        }
         async with db.begin_nested():
             await cred_svc.store_credential(current_user, "espn", credential_dict, db)
 
@@ -73,6 +83,28 @@ async def espn_connect_private(
             espn=espn,
         )
     return {"id": str(league.id), "name": league.name, "platform": "espn", "is_public": False}
+
+
+@router.post("/leagues")
+async def espn_list_leagues(
+    body: ESPNLeaguesRequest,
+    _: None = Depends(check_platform_rate_limit("espn")),
+    current_user: User = Depends(get_current_user),
+):
+    """List the user's ESPN football leagues so the client can offer a picker."""
+    async with httpx.AsyncClient(timeout=15.0) as http:
+        espn = ESPNClient(http, swid=body.swid, espn_s2=body.espn_s2)
+        try:
+            leagues = await espn.get_fan_leagues(body.swid)
+        except ESPNAuthExpired:
+            raise HTTPException(
+                status_code=401,
+                detail=(
+                    "ESPN cookies are expired or invalid. "
+                    "Sign in to ESPN and approve access again."
+                ),
+            )
+    return {"leagues": leagues}
 
 
 @router.post("/public")
