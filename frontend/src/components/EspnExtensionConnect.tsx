@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
 import {
   EspnExtensionError,
+  getProbeDetail,
   isInstalled,
   requestCookies,
   type EspnCookies,
@@ -41,10 +42,13 @@ export default function EspnExtensionConnect({ onConnected, onAdvanced }: Props)
   const [leagues, setLeagues] = useState<FanLeague[]>([])
   const [leagueId, setLeagueId] = useState('')
   const [error, setError] = useState('')
+  const [probeDetail, setProbeDetail] = useState('')
 
   async function detect() {
     setPhase('checking')
-    setPhase((await isInstalled()) ? 'ready' : 'not_installed')
+    const installed = await isInstalled()
+    setProbeDetail(getProbeDetail())
+    setPhase(installed ? 'ready' : 'not_installed')
   }
 
   useEffect(() => {
@@ -123,6 +127,7 @@ export default function EspnExtensionConnect({ onConnected, onAdvanced }: Props)
           <button onClick={() => void detect()} className="text-sm text-accent underline w-full text-center">
             Check again
           </button>
+          {probeDetail && <p className="text-xs text-muted break-all text-center">Detection: {probeDetail}</p>}
         </div>
       )}
 
