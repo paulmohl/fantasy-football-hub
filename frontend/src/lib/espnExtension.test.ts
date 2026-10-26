@@ -60,3 +60,17 @@ describe('requestCookies', () => {
     expect(err.code).toBe('unreachable')
   })
 })
+
+describe('getProbeDetail', () => {
+  it('reports the Chrome error after a failed ping', async () => {
+    const { getProbeDetail } = await import('./espnExtension')
+    ;(globalThis as any).chrome = {
+      runtime: {
+        lastError: { message: 'Could not establish connection. Receiving end does not exist.' },
+        sendMessage: (_id: string, _m: unknown, cb: (r?: unknown) => void) => cb(undefined),
+      },
+    }
+    expect(await isInstalled()).toBe(false)
+    expect(getProbeDetail()).toContain('Receiving end does not exist')
+  })
+})

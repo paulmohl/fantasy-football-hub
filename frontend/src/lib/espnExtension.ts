@@ -25,26 +25,42 @@ function hasRuntime(): boolean {
   return typeof chrome !== 'undefined' && !!chrome.runtime?.sendMessage
 }
 
-function send(message: unknown, timeoutMs?: number): Promise<{ reply: Reply; failed: boolean }> {
+let lastProbeDetail = ''
+
+export function getProbeDetail(): string {
+  return lastProbeDetail
+}
+
+function send(message: unknown, timeoutMs?: number): Promise<{ reply: Reply; failed: boolean; error?: string }> {
   return new Promise((resolve) => {
     let done = false
-    const finish = (value: { reply: Reply; failed: boolean }) => {
+    const finish = (value: { reply: Reply; failed: boolean; error?: string }) => {
       if (done) return
       done = true
       resolve(value)
     }
-    if (timeoutMs) setTimeout(() => finish({ reply: undefined, failed: true }), timeoutMs)
+    if (timeoutMs) setTimeout(() => finish({ reply: undefined, failed: true, error: 'no response within timeout' }), timeoutMs)
     chrome.runtime.sendMessage(
       import.meta.env.VITE_ESPN_EXTENSION_ID as string,
       message,
-      (reply: Reply) => finish({ reply, failed: !!chrome.runtime.lastError }),
+      (reply: Reply) => {
+        const lastError = chrome.runtime.lastError
+        finish({ reply, failed: !!lastError, error: lastError?.message })
+      },
     )
   })
 }
 
 export async function isInstalled(): Promise<boolean> {
-  if (!hasRuntime()) return false
-  const { reply, failed } = await send({ type: 'ping' }, PING_TIMEOUT_MS)
+  const extensionId = import.meta.env.VITE_ESPN_EXTENSION_ID as string
+  if (!hasRuntime()) {
+    lastProbeDetail = `chrome.runtime.sendMessage is not available in this browser (id ${extensionId})`
+    return false
+  }
+  const { reply, failed, error } = await send({ type: 'ping' }, PING_TIMEOUT_MS)
+  lastProbeDetail = failed
+    ? `Chrome error: ${error} (id ${extensionId})`
+    : `reply: ${JSON.stringify(reply)} (id ${extensionId})`
   return !failed && reply?.installed === true
 }
 
