@@ -46,7 +46,12 @@ export default function EspnExtensionConnect({ onConnected, onAdvanced }: Props)
 
   async function detect() {
     setPhase('checking')
-    const installed = await isInstalled()
+    let installed = false
+    try {
+      installed = await isInstalled()
+    } catch {
+      installed = false
+    }
     setProbeDetail(getProbeDetail())
     setPhase(installed ? 'ready' : 'not_installed')
   }

@@ -74,3 +74,18 @@ describe('getProbeDetail', () => {
     expect(getProbeDetail()).toContain('Receiving end does not exist')
   })
 })
+
+describe('isInstalled when sendMessage throws', () => {
+  it('resolves false and records the thrown message', async () => {
+    const { getProbeDetail } = await import('./espnExtension')
+    ;(globalThis as any).chrome = {
+      runtime: {
+        sendMessage: () => {
+          throw new Error('Invalid extension id')
+        },
+      },
+    }
+    expect(await isInstalled()).toBe(false)
+    expect(getProbeDetail()).toContain('threw: Invalid extension id')
+  })
+})
