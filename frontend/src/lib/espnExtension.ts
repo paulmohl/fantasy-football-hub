@@ -40,14 +40,18 @@ function send(message: unknown, timeoutMs?: number): Promise<{ reply: Reply; fai
       resolve(value)
     }
     if (timeoutMs) setTimeout(() => finish({ reply: undefined, failed: true, error: 'no response within timeout' }), timeoutMs)
-    chrome.runtime.sendMessage(
-      import.meta.env.VITE_ESPN_EXTENSION_ID as string,
-      message,
-      (reply: Reply) => {
-        const lastError = chrome.runtime.lastError
-        finish({ reply, failed: !!lastError, error: lastError?.message })
-      },
-    )
+    try {
+      chrome.runtime.sendMessage(
+        import.meta.env.VITE_ESPN_EXTENSION_ID as string,
+        message,
+        (reply: Reply) => {
+          const lastError = chrome.runtime.lastError
+          finish({ reply, failed: !!lastError, error: lastError?.message })
+        },
+      )
+    } catch (err) {
+      finish({ reply: undefined, failed: true, error: `threw: ${(err as Error)?.message ?? String(err)}` })
+    }
   })
 }
 
