@@ -31,6 +31,48 @@ function hasRuntime(): boolean {
 }
 
 let lastProbeDetail = ''
+let route: 'bridge' | 'direct' = 'direct'
+
+const BRIDGE_TIMEOUT_MS = 1500
+
+export function resetExtensionRoute(): void {
+  route = 'direct'
+}
+
+// The extension's content script relays these to the background; it runs in an isolated world, so other
+// extensions that wrap the page's `chrome` object cannot break it.
+function bridgeSend(message: unknown, timeoutMs?: number): Promise<Reply> {
+  return new Promise((resolve) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const onMessage = (event: MessageEvent) => {
+      const data = event.data
+      if (event.origin !== window.location.origin) return
+      if (!data || data.source !== 'fantasy-hub-extension' || data.id !== id) return
+      cleanup()
+      resolve(data.reply as Reply)
+    }
+    const timer = timeoutMs
+      ? setTimeout(() => {
+          cleanup()
+          resolve(undefined)
+        }, timeoutMs)
+      : undefined
+    const cleanup = () => {
+      window.removeEventListener('message', onMessage)
+      if (timer) clearTimeout(timer)
+    }
+    window.addEventListener('message', onMessage)
+    window.postMessage({ source: 'fantasy-hub-page', id, message }, window.location.origin)
+  })
+}
+
+async function dispatch(message: unknown, timeoutMs?: number): Promise<{ reply: Reply; failed: boolean; error?: string }> {
+  if (route === 'bridge') {
+    const reply = await bridgeSend(message, timeoutMs)
+    return { reply, failed: !reply, error: reply ? undefined : 'no response from relay' }
+  }
+  return send(message, timeoutMs)
+}
 
 export function getProbeDetail(): string {
   return lastProbeDetail
@@ -71,20 +113,28 @@ export async function isInstalled(): Promise<boolean> {
 
 async function probe(): Promise<boolean> {
   const extensionId = import.meta.env.VITE_ESPN_EXTENSION_ID as string
+  const viaBridge = await bridgeSend({ type: 'ping' }, BRIDGE_TIMEOUT_MS)
+  if (viaBridge?.installed === true) {
+    route = 'bridge'
+    lastProbeDetail = `relay reply: ${JSON.stringify(viaBridge)}`
+    return true
+  }
+  route = 'direct'
+  const bridgeNote = 'relay: no response'
   if (!hasRuntime()) {
-    lastProbeDetail = `chrome.runtime.sendMessage is not available in this browser (id ${extensionId})`
+    lastProbeDetail = `${bridgeNote}; chrome.runtime.sendMessage is not available in this browser (id ${extensionId})`
     return false
   }
   const { reply, failed, error } = await send({ type: 'ping' }, PING_TIMEOUT_MS)
   lastProbeDetail = failed
-    ? `Chrome error: ${error} (id ${extensionId})`
-    : `reply: ${JSON.stringify(reply)} (id ${extensionId})`
+    ? `${bridgeNote}; Chrome error: ${error} (id ${extensionId})`
+    : `${bridgeNote}; reply: ${JSON.stringify(reply)} (id ${extensionId})`
   return !failed && reply?.installed === true
 }
 
 export async function requestCookies(): Promise<EspnCookies> {
-  if (!hasRuntime()) throw new EspnExtensionError('not_installed')
-  const { reply, failed } = await send({ type: 'espn.connect' })
+  if (route === 'direct' && !hasRuntime()) throw new EspnExtensionError('not_installed')
+  const { reply, failed } = await dispatch({ type: 'espn.connect' })
   if (failed || !reply) throw new EspnExtensionError('unreachable')
   const error = reply.error
   if (error === 'denied' || error === 'not_signed_in' || error === 'busy') {

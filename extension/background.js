@@ -9,3 +9,9 @@ chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => 
   handle(message, sender).then(sendResponse)
   return true
 })
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (!message?.relay || sender.id !== chrome.runtime.id || !sender.tab) return false
+  handle(message.message, sender).then(sendResponse)
+  return true
+})

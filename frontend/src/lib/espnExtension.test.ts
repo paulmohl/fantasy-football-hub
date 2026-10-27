@@ -1,5 +1,6 @@
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { EspnExtensionError, isInstalled, requestCookies } from './espnExtension'
+import { EspnExtensionError, isInstalled, requestCookies, resetExtensionRoute } from './espnExtension'
 
 type Reply = Record<string, unknown> | undefined
 
@@ -17,6 +18,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  resetExtensionRoute()
   delete (globalThis as any).chrome
   vi.unstubAllEnvs()
 })
@@ -100,5 +102,47 @@ describe('isInstalled when chrome.runtime reads throw', () => {
     }
     expect(await isInstalled()).toBe(false)
     expect(getProbeDetail()).toContain('Symbol value')
+  })
+})
+
+describe('relay through the extension content script', () => {
+  function installRelay(reply: unknown) {
+    const handler = (event: MessageEvent) => {
+      if (event.data?.source !== 'fantasy-hub-page') return
+      // jsdom reports an empty origin for postMessage, unlike browsers, so build the event explicitly.
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: { source: 'fantasy-hub-extension', id: event.data.id, reply },
+          origin: window.location.origin,
+        }),
+      )
+    }
+    window.addEventListener('message', handler)
+    return () => window.removeEventListener('message', handler)
+  }
+
+  it('detects the extension and gets cookies even when chrome.runtime.sendMessage throws', async () => {
+    ;(globalThis as any).chrome = {
+      runtime: {
+        sendMessage: () => {
+          throw new Error('Cannot convert a Symbol value to a string')
+        },
+      },
+    }
+    const stop = installRelay({ installed: true, version: '1.1.0' })
+    expect(await isInstalled()).toBe(true)
+    stop()
+    const stop2 = installRelay({ swid: '{A}', espn_s2: 'B%2Bc' })
+    expect(await requestCookies()).toEqual({ swid: '{A}', espn_s2: 'B%2Bc' })
+    stop2()
+  })
+
+  it('maps relay errors to EspnExtensionError', async () => {
+    const stop = installRelay({ installed: true })
+    await isInstalled()
+    stop()
+    const stop2 = installRelay({ error: 'denied' })
+    await expect(requestCookies()).rejects.toMatchObject({ code: 'denied' })
+    stop2()
   })
 })
