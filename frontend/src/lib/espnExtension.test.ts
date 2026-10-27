@@ -89,3 +89,16 @@ describe('isInstalled when sendMessage throws', () => {
     expect(getProbeDetail()).toContain('threw: Invalid extension id')
   })
 })
+
+describe('isInstalled when chrome.runtime reads throw', () => {
+  it('still resolves and records the throw', async () => {
+    const { getProbeDetail } = await import('./espnExtension')
+    ;(globalThis as any).chrome = {
+      get runtime() {
+        throw new TypeError('Cannot convert a Symbol value to a string')
+      },
+    }
+    expect(await isInstalled()).toBe(false)
+    expect(getProbeDetail()).toContain('Symbol value')
+  })
+})
