@@ -1,12 +1,19 @@
 {
   "manifest_version": 3,
   "name": "Fantasy Hub ESPN Connect",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Lets Fantasy Hub read your ESPN fantasy leagues after you approve.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAoJmvH+zs2JdAK2zJO1v8Wvb2RcWaOZqHtTQ7lScIE2RdFUGppAFJkODY4JInZgFZJ1KM2U2o8i2Pq5M/ejczgftXXqthoTQUIvAzwpZ3eXLtAft8+BOhFhSs/isxEMYT3Yp393D6Y3LSTjf9qrXukx5kyieY71Vmfp4/t+a7dJt5v7wxUVGo+Rpz32kwXb3Qv9PgNaA4wf9si7nGrWqUew2Nce9qNvHL3tI1HtwyvK7DwKB3FZbGmBoQt8jpE27P1o9bRZolmerTWLMX6zmfCLGjimpOEZHwI01RztVMHIvr/G4Moc/0DnXS/FLZ+Fy32IhS80jaulbAZGJ+IAuOgwIDAQAB",
   "permissions": ["cookies"],
   "host_permissions": ["https://*.espn.com/*"],
   "background": { "service_worker": "background.js", "type": "module" },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost:5173/*", "https://predictfantasyfootball.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
   "externally_connectable": {
     "matches": ["http://localhost:5173/*", "https://predictfantasyfootball.com/*"]
   }

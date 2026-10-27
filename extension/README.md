@@ -10,9 +10,12 @@ Set `VITE_ESPN_EXTENSION_ID=dmmfcgielmgfnocladkbffflelfidfjl` in the frontend bu
 2. Confirm the displayed ID matches the one above.
 
 ## Manual checklist
-- On the Fantasy Hub page console: `chrome.runtime.sendMessage("dmmfcgielmgfnocladkbffflelfidfjl", {type:"ping"}, console.log)` -> `{installed:true, version:"1.0.0"}`.
+- On the Fantasy Hub page console: `chrome.runtime.sendMessage("dmmfcgielmgfnocladkbffflelfidfjl", {type:"ping"}, console.log)` -> `{installed:true, version:"1.1.0"}`.
 - Signed in to espn.com: `{type:"espn.connect"}` -> popup -> Allow -> `{swid, espn_s2}`; Deny -> `{error:"denied"}`.
 - Signed out of espn.com: Allow -> `{error:"not_signed_in"}` and the ESPN login tab opens.
+
+## Page relay
+`content.js` runs on the allowed origins and relays `window.postMessage` requests from the page to the background. The page tries this first and falls back to `chrome.runtime.sendMessage`, because other extensions can wrap the page's `chrome` object and make direct calls throw.
 
 ## Tests
 `npm test` (Node's built-in runner; no dependencies).
