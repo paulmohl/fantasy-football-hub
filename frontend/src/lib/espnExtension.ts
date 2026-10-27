@@ -22,7 +22,12 @@ const PING_TIMEOUT_MS = 2000
 type Reply = Record<string, unknown> | undefined
 
 function hasRuntime(): boolean {
-  return typeof chrome !== 'undefined' && !!chrome.runtime?.sendMessage
+  try {
+    return typeof chrome !== 'undefined' && !!chrome.runtime?.sendMessage
+  } catch {
+    // Another extension can wrap `chrome` in a proxy that throws on property reads; let send() try for real.
+    return true
+  }
 }
 
 let lastProbeDetail = ''
@@ -56,6 +61,15 @@ function send(message: unknown, timeoutMs?: number): Promise<{ reply: Reply; fai
 }
 
 export async function isInstalled(): Promise<boolean> {
+  try {
+    return await probe()
+  } catch (err) {
+    lastProbeDetail = `threw: ${(err as Error)?.message ?? String(err)}`
+    return false
+  }
+}
+
+async function probe(): Promise<boolean> {
   const extensionId = import.meta.env.VITE_ESPN_EXTENSION_ID as string
   if (!hasRuntime()) {
     lastProbeDetail = `chrome.runtime.sendMessage is not available in this browser (id ${extensionId})`
