@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useLeagueStore } from '@/store/league'
@@ -117,9 +117,20 @@ interface LineupData {
 }
 
 export default function TeamPage() {
-  const { activeLeagueId } = useLeagueStore()
+  const { activeLeagueId, setActiveLeague } = useLeagueStore()
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerSlotData | null>(null)
   const [addPlayer, setAddPlayer] = useState<AddPlayerState | null>(null)
+
+  const { data: leagueList } = useQuery<{ leagues: Array<{ league_id: string }> }>({
+    queryKey: ['my-team-leagues'],
+    queryFn: () => api.get('/team/my').then((r) => r.data),
+  })
+
+  // The switcher hides itself with one league, so nothing else would ever pick it.
+  useEffect(() => {
+    const ids = leagueList?.leagues.map((l) => l.league_id) ?? []
+    if (ids.length > 0 && (!activeLeagueId || !ids.includes(activeLeagueId))) setActiveLeague(ids[0])
+  }, [leagueList, activeLeagueId, setActiveLeague])
 
   const { data, isLoading } = useQuery<TeamData>({
     queryKey: ['my-team', activeLeagueId],
