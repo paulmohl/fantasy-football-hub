@@ -95,3 +95,37 @@ async def test_disconnect_removes_member_not_league(test_db, mock_redis):
         .where(LeagueMember.league_id == league.id)
     )).scalar_one_or_none()
     assert gone is None, "LeagueMember row should be deleted on disconnect"
+
+
+@pytest.mark.asyncio
+async def test_sleeper_import_assigns_owner_from_sleeper_user_id(test_db, mock_redis):
+    from app.models.league import Team
+    user = User(email="own@test.com", password_hash="x", is_verified=True)
+    test_db.add(user)
+    await test_db.flush()
+    sleeper = make_mock_sleeper(league_id="SLEEPER_L3")
+
+    league = await import_league(
+        "SLEEPER_L3", user, test_db, mock_redis, sleeper, week=1, sleeper_user_id="sleeper_user_abc"
+    )
+
+    team = (await test_db.execute(select(Team).where(Team.league_id == league.id))).scalar_one()
+    assert team.owner_user_id == user.id
+    member = (await test_db.execute(
+        select(LeagueMember).where(LeagueMember.user_id == user.id)
+    )).scalar_one()
+    assert member.host_team_id == "1"
+
+
+@pytest.mark.asyncio
+async def test_sleeper_import_does_not_match_ffhub_uuid_as_owner(test_db, mock_redis):
+    from app.models.league import Team
+    user = User(email="own2@test.com", password_hash="x", is_verified=True)
+    test_db.add(user)
+    await test_db.flush()
+    sleeper = make_mock_sleeper(league_id="SLEEPER_L4")
+
+    league = await import_league("SLEEPER_L4", user, test_db, mock_redis, sleeper, week=1)
+
+    team = (await test_db.execute(select(Team).where(Team.league_id == league.id))).scalar_one()
+    assert team.owner_user_id is None

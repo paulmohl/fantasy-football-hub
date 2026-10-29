@@ -12,6 +12,7 @@ Route list:
   POST /lineup/apply    -> TM-16 stub: 501 Not Implemented (Phase 3+)
 """
 import json
+import uuid
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -51,6 +52,17 @@ async def _get_nfl_state(redis: Redis, sleeper: SleeperClient) -> dict:
     return state
 
 
+async def _latest_roster(db: AsyncSession, team_id: uuid.UUID, week: int) -> "Roster | None":
+    result = await db.execute(
+        select(Roster)
+        .where(Roster.team_id == team_id)
+        .where(Roster.week <= week)
+        .order_by(Roster.week.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
 async def _get_user_team_and_roster(
     league: League,
     current_user: User,
@@ -59,7 +71,8 @@ async def _get_user_team_and_roster(
 ) -> tuple["Team | None", "Roster | None"]:
     """Fetch the current user's Team and their Roster snapshot for a league.
 
-    Teams are matched by owner_user_id. Rosters are matched by team_id + week.
+    Teams are matched by owner_user_id. Rosters are matched by team_id; the newest snapshot at or before `week` wins
+    so a league imported earlier in the season still shows its team.
     Returns (None, None) if user has no team in this league yet.
     """
     team_result = await db.execute(
@@ -71,14 +84,7 @@ async def _get_user_team_and_roster(
     if not team:
         return None, None
 
-    roster_result = await db.execute(
-        select(Roster)
-        .where(Roster.team_id == team.id)
-        .where(Roster.week == week)
-        .order_by(Roster.week.desc())
-    )
-    roster = roster_result.scalar_one_or_none()
-    return team, roster
+    return team, await _latest_roster(db, team.id, week)
 
 
 async def _compute_team_matchup_stats(
@@ -388,12 +394,7 @@ async def get_waiver(
     all_teams = teams_result.scalars().all()
     rostered_ids: set[str] = set()
     for t in all_teams:
-        roster_result = await db.execute(
-            select(Roster)
-            .where(Roster.team_id == t.id)
-            .where(Roster.week == week)
-        )
-        r = roster_result.scalar_one_or_none()
+        r = await _latest_roster(db, t.id, week)
         if r and r.snapshot:
             rostered_ids.update(r.snapshot.get("players", []))
 
@@ -485,12 +486,7 @@ async def get_standings(
     standings = []
     for team, member in rows:
         # Get the latest roster snapshot for this team
-        roster_result = await db.execute(
-            select(Roster)
-            .where(Roster.team_id == team.id)
-            .where(Roster.week == week)
-        )
-        roster = roster_result.scalar_one_or_none()
+        roster = await _latest_roster(db, team.id, week)
         snapshot = (roster.snapshot if roster else None) or {}
 
         standings.append({

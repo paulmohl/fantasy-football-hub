@@ -228,3 +228,34 @@ async def test_wrong_league_id_returns_404(async_client, test_db):
         headers={"Authorization": f"Bearer {token}"},
     )
     assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_roster_lookup_falls_back_to_latest_earlier_week(test_db):
+    from app.api.v1.team import _get_user_team_and_roster
+    user = User(email="wk@test.com", password_hash="x", is_verified=True)
+    test_db.add(user)
+    await test_db.flush()
+    league = await _create_league_for_user(test_db, user)
+
+    _, roster = await _get_user_team_and_roster(league, user, test_db, week=8)
+
+    assert roster is not None
+    assert roster.week == 1
+
+
+@pytest.mark.asyncio
+async def test_roster_lookup_prefers_requested_week(test_db):
+    from app.api.v1.team import _get_user_team_and_roster
+    user = User(email="wk2@test.com", password_hash="x", is_verified=True)
+    test_db.add(user)
+    await test_db.flush()
+    league = await _create_league_for_user(test_db, user)
+    team = (await test_db.execute(select(Team).where(Team.league_id == league.id))).scalar_one()
+    test_db.add(Roster(team_id=team.id, week=5, snapshot={"players": [], "starters": []}))
+    test_db.add(Roster(team_id=team.id, week=9, snapshot={"players": [], "starters": []}))
+    await test_db.commit()
+
+    _, roster = await _get_user_team_and_roster(league, user, test_db, week=8)
+
+    assert roster.week == 5

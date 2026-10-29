@@ -18,6 +18,7 @@ from app.models.league import League, LeagueMember, Roster, Team
 from app.models.user import User
 from app.services.espn_client import ESPNClient
 from app.services.player_id_mapper import PlayerIDMapper
+from app.services.team_ownership import claim_team
 
 ESPN_STAT_MAP: dict[int, str] = {
     3: "pass_yd",
@@ -46,6 +47,16 @@ ESPN_SLOT_MAP: dict[int, str] = {
 }
 
 _BENCH_SLOT_IDS = {24, 25}
+
+
+def _norm_swid(swid: str) -> str:
+    return swid.strip().strip("{}").lower()
+
+
+def _owns_team(team_data: dict, swid: str) -> bool:
+    wanted = _norm_swid(swid)
+    owners = [*(team_data.get("owners") or []), team_data.get("primaryOwner")]
+    return any(isinstance(o, str) and _norm_swid(o) == wanted for o in owners)
 
 
 def normalize_espn_scoring(league_data: dict) -> dict:
@@ -113,11 +124,13 @@ async def import_espn_league(
     redis: Redis,
     espn: ESPNClient,
     week: int = 1,
+    swid: str | None = None,
 ) -> League:
     """Import an ESPN league into the unified data model.
 
     MP-03, MP-04, MP-05: fetch-first, write-atomic (LC-08 equivalent).
     Public leagues: is_public=True sets LeagueMember.role="viewer".
+    swid identifies which team is the user's; without it no team is claimed.
     """
     logger.info(
         "espn.league.import.start",
@@ -189,7 +202,9 @@ async def import_espn_league(
                 connected_at=datetime.now(UTC).replace(tzinfo=None),
             ))
 
+        await db.flush()
         mapper = PlayerIDMapper()
+        my_host_team_id: str | None = None
         # Pitfall 6: mRoster returns ALL teams in league_data["teams"]
         for team_obj_data in league_data.get("teams", []):
             host_team_id = str(team_obj_data.get("id", ""))
@@ -209,15 +224,20 @@ async def import_espn_league(
                 db.add(team)
                 await db.flush()
 
+            if swid and not is_public and _owns_team(team_obj_data, swid):
+                my_host_team_id = host_team_id
+
             roster_entries = team_obj_data.get("roster", {}).get("entries", [])
-            players: list[dict] = []
+            players: list[str] = []
+            entries: list[dict] = []
             starters: list[str] = []
             for entry in roster_entries:
                 espn_id = str(entry.get("playerId", ""))
                 lineup_slot_id = entry.get("lineupSlotId", 24)
                 is_starting = lineup_slot_id not in _BENCH_SLOT_IDS
                 sleeper_id = await mapper.espn_to_sleeper(db, espn_id)
-                players.append({
+                players.append(sleeper_id or espn_id)
+                entries.append({
                     "espn_id": espn_id,
                     "sleeper_id": sleeper_id,
                     "lineup_slot_id": lineup_slot_id,
@@ -226,7 +246,17 @@ async def import_espn_league(
                 if is_starting:
                     starters.append(sleeper_id or espn_id)
 
-            snapshot = {"players": players, "starters": starters, "settings": {}}
+            overall = (team_obj_data.get("record") or {}).get("overall") or {}
+            snapshot = {
+                "players": players,
+                "starters": starters,
+                "entries": entries,
+                "settings": {
+                    "wins": overall.get("wins", 0),
+                    "losses": overall.get("losses", 0),
+                    "fpts": overall.get("pointsFor", 0),
+                },
+            }
             result = await db.execute(
                 select(Roster).where(Roster.team_id == team.id, Roster.week == week)
             )
@@ -241,6 +271,16 @@ async def import_espn_league(
             else:
                 existing.snapshot = snapshot
                 existing.last_synced_at = datetime.now(UTC).replace(tzinfo=None)
+
+        await db.flush()
+        if member is None:
+            member = (await db.execute(
+                select(LeagueMember).where(
+                    LeagueMember.user_id == current_user.id,
+                    LeagueMember.league_id == league.id,
+                )
+            )).scalar_one()
+        await claim_team(db, current_user, league, member, my_host_team_id)
 
     await redis.set(
         CacheKey.league_settings(str(league.id)),

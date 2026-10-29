@@ -58,7 +58,10 @@ def _yahoo_settings(max_keepers: int = 3, keeper_cost_type: int = 1, extra_stats
     }
 
 
-def _yahoo_teams(team_id: str = "1", team_name: str = "Team Alpha") -> dict:
+def _yahoo_teams(team_id: str = "1", team_name: str = "Team Alpha", mine: bool = False) -> dict:
+    info = [{"team_id": team_id}, {"name": team_name}]
+    if mine:
+        info.append({"is_owned_by_current_login": 1})
     return {
         "fantasy_content": {
             "league": [
@@ -67,7 +70,7 @@ def _yahoo_teams(team_id: str = "1", team_name: str = "Team Alpha") -> dict:
                     "teams": {
                         "0": {
                             "team": [
-                                [{"team_id": team_id}, {"name": team_name}],
+                                info,
                                 {},
                             ]
                         },
@@ -293,11 +296,11 @@ async def test_roster_snapshot_has_sleeper_id_yahoo(test_db):
     team = team_result.scalar_one()
     roster_result = await test_db.execute(sa_select(Roster).where(Roster.team_id == team.id))
     roster = roster_result.scalar_one()
-    players = roster.snapshot["players"]
-    assert len(players) == 1
-    assert "sleeper_id" in players[0]
-    assert "yahoo_id" in players[0]
-    assert players[0]["yahoo_id"] == "1111"
+    entries = roster.snapshot["entries"]
+    assert len(entries) == 1
+    assert "sleeper_id" in entries[0]
+    assert entries[0]["yahoo_id"] == "1111"
+    assert roster.snapshot["players"] == ["1111"]
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -441,7 +444,132 @@ async def test_roster_snapshot_has_sleeper_id_espn(test_db):
     team = team_result.scalar_one()
     roster_result = await test_db.execute(sa_select(Roster).where(Roster.team_id == team.id))
     roster = roster_result.scalar_one()
-    players = roster.snapshot["players"]
-    assert len(players) == 2
-    assert "sleeper_id" in players[0]
-    assert "espn_id" in players[0]
+    entries = roster.snapshot["entries"]
+    assert len(entries) == 2
+    assert "sleeper_id" in entries[0]
+    assert "espn_id" in entries[0]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEAM OWNERSHIP + SNAPSHOT SHAPE
+# ═══════════════════════════════════════════════════════════════════════════════
+
+async def _make_user(test_db, email: str) -> User:
+    from sqlalchemy import select as sa_select
+    uid = uuid4()
+    test_db.add(User(id=uid, email=email, password_hash=None, is_verified=False))
+    await test_db.flush()
+    return (await test_db.execute(sa_select(User).where(User.id == uid))).scalar_one()
+
+
+@pytest.mark.asyncio
+async def test_espn_import_assigns_owner_from_swid(test_db):
+    from sqlalchemy import select as sa_select
+    user = await _make_user(test_db, "own1@test.com")
+    data = _espn_league_data(num_teams=3)
+    data["teams"][0]["owners"] = ["{AAAA-1}"]
+    data["teams"][1]["owners"] = ["{BBBB-2}"]
+    data["teams"][2]["owners"] = ["{CCCC-3}"]
+    espn = MagicMock()
+    espn.get_league = AsyncMock(return_value=data)
+
+    league = await import_espn_league(
+        "336541", 2025, False, user, test_db, _mock_redis(), espn, swid="{bbbb-2}"
+    )
+
+    teams = (await test_db.execute(sa_select(Team).where(Team.league_id == league.id))).scalars().all()
+    owned = [t for t in teams if t.owner_user_id == user.id]
+    assert [t.host_team_id for t in owned] == ["2"]
+    member = (await test_db.execute(
+        sa_select(LeagueMember).where(LeagueMember.user_id == user.id)
+    )).scalar_one()
+    assert member.host_team_id == "2"
+
+
+@pytest.mark.asyncio
+async def test_espn_reimport_backfills_owner(test_db):
+    from sqlalchemy import select as sa_select
+    user = await _make_user(test_db, "own2@test.com")
+    data = _espn_league_data(num_teams=2)
+    data["teams"][0]["owners"] = ["{AAAA-1}"]
+    espn = MagicMock()
+    espn.get_league = AsyncMock(return_value=data)
+
+    await import_espn_league("336541", 2025, False, user, test_db, _mock_redis(), espn)
+    league = await import_espn_league(
+        "336541", 2025, False, user, test_db, _mock_redis(), espn, swid="{AAAA-1}"
+    )
+
+    team = (await test_db.execute(
+        sa_select(Team).where(Team.league_id == league.id, Team.host_team_id == "1")
+    )).scalar_one()
+    assert team.owner_user_id == user.id
+    member = (await test_db.execute(
+        sa_select(LeagueMember).where(LeagueMember.user_id == user.id)
+    )).scalar_one()
+    assert member.host_team_id == "1"
+
+
+@pytest.mark.asyncio
+async def test_espn_import_without_swid_assigns_no_owner(test_db):
+    from sqlalchemy import select as sa_select
+    user = await _make_user(test_db, "own3@test.com")
+    data = _espn_league_data(num_teams=2)
+    data["teams"][0]["owners"] = ["{AAAA-1}"]
+    espn = MagicMock()
+    espn.get_league = AsyncMock(return_value=data)
+
+    league = await import_espn_league("336541", 2025, True, user, test_db, _mock_redis(), espn)
+
+    teams = (await test_db.execute(sa_select(Team).where(Team.league_id == league.id))).scalars().all()
+    assert all(t.owner_user_id is None for t in teams)
+
+
+@pytest.mark.asyncio
+async def test_espn_snapshot_players_are_id_strings(test_db):
+    from sqlalchemy import select as sa_select
+    from app.models.league import Roster
+    user = await _make_user(test_db, "own4@test.com")
+    espn = MagicMock()
+    espn.get_league = AsyncMock(return_value=_espn_league_data(num_teams=1))
+
+    league = await import_espn_league("336541", 2025, False, user, test_db, _mock_redis(), espn)
+
+    team = (await test_db.execute(sa_select(Team).where(Team.league_id == league.id))).scalar_one()
+    roster = (await test_db.execute(sa_select(Roster).where(Roster.team_id == team.id))).scalar_one()
+    assert all(isinstance(p, str) for p in roster.snapshot["players"])
+    assert roster.snapshot["starters"] == [roster.snapshot["players"][0]]
+
+
+@pytest.mark.asyncio
+async def test_yahoo_import_assigns_owner_from_login_flag(test_db):
+    from sqlalchemy import select as sa_select
+    user = await _make_user(test_db, "own5@test.com")
+    yahoo = MagicMock()
+    yahoo.get_league_settings = AsyncMock(return_value=_yahoo_settings())
+    yahoo.get_league_teams = AsyncMock(return_value=_yahoo_teams(team_id="4", mine=True))
+    yahoo.get_team_roster = AsyncMock(return_value=_yahoo_roster())
+
+    league = await import_yahoo_league("1234", "461", user, test_db, _mock_redis(), yahoo)
+
+    team = (await test_db.execute(sa_select(Team).where(Team.league_id == league.id))).scalar_one()
+    assert team.owner_user_id == user.id
+    member = (await test_db.execute(
+        sa_select(LeagueMember).where(LeagueMember.user_id == user.id)
+    )).scalar_one()
+    assert member.host_team_id == "4"
+
+
+@pytest.mark.asyncio
+async def test_yahoo_import_leaves_other_teams_unowned(test_db):
+    from sqlalchemy import select as sa_select
+    user = await _make_user(test_db, "own6@test.com")
+    yahoo = MagicMock()
+    yahoo.get_league_settings = AsyncMock(return_value=_yahoo_settings())
+    yahoo.get_league_teams = AsyncMock(return_value=_yahoo_teams(team_id="4", mine=False))
+    yahoo.get_team_roster = AsyncMock(return_value=_yahoo_roster())
+
+    league = await import_yahoo_league("1234", "461", user, test_db, _mock_redis(), yahoo)
+
+    team = (await test_db.execute(sa_select(Team).where(Team.league_id == league.id))).scalar_one()
+    assert team.owner_user_id is None

@@ -9,68 +9,6 @@ import { WaiverCard, WaiverPlayer } from '@/components/WaiverCard'
 import { AddPlayerDialog } from '@/components/AddPlayerDialog'
 import { PlayerDetailDrawer, PlayerSlotData } from '@/components/PlayerDetailDrawer'
 
-interface Player {
-  player_id: string
-  full_name: string
-  position: string
-  team: string
-  projected_points: number
-  status?: string
-}
-
-interface RosterSlot {
-  slot_type: string
-  display: string
-  player: Player | null
-}
-
-interface TeamData {
-  team_name: string
-  owner_name: string
-  record: string
-  points_for: number
-  waiver_position: number
-  roster: RosterSlot[]
-  leagues?: Array<{ league_id: string; name: string; season: string; platform: string }>
-}
-
-function StatusDot({ status }: { status?: string }) {
-  if (!status || status === 'Active') return null
-  const color = status === 'Out' ? 'bg-danger' : status === 'Questionable' ? 'bg-warning' : 'bg-muted'
-  return (
-    <span className={`inline-block w-2 h-2 rounded-full ${color} ml-1.5`} title={status} />
-  )
-}
-
-export function PlayerCard({ slot }: { slot: RosterSlot }) {
-  return (
-    <div className="bg-surface border border-border rounded-xl p-3 flex items-center gap-3">
-      <div className="shrink-0 w-8 h-8 rounded-lg bg-raised flex items-center justify-center">
-        <span className="text-[10px] font-bold text-muted">{slot.slot_type}</span>
-      </div>
-      {slot.player ? (
-        <>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center">
-              <span className="font-semibold text-text text-sm truncate">{slot.player.full_name}</span>
-              <StatusDot status={slot.player.status} />
-            </div>
-            <p className="text-xs text-muted">{slot.player.position} · {slot.player.team}</p>
-          </div>
-          <div className="shrink-0 text-right">
-            <p className="text-sm font-semibold text-accent">{slot.player.projected_points.toFixed(1)}</p>
-            <p className="text-[10px] text-muted">proj</p>
-          </div>
-        </>
-      ) : (
-        <div className="flex-1">
-          <p className="text-sm text-muted italic">{slot.display} — Empty</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
 interface DropCandidate {
   player_id: string
   full_name: string
@@ -121,7 +59,9 @@ export default function TeamPage() {
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerSlotData | null>(null)
   const [addPlayer, setAddPlayer] = useState<AddPlayerState | null>(null)
 
-  const { data: leagueList } = useQuery<{ leagues: Array<{ league_id: string }> }>({
+  const { data: leagueList, isLoading } = useQuery<{
+    leagues: Array<{ league_id: string; team_name: string | null }>
+  }>({
     queryKey: ['my-team-leagues'],
     queryFn: () => api.get('/team/my').then((r) => r.data),
   })
@@ -132,15 +72,11 @@ export default function TeamPage() {
     if (ids.length > 0 && (!activeLeagueId || !ids.includes(activeLeagueId))) setActiveLeague(ids[0])
   }, [leagueList, activeLeagueId, setActiveLeague])
 
-  const { data, isLoading } = useQuery<TeamData>({
-    queryKey: ['my-team', activeLeagueId],
-    queryFn: () => api.get('/team/my').then((r) => r.data),
-    enabled: !!activeLeagueId,
-  })
+  const teamName = leagueList?.leagues.find((l) => l.league_id === activeLeagueId)?.team_name
 
   const { data: lineupData } = useQuery<LineupData>({
     queryKey: ['team-lineup', activeLeagueId],
-    queryFn: () => api.get('/team/lineup').then((r) => r.data),
+    queryFn: () => api.get('/team/lineup', { params: { league_id: activeLeagueId } }).then((r) => r.data),
     enabled: !!activeLeagueId,
     staleTime: 5 * 60 * 1000,
   })
@@ -176,13 +112,8 @@ export default function TeamPage() {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-base font-semibold text-text">
-            {data?.team_name ?? 'Team Manager'}
+            {teamName ?? 'Team Manager'}
           </h1>
-          {data?.record && (
-            <p className="text-xs text-muted mt-0.5">
-              {data.record} · <span className="font-mono">{data.points_for ?? 0}</span> pts
-            </p>
-          )}
         </div>
         <LeagueSwitcher />
       </div>
