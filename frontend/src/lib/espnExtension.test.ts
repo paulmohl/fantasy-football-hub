@@ -122,7 +122,7 @@ describe('relay through the extension content script', () => {
   }
 
   it('detects the extension and gets cookies even when chrome.runtime.sendMessage throws', async () => {
-    ;(globalThis as any).chrome = {
+    (globalThis as any).chrome = {
       runtime: {
         sendMessage: () => {
           throw new Error('Cannot convert a Symbol value to a string')
