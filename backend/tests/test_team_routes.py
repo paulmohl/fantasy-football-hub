@@ -259,3 +259,36 @@ async def test_roster_lookup_prefers_requested_week(test_db):
     _, roster = await _get_user_team_and_roster(league, user, test_db, week=8)
 
     assert roster.week == 5
+
+
+@pytest.mark.asyncio
+async def test_matchup_stats_skipped_for_non_sleeper_league():
+    from unittest.mock import AsyncMock, MagicMock
+    from app.api.v1.team import _compute_team_matchup_stats
+    sleeper = MagicMock()
+    sleeper.get_league_matchups = AsyncMock(side_effect=AssertionError("must not call Sleeper"))
+    redis = MagicMock()
+    redis.get = AsyncMock(return_value=None)
+
+    result = await _compute_team_matchup_stats("336541", 8, sleeper, redis, platform="espn")
+
+    assert result == {}
+    sleeper.get_league_matchups.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_matchup_stats_survive_a_sleeper_http_error():
+    from unittest.mock import AsyncMock, MagicMock
+    import httpx
+    from app.api.v1.team import _compute_team_matchup_stats
+    sleeper = MagicMock()
+    request = httpx.Request("GET", "https://api.sleeper.app/v1/league/x/matchups/1")
+    sleeper.get_league_matchups = AsyncMock(
+        side_effect=httpx.HTTPStatusError("404", request=request, response=httpx.Response(404, request=request))
+    )
+    redis = MagicMock()
+    redis.get = AsyncMock(return_value=None)
+
+    result = await _compute_team_matchup_stats("abc", 8, sleeper, redis, platform="sleeper")
+
+    assert result == {}
