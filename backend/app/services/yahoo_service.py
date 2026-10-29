@@ -19,6 +19,7 @@ from app.core.logging import logger
 from app.models.league import League, LeagueMember, Roster, Team
 from app.models.user import User
 from app.services.player_id_mapper import PlayerIDMapper
+from app.services.team_ownership import claim_team
 from app.services.yahoo_client import YahooClient
 
 YAHOO_STAT_MAP: dict[int, str] = {
@@ -189,6 +190,7 @@ async def import_yahoo_league(
         teams_content = teams_data.get("fantasy_content", {}).get("league", [{}, {}])
         teams_node = teams_content[1].get("teams", {}) if len(teams_content) > 1 else {}
         mapper = PlayerIDMapper()
+        my_host_team_id: str | None = None
 
         for key, team_entry in teams_node.items():
             if not str(key).isdigit():
@@ -205,6 +207,8 @@ async def import_yahoo_league(
 
             host_team_id = str(team_info.get("team_id", key))
             team_name = team_info.get("name", f"Team {key}")
+            if str(team_info.get("is_owned_by_current_login", 0)) == "1":
+                my_host_team_id = host_team_id
 
             result = await db.execute(
                 select(Team).where(
@@ -228,7 +232,8 @@ async def import_yahoo_league(
                 .get("0", {})
                 .get("players", {})
             )
-            players: list[dict] = []
+            players: list[str] = []
+            entries: list[dict] = []
             starters: list[str] = []
             for pk, player_entry in players_node.items():
                 if not str(pk).isdigit():
@@ -251,7 +256,8 @@ async def import_yahoo_league(
                 )
                 is_starting = selected_position not in ("BN", "IR")
                 sleeper_id = await mapper.yahoo_to_sleeper(db, yahoo_id)
-                players.append({
+                players.append(sleeper_id or yahoo_id)
+                entries.append({
                     "yahoo_id": yahoo_id,
                     "sleeper_id": sleeper_id,
                     "selected_position": selected_position,
@@ -260,7 +266,7 @@ async def import_yahoo_league(
                 if is_starting:
                     starters.append(sleeper_id or yahoo_id)
 
-            snapshot = {"players": players, "starters": starters, "settings": {}}
+            snapshot = {"players": players, "starters": starters, "entries": entries, "settings": {}}
             result = await db.execute(
                 select(Roster).where(Roster.team_id == team_obj.id, Roster.week == week)
             )
@@ -275,6 +281,15 @@ async def import_yahoo_league(
             else:
                 existing.snapshot = snapshot
                 existing.last_synced_at = datetime.now(UTC).replace(tzinfo=None)
+
+        await db.flush()
+        member = (await db.execute(
+            select(LeagueMember).where(
+                LeagueMember.user_id == current_user.id,
+                LeagueMember.league_id == league.id,
+            )
+        )).scalar_one()
+        await claim_team(db, current_user, league, member, my_host_team_id)
 
     await redis.set(
         CacheKey.league_settings(str(league.id)),

@@ -25,6 +25,7 @@ from app.core.logging import logger
 from app.models.league import League, LeagueMember, Roster, Team
 from app.models.user import User
 from app.services.sleeper_client import SleeperClient
+from app.services.team_ownership import claim_team
 
 
 def classify_draft(league_data: dict) -> str:
@@ -56,6 +57,7 @@ async def import_league(
     redis: Redis,
     sleeper: SleeperClient,
     week: int = 1,
+    sleeper_user_id: str | None = None,
 ) -> League:
     """Import a Sleeper league for the current user.
 
@@ -112,7 +114,7 @@ async def import_league(
         # Find current user's roster_id from rosters list
         member_host_team_id = None
         for roster in rosters:
-            if roster.get("owner_id") == str(current_user.id):
+            if sleeper_user_id and roster.get("owner_id") == sleeper_user_id:
                 member_host_team_id = str(roster["roster_id"])
                 break
 
@@ -178,6 +180,15 @@ async def import_league(
             else:
                 existing_roster.snapshot = snapshot_data
                 existing_roster.last_synced_at = datetime.now(UTC).replace(tzinfo=None)
+
+        await db.flush()
+        member = (await db.execute(
+            select(LeagueMember).where(
+                LeagueMember.user_id == current_user.id,
+                LeagueMember.league_id == league.id,
+            )
+        )).scalar_one()
+        await claim_team(db, current_user, league, member, member_host_team_id)
 
     # Step 5: Cache after successful savepoint commit (outside transaction)
     await redis.set(

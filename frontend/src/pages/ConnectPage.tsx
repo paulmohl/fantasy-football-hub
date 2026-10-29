@@ -132,6 +132,7 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
   ])
   const [username, setUsername] = useState('')
   const [sleeperLeagues, setSleeperLeagues] = useState<SleeperLeague[]>([])
+  const [sleeperUserId, setSleeperUserId] = useState<string | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [lookingUp, setLookingUp] = useState(false)
   const [importing, setImporting] = useState(false)
@@ -293,6 +294,7 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
       const { data } = await api.get(`/sleeper/lookup?username=${encodeURIComponent(username.trim())}`)
       removeTyping()
       setSleeperLeagues(data.leagues)
+      setSleeperUserId(data.user?.user_id ?? null)
       setStep('leagues')
       append({
         type: 'app',
@@ -337,7 +339,7 @@ function OnboardingFlow({ onComplete, initialStep = 'platform' }: { onComplete: 
       })
     }, 400)
     try {
-      await api.post('/sleeper/import', { league_ids: [...selected] })
+      await api.post('/sleeper/import', { league_ids: [...selected], sleeper_user_id: sleeperUserId })
       setStep('done')
       append({
         type: 'app',

@@ -3,7 +3,12 @@
  * Tests the ESPN platform selection, sub-option steps, private form, and public form
  * against a running dev stack at localhost:5173.
  */
-import { test, expect } from '@playwright/test'
+import { test, expect, Page } from '@playwright/test'
+
+async function openManualCookieForm(page: Page) {
+  await page.getByRole('button', { name: /Advanced: enter cookies manually/ }).click()
+  await page.getByRole('button', { name: /enter cookies manually/ }).click()
+}
 
 test.describe('ESPN Connect Flows', () => {
   test.beforeEach(async ({ page }) => {
@@ -49,6 +54,7 @@ test.describe('ESPN Connect Flows', () => {
   test('ESPN private form has SWID, espn_s2, and league ID inputs', async ({ page }) => {
     await page.getByRole('button', { name: /ESPN/ }).click()
     await page.getByRole('button', { name: /Private league/ }).click()
+    await openManualCookieForm(page)
     await expect(page.getByLabel('ESPN SWID cookie')).toBeVisible()
     await expect(page.getByLabel('ESPN espn_s2 cookie')).toBeVisible()
     await expect(page.getByLabel('ESPN League ID')).toBeVisible()
@@ -64,6 +70,7 @@ test.describe('ESPN Connect Flows', () => {
     )
     await page.getByRole('button', { name: /ESPN/ }).click()
     await page.getByRole('button', { name: /Private league/ }).click()
+    await openManualCookieForm(page)
     await page.getByLabel('ESPN SWID cookie').fill('{12345}')
     await page.getByLabel('ESPN espn_s2 cookie').fill('fake_token')
     await page.getByLabel('ESPN League ID').fill('123')

@@ -81,6 +81,7 @@ async def espn_connect_private(
             db=db,
             redis=redis,
             espn=espn,
+            swid=body.swid,
         )
     return {"id": str(league.id), "name": league.name, "platform": "espn", "is_public": False}
 

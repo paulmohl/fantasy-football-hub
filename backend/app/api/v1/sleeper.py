@@ -80,6 +80,7 @@ async def lookup(
 
 class ImportRequest(BaseModel):
     league_ids: list[str]
+    sleeper_user_id: str | None = None
 
 
 @router.post("/import")
@@ -110,7 +111,9 @@ async def import_leagues(
     errors = []
     for league_id in body.league_ids:
         try:
-            league = await import_league(league_id, current_user, db, redis, sleeper, week=week)
+            league = await import_league(
+                league_id, current_user, db, redis, sleeper, week=week, sleeper_user_id=body.sleeper_user_id
+            )
             results.append({
                 "id": str(league.id),
                 "name": league.name,

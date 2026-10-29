@@ -55,3 +55,28 @@ describe('TeamPage league selection', () => {
     expect(useLeagueStore.getState().activeLeagueId).toBe('b')
   })
 })
+
+describe('TeamPage header and lineup request', () => {
+  const mine = { ...league('a'), team_name: 'Gridiron Ghosts' }
+
+  it('shows the active league team name instead of the generic title', async () => {
+    get.mockResolvedValue({ data: { leagues: [mine] } })
+    renderPage()
+    expect(await screen.findByText('Gridiron Ghosts')).toBeTruthy()
+  })
+
+  it('falls back to the generic title when the user has no team in the league', async () => {
+    get.mockResolvedValue({ data: { leagues: [{ ...mine, team_name: null }] } })
+    renderPage()
+    await waitFor(() => expect(useLeagueStore.getState().activeLeagueId).toBe('a'))
+    expect(screen.getByText('Team Manager')).toBeTruthy()
+  })
+
+  it('sends the active league id with the lineup request', async () => {
+    get.mockResolvedValue({ data: { leagues: [mine] } })
+    renderPage()
+    await waitFor(() =>
+      expect(get).toHaveBeenCalledWith('/team/lineup', { params: { league_id: 'a' } }),
+    )
+  })
+})
