@@ -23,9 +23,9 @@ async def claim_team(
     owned = await db.execute(
         select(Team).where(Team.league_id == league.id, Team.owner_user_id == user.id)
     )
-    for team in owned.scalars():
-        if team.host_team_id != host_team_id:
-            team.owner_user_id = None
+    for previous in owned.scalars():
+        if previous.host_team_id != host_team_id:
+            previous.owner_user_id = None
 
     result = await db.execute(
         select(Team).where(Team.league_id == league.id, Team.host_team_id == host_team_id)

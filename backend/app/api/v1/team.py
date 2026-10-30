@@ -15,6 +15,7 @@ import json
 import uuid
 from typing import Literal
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from redis.asyncio import Redis
 from sqlalchemy import select
@@ -92,12 +93,18 @@ async def _compute_team_matchup_stats(
     current_week: int,
     sleeper: SleeperClient,
     redis: Redis,
+    platform: str = "sleeper",
 ) -> dict[int, dict[str, float]]:
     """Compute pts_for_avg and pts_against_avg for each team over last 4 weeks.
 
     Returns dict keyed by roster_id:
         {roster_id: {"pts_for_avg": float, "pts_against_avg": float}}
+
+    Matchups come from Sleeper, so other platforms get {} (their league id is
+    unknown to Sleeper), and a Sleeper outage degrades the lineup instead of failing it.
     """
+    if platform != "sleeper":
+        return {}
     weeks_back = min(4, current_week - 1)
     if weeks_back < 1:
         return {}
@@ -111,7 +118,11 @@ async def _compute_team_matchup_stats(
         if cached:
             week_data = json.loads(cached)
         else:
-            week_data = await sleeper.get_league_matchups(league_id, w)
+            try:
+                week_data = await sleeper.get_league_matchups(league_id, w)
+            except httpx.HTTPError as exc:
+                logger.warning("team.matchups.unavailable", league_id=league_id, week=w, error=str(exc))
+                continue
             await redis.set(cache_key, json.dumps(week_data), ex=3600)
 
         for entry in week_data:
@@ -232,6 +243,7 @@ async def get_lineup(
         current_week=week,
         sleeper=sleeper,
         redis=redis,
+        platform=league.host_platform,
     )
 
     # Fetch trending adds for TM-03 recent_usage_trend
