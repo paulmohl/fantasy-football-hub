@@ -20,6 +20,7 @@ import json
 import httpx
 from fastapi import Depends
 from redis.asyncio import Redis
+from redis.exceptions import RedisError
 
 from app.core.cache import CacheKey, CacheTTL
 from app.core.redis import get_redis
@@ -28,6 +29,12 @@ from app.core.logging import logger
 
 FANTASYCALC_BASE = "https://api.fantasycalc.com"
 SLEEPER_BASE = "https://api.sleeper.app"
+
+# The full Sleeper pool is ~16 MB of JSON, more than a hosted Redis accepts in one write.
+_PLAYER_FIELDS = (
+    "full_name", "position", "fantasy_positions", "team", "status",
+    "injury_status", "search_rank", "depth_chart_order",
+)
 
 
 class FantasyCalcError(Exception):
@@ -44,6 +51,19 @@ class ProjectionService:
         self.http = http
         self.redis = redis
 
+    async def _cache_get(self, key: str) -> str | None:
+        try:
+            return await self.redis.get(key)
+        except RedisError as exc:
+            logger.warning("projection.cache.read_failed", key=key, error=str(exc))
+            return None
+
+    async def _cache_set(self, key: str, value: object, ex: int) -> None:
+        try:
+            await self.redis.set(key, json.dumps(value), ex=ex)
+        except RedisError as exc:
+            logger.warning("projection.cache.write_failed", key=key, error=str(exc))
+
     async def get_fantasycalc_values(self, is_dynasty: bool = False) -> list[dict]:
         """Fetch FantasyCalc player values; cached 24h.
 
@@ -51,7 +71,7 @@ class ProjectionService:
         Redraft returns ~200 players; dynasty returns ~460.
         """
         key = CacheKey.fantasycalc_values(is_dynasty)
-        cached = await self.redis.get(key)
+        cached = await self._cache_get(key)
         if cached:
             logger.info("fantasycalc.cache.hit", is_dynasty=is_dynasty)
             return json.loads(cached)
@@ -72,17 +92,16 @@ class ProjectionService:
             raise FantasyCalcError(f"FantasyCalc returned {exc.response.status_code}") from exc
 
         data: list[dict] = r.json()
-        await self.redis.set(key, json.dumps(data), ex=CacheTTL.FANTASYCALC)
+        await self._cache_set(key, data, CacheTTL.FANTASYCALC)
         return data
 
     async def get_sleeper_players(self) -> dict[str, dict]:
-        """Fetch full Sleeper player pool; cached 24h.
+        """Fetch the Sleeper player pool trimmed to the fields the app reads; cached 24h.
 
-        Returns dict keyed by player_id string. ~5MB response.
-        Each player has fantasy_positions, injury_status, status, search_rank, depth_chart_order.
+        Returns dict keyed by player_id string, only for entries that can be fantasy players.
         """
         key = CacheKey.sleeper_players_nfl()
-        cached = await self.redis.get(key)
+        cached = await self._cache_get(key)
         if cached:
             logger.info("sleeper.players.cache.hit")
             return json.loads(cached)
@@ -90,8 +109,12 @@ class ProjectionService:
         logger.info("sleeper.players.fetch")
         r = await self.http.get(f"{SLEEPER_BASE}/v1/players/nfl")
         r.raise_for_status()
-        data: dict[str, dict] = r.json()
-        await self.redis.set(key, json.dumps(data), ex=CacheTTL.SLEEPER_PLAYERS)
+        data: dict[str, dict] = {
+            pid: {f: p[f] for f in _PLAYER_FIELDS if f in p}
+            for pid, p in r.json().items()
+            if p.get("fantasy_positions") or p.get("position")
+        }
+        await self._cache_set(key, data, CacheTTL.SLEEPER_PLAYERS)
         return data
 
     def build_sleeper_id_index(self, fc_values: list[dict]) -> dict[str, dict]:
@@ -112,7 +135,7 @@ class ProjectionService:
         Returns dict {player_id: count}. Low counts during off-season (see RESEARCH.md Pitfall 7).
         """
         key = CacheKey.sleeper_trending_add()
-        cached = await self.redis.get(key)
+        cached = await self._cache_get(key)
         if cached:
             return json.loads(cached)
 
@@ -124,7 +147,7 @@ class ProjectionService:
         r.raise_for_status()
         raw: list[dict] = r.json()
         data = {item["player_id"]: item["count"] for item in raw}
-        await self.redis.set(key, json.dumps(data), ex=CacheTTL.SLEEPER_TRENDING)
+        await self._cache_set(key, data, CacheTTL.SLEEPER_TRENDING)
         return data
 
     async def get_player_weekly_stats(self, season: str, week: int) -> dict[str, dict]:
@@ -134,7 +157,7 @@ class ProjectionService:
         Off-season weeks return sparse or empty data.
         """
         key = CacheKey.sleeper_stats(season, week)
-        cached = await self.redis.get(key)
+        cached = await self._cache_get(key)
         if cached:
             return json.loads(cached)
 
@@ -142,7 +165,7 @@ class ProjectionService:
         r = await self.http.get(f"{SLEEPER_BASE}/v1/stats/nfl/regular/{season}/{week}")
         r.raise_for_status()
         data: dict[str, dict] = r.json()
-        await self.redis.set(key, json.dumps(data), ex=CacheTTL.SLEEPER_STATS)
+        await self._cache_set(key, data, CacheTTL.SLEEPER_STATS)
         return data
 
 
