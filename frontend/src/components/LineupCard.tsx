@@ -17,6 +17,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { positionTone } from '@/lib/position'
 import { api } from '@/lib/api'
 import { useLeagueStore } from '@/store/league'
 import { InjuryBadge } from './InjuryBadge'
@@ -64,6 +65,19 @@ function NoStrongCallBanner() {
   )
 }
 
+function SlotChip({ slot }: { slot: string }) {
+  return (
+    <div
+      className={cn(
+        'w-9 h-9 rounded-lg flex items-center justify-center text-[10px] font-semibold shrink-0',
+        positionTone(slot),
+      )}
+    >
+      {slot.replace(/\d+$/, '')}
+    </div>
+  )
+}
+
 function CurrentPlayerRow({
   slot,
   onPlayerClick,
@@ -75,31 +89,21 @@ function CurrentPlayerRow({
   return (
     <div
       className={cn(
-        'relative flex items-center gap-2 p-3 bg-raised border border-border rounded-xl',
+        'flex items-center gap-2.5 px-2.5 py-2 bg-raised/60 border border-border/70 rounded-xl h-[60px]',
         isOut && 'opacity-60',
       )}
     >
-      <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-xs font-bold text-muted shrink-0">
-        {slot.slot.replace(/\d+$/, '')}
-      </div>
-      <button
-        className="flex-1 min-w-0 text-left"
-        onClick={() => onPlayerClick(slot)}
-      >
-        <div className="flex items-center gap-1 min-w-0">
-          <span className="text-sm font-semibold text-text truncate">{slot.full_name ?? '—'}</span>
+      <SlotChip slot={slot.slot} />
+      <button className="flex-1 min-w-0 text-left" onClick={() => onPlayerClick(slot)}>
+        <div className="flex items-center min-w-0">
+          <span className="text-sm font-medium text-text truncate">{slot.full_name ?? '—'}</span>
           <InjuryBadge status={slot.injury_status} playerName={slot.full_name ?? undefined} />
         </div>
-        <p className="text-xs text-muted">{slot.position ?? ''}</p>
-        {isOut && slot.replacement_suggestion && (
-          <p className="text-xs text-muted italic mt-0.5">→ Start bench player</p>
-        )}
+        <p className="text-xs text-muted mt-0.5 truncate">
+          {slot.position ?? ''}
+          {isOut && slot.replacement_suggestion && ' · start bench player'}
+        </p>
       </button>
-      {slot.is_swap_suggested && (
-        <span className="absolute -right-1.5 top-1/2 -translate-y-1/2 bg-accent text-white text-xs font-semibold px-1.5 py-0.5 rounded-full z-10">
-          SWAP
-        </span>
-      )}
     </div>
   )
 }
@@ -128,14 +132,14 @@ function DraggablePlayerRow({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group relative flex items-center gap-2 p-3 bg-raised border rounded-xl transition-colors',
-        slot.is_swap_suggested ? 'border-accent/50' : 'border-border',
+        'group relative flex items-center gap-2.5 px-2.5 py-2 bg-raised/60 border rounded-xl transition-colors hover:bg-raised h-[60px]',
+        slot.is_swap_suggested ? 'border-accent/60 bg-accent/5' : 'border-border/70',
         isOut && 'opacity-60',
         isDragging && 'opacity-50 border-dashed border-accent',
       )}
     >
       <button
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted px-2.5 -ml-2.5 min-w-[44px] flex items-center justify-center cursor-grab active:cursor-grabbing"
+        className="absolute right-0 inset-y-0 w-9 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity text-muted flex items-center justify-center cursor-grab active:cursor-grabbing"
         {...attributes}
         {...listeners}
         aria-label={`Reorder ${slot.full_name ?? slot.slot}`}
@@ -143,16 +147,9 @@ function DraggablePlayerRow({
         <GripVertical size={16} />
       </button>
 
-      <div className="w-8 h-8 rounded-lg bg-surface flex items-center justify-center text-xs font-bold text-muted shrink-0">
-        {slot.slot.replace(/\d+$/, '')}
-      </div>
-
-      <button
-        className="flex-1 min-w-0 text-left"
-        onClick={() => onPlayerClick(slot)}
-      >
-        <div className="flex items-center gap-1 min-w-0">
-          <span className="text-sm font-semibold text-text truncate">
+      <button className="flex-1 min-w-0 text-left" onClick={() => onPlayerClick(slot)}>
+        <div className="flex items-center min-w-0">
+          <span className="text-sm font-medium text-text truncate">
             {slot.full_name ?? '—'}
             {isOverride && (
               <span className="text-xs text-muted italic font-normal ml-1">(override)</span>
@@ -160,15 +157,16 @@ function DraggablePlayerRow({
           </span>
           <InjuryBadge status={slot.injury_status} playerName={slot.full_name ?? undefined} />
         </div>
-        <p className="text-xs text-muted">{slot.position ?? ''}</p>
+        <div className="flex items-center gap-1.5 mt-1">
+          <span className="text-sm font-semibold font-mono text-text leading-none">
+            {slot.projected_points.toFixed(1)}
+          </span>
+          <ConfidenceBadge confidence={slot.confidence} />
+          {slot.is_swap_suggested && (
+            <span className="text-[10px] font-semibold text-accent uppercase tracking-wide">Swap</span>
+          )}
+        </div>
       </button>
-
-      <div className="flex flex-col items-end gap-0.5 shrink-0">
-        <span className="text-sm font-semibold font-mono text-accent">
-          {slot.projected_points.toFixed(1)}
-        </span>
-        <ConfidenceBadge confidence={slot.confidence} />
-      </div>
     </div>
   )
 }
@@ -205,8 +203,8 @@ export function LineupCard({ onPlayerClick }: { onPlayerClick: (slot: SlotData) 
 
   if (isLoading) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-4">
-        <div className="text-base font-semibold text-text mb-3">Lineup Optimizer</div>
+      <div className="card">
+        <div className="card-title mb-3">Lineup Optimizer</div>
         <div className="grid grid-cols-2 gap-3">
           {[...Array(7)].map((_, i) => (
             <div key={i} className="h-12 animate-pulse bg-raised rounded-xl col-span-1" />
@@ -218,11 +216,11 @@ export function LineupCard({ onPlayerClick }: { onPlayerClick: (slot: SlotData) 
 
   if (error || !data) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-4">
-        <p className="text-sm text-danger">
+      <div className="card">
+        <p className="text-sm text-muted">
           Couldn't load lineup.{' '}
           <button
-            className="underline"
+            className="text-accent font-medium underline underline-offset-2"
             onClick={() => queryClient.invalidateQueries({ queryKey: ['team-lineup', activeLeagueId] })}
           >
             Try again
@@ -243,9 +241,9 @@ export function LineupCard({ onPlayerClick }: { onPlayerClick: (slot: SlotData) 
   const delta = optimalTotal - currentTotal
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-4">
+    <div className="card">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold text-text">Lineup Optimizer</h2>
+        <h2 className="card-title">Lineup Optimizer</h2>
         {Object.keys(currentWeekOverrides).length > 0 && (
           <button
             className="text-xs text-muted hover:text-danger transition-colors"
@@ -261,8 +259,8 @@ export function LineupCard({ onPlayerClick }: { onPlayerClick: (slot: SlotData) 
       )}
 
       <div className="grid grid-cols-2 gap-3">
-        <p className="text-xs font-semibold text-muted uppercase tracking-wide">Current</p>
-        <p className="text-xs font-semibold text-muted uppercase tracking-wide">Optimal</p>
+        <p className="label">Current</p>
+        <p className="label">Optimal</p>
 
         <div className="space-y-1.5">
           {starters.map((slot) => (
@@ -295,7 +293,7 @@ export function LineupCard({ onPlayerClick }: { onPlayerClick: (slot: SlotData) 
         </DndContext>
       </div>
 
-      <div className="mt-3 flex items-center gap-2 text-sm font-semibold font-mono text-text border-t border-border pt-3">
+      <div className="mt-4 flex items-center gap-2 text-sm font-semibold font-mono text-text border-t border-border pt-3">
         <span>{currentTotal.toFixed(1)}</span>
         <span className="text-muted">→</span>
         <span className={delta > 0 ? 'text-success' : delta < 0 ? 'text-danger' : 'text-text'}>

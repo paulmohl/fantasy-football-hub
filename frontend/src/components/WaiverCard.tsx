@@ -94,9 +94,9 @@ export function WaiverCard({
   }
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-4">
+    <div className="card">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold text-text">Waiver Wire</h2>
+        <h2 className="card-title">Waiver Wire</h2>
 
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>

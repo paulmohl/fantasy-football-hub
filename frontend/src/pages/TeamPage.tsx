@@ -60,7 +60,7 @@ export default function TeamPage() {
   const [addPlayer, setAddPlayer] = useState<AddPlayerState | null>(null)
 
   const { data: leagueList, isLoading } = useQuery<{
-    leagues: Array<{ league_id: string; team_name: string | null }>
+    leagues: Array<{ league_id: string; team_name: string | null; name?: string; season?: string }>
   }>({
     queryKey: ['my-team-leagues'],
     queryFn: () => api.get('/team/my').then((r) => r.data),
@@ -72,7 +72,8 @@ export default function TeamPage() {
     if (ids.length > 0 && (!activeLeagueId || !ids.includes(activeLeagueId))) setActiveLeague(ids[0])
   }, [leagueList, activeLeagueId, setActiveLeague])
 
-  const teamName = leagueList?.leagues.find((l) => l.league_id === activeLeagueId)?.team_name
+  const activeLeague = leagueList?.leagues.find((l) => l.league_id === activeLeagueId)
+  const teamName = activeLeague?.team_name
 
   const { data: lineupData } = useQuery<LineupData>({
     queryKey: ['team-lineup', activeLeagueId],
@@ -108,12 +109,18 @@ export default function TeamPage() {
     }))
 
   return (
-    <div className="px-4 pt-10 pb-4 space-y-3">
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-base font-semibold text-text">
+    <div className="px-4 pt-8 pb-6 space-y-4 max-w-xl mx-auto">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-text truncate">
             {teamName ?? 'Team Manager'}
           </h1>
+          {activeLeague?.name && (
+            <p className="text-sm text-muted mt-0.5 truncate">
+              {activeLeague.name}
+              {activeLeague.season ? ` · ${activeLeague.season}` : ''}
+            </p>
+          )}
         </div>
         <LeagueSwitcher />
       </div>

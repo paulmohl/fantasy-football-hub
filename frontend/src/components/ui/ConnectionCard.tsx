@@ -76,7 +76,7 @@ export function ConnectionCard({ league, onDisconnected }: ConnectionCardProps) 
 
   return (
     <>
-      <div className="bg-surface border border-border rounded-xl p-4 flex flex-col gap-3">
+      <div className="card flex flex-col gap-3">
         {showRefreshBar && <ProgressBar pulsing className="mb-1" />}
 
         <div className="flex items-center gap-2">

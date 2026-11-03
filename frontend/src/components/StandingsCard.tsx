@@ -31,8 +31,8 @@ export function StandingsCard() {
   })
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-4">
-      <h2 className="text-base font-semibold text-text mb-3">League Standings</h2>
+    <div className="card">
+      <h2 className="card-title mb-3">League Standings</h2>
 
       {isLoading && (
         <div className="space-y-1">
@@ -43,10 +43,10 @@ export function StandingsCard() {
       )}
 
       {error && !isLoading && (
-        <p className="text-sm text-danger">
+        <p className="text-sm text-muted">
           Couldn't load standings.{' '}
           <button
-            className="underline hover:no-underline"
+            className="text-accent font-medium underline underline-offset-2"
             onClick={() => window.location.reload()}
           >
             Try again
@@ -62,13 +62,19 @@ export function StandingsCard() {
       )}
 
       {!isLoading && data && data.standings.length > 0 && (
-        <div className="space-y-1">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-3 px-2 pb-1 label">
+            <span className="w-6 text-center">#</span>
+            <span className="flex-1">Team</span>
+            <span className="shrink-0">W-L</span>
+            <span className="shrink-0 w-16 text-right">PF</span>
+          </div>
           {data.standings.map((row, idx) => (
             <div
               key={row.roster_id}
               className={cn(
-                'flex items-center gap-3 px-2 py-2 rounded-lg',
-                row.is_current_user && 'bg-raised border border-border',
+                'flex items-center gap-3 px-2 py-2.5 rounded-lg',
+                row.is_current_user ? 'bg-accent/10 ring-1 ring-accent/25' : 'hover:bg-raised/60',
               )}
             >
               <span className="w-6 shrink-0 text-xs font-semibold font-mono text-muted text-center">

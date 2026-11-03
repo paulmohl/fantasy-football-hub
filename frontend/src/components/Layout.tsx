@@ -27,8 +27,8 @@ export default function Layout() {
       </main>
 
       {!isDraft && (
-        <nav className="shrink-0 bg-surface border-t border-border safe-area-pb">
-          <div className="flex items-center justify-around h-16 px-2">
+        <nav className="shrink-0 bg-surface/90 backdrop-blur border-t border-border safe-area-pb">
+          <div className="flex items-center justify-around h-16 px-2 max-w-xl mx-auto">
             {tabs.map(({ to, icon: Icon, label }) => {
               const isDisabled = !hasLeagues && REQUIRES_LEAGUE.some((r) => to.startsWith(r))
               return (
@@ -39,17 +39,17 @@ export default function Layout() {
                   tabIndex={isDisabled ? -1 : undefined}
                   className={({ isActive }) =>
                     cn(
-                      'flex flex-col items-center gap-0.5 px-3 py-2 rounded-lg transition-colors',
+                      'relative flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors',
                       isDisabled
                         ? 'opacity-40 pointer-events-none text-muted'
                         : isActive
-                          ? 'text-accent'
+                          ? 'text-accent bg-accent/10'
                           : 'text-muted hover:text-text',
                     )
                   }
                 >
                   <Icon size={22} strokeWidth={1.75} />
-                  <span className="text-xs font-semibold">{label}</span>
+                  <span className="text-[11px] font-medium leading-none">{label}</span>
                 </NavLink>
               )
             })}
