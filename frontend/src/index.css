@@ -3,4 +3,47 @@
 @tailwind utilities;
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: system-ui, sans-serif; background: #0a0a0a; color: #e5e5e5; }
+
+:root { color-scheme: dark; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  background: #0B0E14;
+  color: #E8ECF1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection { background: rgba(61, 169, 252, 0.35); color: #fff; }
+
+:focus-visible {
+  outline: 2px solid #3DA9FC;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+* { scrollbar-width: thin; scrollbar-color: #262C3A transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: #262C3A; border-radius: 999px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+.font-mono, [class*='font-mono'] { font-variant-numeric: tabular-nums; }
+
+@layer components {
+  .card {
+    @apply bg-surface border border-border rounded-2xl p-4 shadow-card;
+  }
+  .card-title {
+    @apply text-sm font-semibold text-text tracking-tight;
+  }
+  .label {
+    @apply text-[11px] font-medium text-muted uppercase tracking-wider;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
