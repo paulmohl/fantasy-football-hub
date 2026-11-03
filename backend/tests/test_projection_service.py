@@ -225,3 +225,66 @@ def test_source_uses_fantasycalc_ttl():
     from app.services import projection_service
     source = inspect.getsource(projection_service)
     assert "CacheTTL.FANTASYCALC" in source
+
+
+def _player(**extra):
+    base = {
+        "full_name": "A Player", "position": "WR", "fantasy_positions": ["WR"], "team": "KC",
+        "status": "Active", "injury_status": None, "search_rank": 12, "depth_chart_order": 1,
+    }
+    base.update(extra)
+    return base
+
+
+async def test_sleeper_players_cache_keeps_only_fields_the_app_reads():
+    from app.services.projection_service import ProjectionService
+    bulky = _player(news_updated=1, birth_date="1999-01-01", metadata={"x": "y" * 500}, practice_description="z" * 500)
+    http = AsyncMock()
+    http.get = AsyncMock(return_value=_make_http_response({"1": bulky}))
+    redis = _make_redis()
+
+    players = await ProjectionService(http, redis).get_sleeper_players()
+
+    assert set(players["1"]) == {
+        "full_name", "position", "fantasy_positions", "team", "status",
+        "injury_status", "search_rank", "depth_chart_order",
+    }
+    stored = json.loads(redis.set.call_args.args[1])
+    assert set(stored["1"]) == set(players["1"])
+
+
+async def test_sleeper_players_skip_entries_that_cannot_be_fantasy_players():
+    from app.services.projection_service import ProjectionService
+    data = {"1": _player(), "2": {"full_name": "Coach", "position": None, "fantasy_positions": None}}
+    http = AsyncMock()
+    http.get = AsyncMock(return_value=_make_http_response(data))
+
+    players = await ProjectionService(http, _make_redis()).get_sleeper_players()
+
+    assert list(players) == ["1"]
+
+
+async def test_sleeper_players_returned_when_redis_write_fails():
+    from redis.exceptions import ResponseError
+    from app.services.projection_service import ProjectionService
+    http = AsyncMock()
+    http.get = AsyncMock(return_value=_make_http_response({"1": _player()}))
+    redis = _make_redis()
+    redis.set = AsyncMock(side_effect=ResponseError("max request size exceeded"))
+
+    players = await ProjectionService(http, redis).get_sleeper_players()
+
+    assert "1" in players
+
+
+async def test_sleeper_players_fetched_when_redis_read_fails():
+    from redis.exceptions import ConnectionError as RedisConnectionError
+    from app.services.projection_service import ProjectionService
+    http = AsyncMock()
+    http.get = AsyncMock(return_value=_make_http_response({"1": _player()}))
+    redis = _make_redis()
+    redis.get = AsyncMock(side_effect=RedisConnectionError("down"))
+
+    players = await ProjectionService(http, redis).get_sleeper_players()
+
+    assert "1" in players

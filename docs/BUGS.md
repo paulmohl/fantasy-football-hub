@@ -31,7 +31,7 @@ Fixed on branch `fix/team-ownership` (uncommitted): BUG-1, 2, 3, 4, 6, plus BUG-
 
 `TeamPage.tsx:143` calls `/team/lineup` without `league_id`, which FastAPI rejects with 422 in production. The e2e mocks use a wildcard route and hide this. It feeds the compare pool in the player drawer, so comparing players silently has no data.
 
-## BUG-5: `/users/me` and `/notifications` return 500 in the test environment
+## BUG-5: `/users/me` and `/notifications` return 500 in the test environment — NOT A BUG (200 on the live site; mock-only artifact)
 
 Seen on every page load (mocked environment, no backend running, so may be the dev proxy only). Needs confirmation against a real backend.
 
@@ -59,3 +59,19 @@ ESPN and Yahoo imports hardcode `week=1`, but `/team/lineup`, `/team/waiver` and
 ## Deploy and verification
 
 Existing leagues need a re-connect after deploy to backfill ownership (the import is idempotent). Sleeper leagues need a re-import through the UI so the Sleeper user id is sent.
+
+## BUG-10: Lineup and waiver 500 on every league (confirmed from runtime logs) — FIXED
+
+`redis.exceptions.ResponseError: max request size exceeded. Limit: 10485760 bytes, Actual: 15999650 bytes.` raised from `projection_service.get_sleeper_players`. The full Sleeper player pool (~16 MB JSON) exceeds Upstash's 10 MB write limit, so `/team/lineup` and `/team/waiver` failed for every platform. Fix: cache only the 8 fields the app reads (~2.3 MB) and make all Redis reads and writes in `ProjectionService` best-effort so a cache failure cannot 500 a route.
+
+## BUG-11: Lineup 500 for non-Sleeper leagues — FIXED
+
+`/team/lineup` fetched Sleeper matchup history with the ESPN league id; Sleeper answers 404 and `raise_for_status` surfaced as a 500. Matchup stats are now skipped for non-Sleeper leagues and tolerate Sleeper HTTP errors.
+
+## BUG-12: More tab is a blank page (open)
+
+`Layout.tsx` links to `/more`, which has no route in `App.tsx`, and the router has no catch-all, so unknown URLs render nothing.
+
+## BUG-13: League refresh only works for Sleeper (open)
+
+`POST /leagues/{id}/refresh` calls `refresh_league`, which fetches from Sleeper using the league's host id. ESPN and Yahoo leagues fail, and `ConnectionCard` reports every failure as "Sleeper may be slow".
